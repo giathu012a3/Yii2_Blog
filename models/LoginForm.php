@@ -12,16 +12,14 @@ use yii\base\Security;
  * LoginForm is the model behind the login form.
  *
  * @property-read User|null $user
- */
+ *
 class LoginForm extends Model
 {
     public string $username = '';
     public string $password = '';
     public bool $rememberMe = true;
-
     private User|null $_user = null;
     private bool $_userLoaded = false;
-
     public function __construct(private readonly Security $security, $config = [])
     {
         parent::__construct($config);

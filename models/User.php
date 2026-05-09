@@ -14,7 +14,6 @@ class User extends BaseObject implements IdentityInterface
     public string $passwordHash = '';
     public string $authKey = '';
     public string $accessToken = '';
-
     private static array $_users = [
         '100' => [
             'id' => '100',
@@ -33,7 +32,6 @@ class User extends BaseObject implements IdentityInterface
             'accessToken' => '101-token',
         ],
     ];
-
     /**
      * {@inheritdoc}
      */

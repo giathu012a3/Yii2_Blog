@@ -46,7 +46,6 @@ class Alert extends \yii\bootstrap5\Widget
      * Array will be passed to [[\yii\bootstrap\Alert::closeButton]].
      */
     public array $closeButton = [];
-
     /**
      * {@inheritdoc}
      */
