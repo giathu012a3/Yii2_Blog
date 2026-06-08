@@ -32,6 +32,7 @@ class User extends BaseObject implements IdentityInterface
             'accessToken' => '101-token',
         ],
     ];
+
     /**
      * {@inheritdoc}
      */
