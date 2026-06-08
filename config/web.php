@@ -1,5 +1,7 @@
 <?php
 
+use yii\web\Response;
+
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
 
@@ -55,6 +57,44 @@ $config = [
             ],
         ],
         */
+        'response' => [
+            'class' => Response::class,
+            'format' => Response::FORMAT_JSON,
+            'on beforeSend' => function($event){
+                $response = $event->sender;
+                $route = Yii::$app->requestedRoute;
+
+                if($route !== null && str_starts_with($route, 'api/')){
+                    $isSuccess = $response->isSuccessful;
+                    $data = $response->data;
+                    $meta = null;
+
+                    if($isSuccess && is_array($data) && is_array($data['items'])){
+                       $meta = $data['_meta'] ?? null;
+                       $data = $data['items'];
+                    }
+
+                    $message = $isSuccess ? 'Success' : ($response->statusText ?: 'Error');
+
+                    if(!$isSuccess && is_array($data) && isset($data['message'])){
+                        $message = $data['message'];
+                    }
+
+                    $formatData = [
+                        'status' => $isSuccess ? 'success' : 'error',
+                        'code' => $response->statusCode,
+                        'message' => $message,
+                        'data' => !$isSuccess && isset($data['errors']) ? $data['errors'] : $data,
+                    ];
+
+                    if($meta){
+                        $formatData['meta'] = $meta;
+                    }
+
+                    $response->data = $formatData;
+                }
+            }
+        ]
     ],
     'params' => $params,
 ];
