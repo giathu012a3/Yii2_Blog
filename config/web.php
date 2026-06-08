@@ -94,6 +94,9 @@ $config = [
                     $response->data = $formatData;
                 }
             }
+        ],
+        'authManager' => [
+            'class' => \yii\rbac\DbManager::class,
         ]
     ],
     'params' => $params,
