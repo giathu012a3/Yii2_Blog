@@ -13,6 +13,13 @@ class User extends BaseUser implements IdentityInterface
 {
     const STATUS_ACTIVE = 1;
     const STATUS_INACTIVE = 0;
+    const ROLE_ADMIN = 'admin';
+    const ROLE_AUTHOR = 'author';
+    const ROLE_READER = 'reader';
+
+    public $access_token;
+
+
 
     public function behaviors()
     {
@@ -24,8 +31,20 @@ class User extends BaseUser implements IdentityInterface
     public function rules()
     {
         return array_merge(parent::rules(), [
-            [['status'], 'in', 'range', [self::STATUS_ACTIVE, self::STATUS_INACTIVE]]
+            [['status'], 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_INACTIVE]]
         ]);
+    }
+
+    public function fields()
+    {
+        return [
+            'id',
+            'username',
+            'email',
+            'access_token',
+            'status',
+            'created_at',
+        ];
     }
 
     public static function findIdentity($id): ?IdentityInterface

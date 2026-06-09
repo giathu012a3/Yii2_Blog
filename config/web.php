@@ -27,6 +27,9 @@ $config = [
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => $_ENV['COOKIE_VALIDATION_KEY'],
+            'parsers' => [
+                'application/json' => 'yii\web\JsonParser'
+            ]
         ],
         'cache' => [
             'class' => \yii\caching\FileCache::class,
@@ -49,34 +52,35 @@ $config = [
             ],
         ],
         'db' => $db,
-        /*
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                'POST api/auth/register' => 'api/auth/register',
             ],
         ],
-        */
         'response' => [
             'class' => Response::class,
             'format' => Response::FORMAT_JSON,
-            'on beforeSend' => function($event){
+            'on beforeSend' => function ($event) {
                 $response = $event->sender;
                 $route = Yii::$app->requestedRoute;
 
-                if($route !== null && str_starts_with($route, 'api/')){
+                if ($route !== null && str_starts_with($route, 'api/')) {
                     $isSuccess = $response->isSuccessful;
                     $data = $response->data;
                     $meta = null;
 
-                    if($isSuccess && is_array($data) && is_array($data['items'])){
-                       $meta = $data['_meta'] ?? null;
-                       $data = $data['items'];
+                    if ($isSuccess && is_array($data)) {
+                        if (isset($data['items']) && is_array($data['items'])) {
+                            $meta = $data['_meta'] ?? null;
+                            $data = $data['items'];
+                        }
                     }
 
                     $message = $isSuccess ? 'Success' : ($response->statusText ?: 'Error');
 
-                    if(!$isSuccess && is_array($data) && isset($data['message'])){
+                    if (!$isSuccess && is_array($data) && isset($data['message'])) {
                         $message = $data['message'];
                     }
 
@@ -87,7 +91,7 @@ $config = [
                         'data' => !$isSuccess && isset($data['errors']) ? $data['errors'] : $data,
                     ];
 
-                    if($meta){
+                    if ($meta) {
                         $formatData['meta'] = $meta;
                     }
 
@@ -100,6 +104,11 @@ $config = [
         ]
     ],
     'params' => $params,
+    'modules' => [
+        'api' => [
+            'class' => \app\modules\api\Module::class,
+        ]
+    ]
 ];
 
 if (YII_ENV_DEV) {
