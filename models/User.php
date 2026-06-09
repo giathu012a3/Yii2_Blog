@@ -20,7 +20,7 @@ class User extends UserBase implements IdentityInterface
     /**
      * {@inheritdoc}
      */
-    public function behaviors(): array
+    public function behaviors()
     {
         return [
             [
@@ -32,7 +32,7 @@ class User extends UserBase implements IdentityInterface
     /**
      * {@inheritdoc}
      */
-    public static function findIdentity($id): ?self
+    public static function findIdentity($id)
     {
         return static::find()->active()->andWhere(['id' => $id])->one();
     }
@@ -40,7 +40,7 @@ class User extends UserBase implements IdentityInterface
     /**
      * {@inheritdoc}
      */
-    public static function findIdentityByAccessToken($token, $type = null): ?self
+    public static function findIdentityByAccessToken($token, $type = null)
     {
         return static::find()->active()->andWhere(['access_token' => $token])->one();
     }
@@ -48,7 +48,7 @@ class User extends UserBase implements IdentityInterface
     /**
      * Finds user by username.
      */
-    public static function findByUsername(string $username): ?self
+    public static function findByUsername(string $username)
     {
         return static::find()->active()->andWhere(['username' => $username])->one();
     }
@@ -56,7 +56,7 @@ class User extends UserBase implements IdentityInterface
     /**
      * {@inheritdoc}
      */
-    public function getId(): int
+    public function getId()
     {
         return (int) $this->id;
     }
@@ -64,7 +64,7 @@ class User extends UserBase implements IdentityInterface
     /**
      * {@inheritdoc}
      */
-    public function getAuthKey(): string
+    public function getAuthKey()
     {
         return $this->auth_key;
     }
@@ -72,7 +72,7 @@ class User extends UserBase implements IdentityInterface
     /**
      * {@inheritdoc}
      */
-    public function validateAuthKey($authKey): bool
+    public function validateAuthKey($authKey)
     {
         return $this->auth_key === $authKey;
     }
@@ -86,6 +86,16 @@ class User extends UserBase implements IdentityInterface
             'id',
             'username',
             'email',
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function extraFields()
+    {
+        return [
+            'access_token',
         ];
     }
 
@@ -124,5 +134,13 @@ class User extends UserBase implements IdentityInterface
     public function generateAccessToken()
     {
         $this->access_token = Yii::$app->security->generateRandomString() . '_' . time();
+    }
+
+    /**
+     * Revokes the access token.
+     */
+    public function revokeAccessToken()
+    {
+        $this->access_token = null;
     }
 }

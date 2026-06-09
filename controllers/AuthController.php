@@ -6,6 +6,7 @@ namespace app\controllers;
 
 use app\models\forms\LoginForm;
 use app\models\forms\RegisterForm;
+use app\models\User;
 use Yii;
 
 /**
@@ -53,10 +54,33 @@ class AuthController extends BaseApiController
         $model->load(Yii::$app->request->getBodyParams(), '');
 
         if ($user = $model->login()) {
-            return $user->toArray(['id', 'username', 'email', 'access_token']);
+            return $user->toArray(['id', 'username', 'email'], ['access_token']);
         }
 
         Yii::$app->response->statusCode = 422;
         return $model->getErrors();
+    }
+
+    /**
+     * Log out the current authenticated user by revoking their access token.
+     * 
+     */
+    public function actionLogout()
+    {
+        /** @var User|null $user */
+        $user = Yii::$app->user->identity;
+        if ($user) {
+            $user->revokeAccessToken();
+            if ($user->save(false)) {
+                return [
+                    'message' => 'Logged out successfully.',
+                ];
+            }
+        }
+
+        Yii::$app->response->statusCode = 500;
+        return [
+            'message' => 'Failed to logout.',
+        ];
     }
 }
