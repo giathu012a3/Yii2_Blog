@@ -56,10 +56,20 @@ $config = [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                // auth
                 'POST api/auth/register' => 'api/auth/register',
                 'POST api/auth/login' => 'api/auth/login',
                 'POST api/auth/logout' => 'api/auth/logout',
-                'GET api/auth/me' => 'api/auth/me'
+                'GET api/auth/me' => 'api/auth/me',
+
+                // admin
+                [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => [
+                        'api/categories' => 'api/category',
+                    ],
+                    'pluralize' => false,
+                ]
 
             ],
         ],
