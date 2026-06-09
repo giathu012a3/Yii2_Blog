@@ -18,7 +18,7 @@ class User extends BaseUser implements IdentityInterface
     const ROLE_READER = 'reader';
 
     public $access_token;
-
+    public $current_token;
 
 
     public function behaviors()
@@ -41,9 +41,9 @@ class User extends BaseUser implements IdentityInterface
             'id',
             'username',
             'email',
-            'access_token',
             'status',
             'created_at',
+            'roles',
         ];
     }
 
@@ -57,10 +57,14 @@ class User extends BaseUser implements IdentityInterface
         $accessToken = UserAccessToken::find()
             ->where(['token' => $token])
             ->andWhere(['or', ['>', 'expires_at', time()], ['expires_at' => null]])
-            ->andWhere(['or', ['revoked_at' => null]])
+            ->andWhere(['revoked_at' => null])
             ->one();
         if ($accessToken) {
-            return static::findOne(['id' => $accessToken->user_id, 'status' => self::STATUS_ACTIVE]);
+            $user = static::findOne(['id' => $accessToken->user_id, 'status' => self::STATUS_ACTIVE]);
+            if ($user){
+                $user->current_token = $accessToken;
+                return $user;
+            }
         }
         return null;
     }
@@ -93,5 +97,10 @@ class User extends BaseUser implements IdentityInterface
     public function generateAuthKey()
     {
         $this->auth_key = Yii::$app->security->generateRandomString();
+    }
+    public function getRoles()
+    {
+        $auth = Yii::$app->authManager;
+       return array_keys($auth->getRolesByUser($this->id));
     }
 }

@@ -12,7 +12,7 @@ class AuthController extends BaseController
     public function behaviors()
     {
         $behaviors =  parent::behaviors();
-        $behaviors['authenticator']['optional'] = ['register','login'];
+        $behaviors['authenticator']['optional'] = ['register', 'login'];
         return $behaviors;
     }
 
@@ -22,8 +22,11 @@ class AuthController extends BaseController
         $form->load(Yii::$app->request->post(), '');
         $user = $form->register();
         if ($user) {
-            return $user;
-            }
+            return [
+                'user' => $user,
+                'access_token' => $user->access_token,
+            ];
+        }
         Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
         return [
             'errors' => $form->errors
@@ -36,7 +39,10 @@ class AuthController extends BaseController
         $form->load(Yii::$app->request->post(), '');
         $user = $form->login();
         if ($user) {
-            return $user;
+            return [
+                'user' => $user,
+                'access_token' => $user->access_token,
+            ];
         }
 
         Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
@@ -45,4 +51,23 @@ class AuthController extends BaseController
         ];
     }
 
+    public function actionLogout()
+    {
+        $user = Yii::$app->user->identity;
+
+        if ($user->current_token) {
+            $user->current_token->updateAttributes([
+                'revoked_at' => time(),
+            ]);
+        }
+
+        return [
+            'message' => 'Logout successfully.',
+        ];
+    }
+
+    public function actionMe()
+    {
+        return Yii::$app->user->identity;
+    }
 }
