@@ -106,4 +106,23 @@ class User extends UserBase implements IdentityInterface
     {
         $this->auth_key = Yii::$app->security->generateRandomString();
     }
+
+    /**
+     * Validates password.
+     *
+     * @param string $password
+     * @return bool
+     */
+    public function validatePassword(string $password)
+    {
+        return Yii::$app->security->validatePassword($password, $this->password_hash);
+    }
+
+    /**
+     * Generates a new access token.
+     */
+    public function generateAccessToken()
+    {
+        $this->access_token = Yii::$app->security->generateRandomString() . '_' . time();
+    }
 }
