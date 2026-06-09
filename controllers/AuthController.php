@@ -62,6 +62,14 @@ class AuthController extends BaseApiController
     }
 
     /**
+     * Get the profile of the current authenticated user.
+     */
+    public function actionMe()
+    {
+        return Yii::$app->user->identity;
+    }
+
+    /**
      * Log out the current authenticated user by revoking their access token.
      * 
      */

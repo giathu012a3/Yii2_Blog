@@ -92,6 +92,7 @@ $config = [
             'enablePrettyUrl' => true,
             'showScriptName'  => false,
             'rules' => [
+                'GET  api/auth/me'       => 'auth/me',
                 'POST api/auth/register' => 'auth/register',
                 'POST api/auth/login'    => 'auth/login',
                 'POST api/auth/logout'   => 'auth/logout',
