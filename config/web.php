@@ -50,6 +50,36 @@ $config = [
         'authManager' => [
             'class' => \yii\rbac\DbManager::class,
         ],
+        'response'    => [
+            'format'  => \yii\web\Response::FORMAT_JSON,
+            'charset' => 'UTF-8',
+            'on beforeSend' => function ($event) {
+                $response = $event->sender;
+
+                $isSuccessful = $response->isSuccessful;
+                $code         = $response->statusCode;
+                $data         = $response->data;
+
+                $status  = $isSuccessful ? 'success' : 'error';
+                $message = $isSuccessful ? 'Success' : 'An error occurred';
+                $responseData = $data;
+
+                if (!$isSuccessful) {
+                    if (is_array($data) && isset($data['message'])) {
+                        $message = $data['message'];
+                    }
+
+                    $responseData = ($code === 422) ? $data : null;
+                }
+
+                $response->data = [
+                    'status'  => $status,
+                    'code'    => $code,
+                    'message' => $message,
+                    'data'    => $responseData,
+                ];
+            },
+        ],
         /*
         'urlManager' => [
             'enablePrettyUrl' => true,
