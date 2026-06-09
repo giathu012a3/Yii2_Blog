@@ -4,88 +4,69 @@ declare(strict_types=1);
 
 namespace app\models;
 
-use yii\base\BaseObject;
+use app\models\base\UserBase;
+use Yii;
+use yii\behaviors\TimestampBehavior;
 use yii\web\IdentityInterface;
 
-class User extends BaseObject implements IdentityInterface
+/**
+ * User model connected to the database.
+ */
+class User extends UserBase implements IdentityInterface
 {
-    public int|string $id = '';
-    public string $username = '';
-    public string $passwordHash = '';
-    public string $authKey = '';
-    public string $accessToken = '';
-    private static array $_users = [
-        '100' => [
-            'id' => '100',
-            'username' => 'admin',
-            // password: admin
-            'passwordHash' => '$2y$13$gYAywKSkhfZDq9FLNdm7buKnvlRxDexf5xipSMAxQPDUxpaptmZJu',
-            'authKey' => 'test100key',
-            'accessToken' => '100-token',
-        ],
-        '101' => [
-            'id' => '101',
-            'username' => 'demo',
-            // password: demo
-            'passwordHash' => '$2y$13$alRLq1PGVMlGYwS/Y3iy3ewQns1Z8ol8Iq6Zb5k7ZwEhblA1aL29y',
-            'authKey' => 'test101key',
-            'accessToken' => '101-token',
-        ],
-    ];
+    public const STATUS_ACTIVE = 1;
+    public const STATUS_INACTIVE = 0;
 
     /**
      * {@inheritdoc}
      */
-    public static function findIdentity($id): static|null
+    public function behaviors(): array
     {
-        return isset(self::$_users[$id]) ? new static(self::$_users[$id]) : null;
+        return [
+            [
+                'class' => TimestampBehavior::class,
+            ],
+        ];
     }
 
     /**
      * {@inheritdoc}
      */
-    public static function findIdentityByAccessToken($token, $type = null): static|null
+    public static function findIdentity($id): ?self
     {
-        foreach (self::$_users as $user) {
-            if ($user['accessToken'] === $token) {
-                return new static($user);
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Finds user by username
-     *
-     * @param string $username
-     * @return static|null
-     */
-    public static function findByUsername(string $username): static|null
-    {
-        foreach (self::$_users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return static::find()->active()->andWhere(['id' => $id])->one();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getId(): int|string
+    public static function findIdentityByAccessToken($token, $type = null): ?self
     {
-        return $this->id;
+        return static::find()->active()->andWhere(['access_token' => $token])->one();
+    }
+
+    /**
+     * Finds user by username.
+     */
+    public static function findByUsername(string $username): ?self
+    {
+        return static::find()->active()->andWhere(['username' => $username])->one();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getAuthKey(): string|null
+    public function getId(): int
     {
-        return $this->authKey;
+        return (int) $this->id;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAuthKey(): string
+    {
+        return $this->auth_key;
     }
 
     /**
@@ -93,6 +74,36 @@ class User extends BaseObject implements IdentityInterface
      */
     public function validateAuthKey($authKey): bool
     {
-        return $this->authKey === $authKey;
+        return $this->auth_key === $authKey;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function fields()
+    {
+        return [
+            'id',
+            'username',
+            'email',
+        ];
+    }
+
+    /**
+     * Generates password hash from password and sets it to the model.
+     *
+     * @param string $password
+     */
+    public function setPassword(string $password): void
+    {
+        $this->password_hash = Yii::$app->security->generatePasswordHash($password);
+    }
+
+    /**
+     * Generates "remember me" authentication key.
+     */
+    public function generateAuthKey(): void
+    {
+        $this->auth_key = Yii::$app->security->generateRandomString();
     }
 }

@@ -23,15 +23,19 @@ $config = [
     ],
     'components' => [
         'request' => [
-            // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => $_ENV['COOKIE_VALIDATION_KEY'] ?? '',
+            'parsers' => [
+                'application/json' => 'yii\web\JsonParser',
+            ],
         ],
         'cache' => [
             'class' => \yii\caching\FileCache::class,
         ],
         'user' => [
-            'identityClass' => \app\models\User::class,
-            'enableAutoLogin' => true,
+            'identityClass'   => \app\models\User::class,
+            'enableAutoLogin' => false,
+            'enableSession'   => false,
+            'loginUrl'        => null,
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',
@@ -55,6 +59,10 @@ $config = [
             'charset' => 'UTF-8',
             'on beforeSend' => function ($event) {
                 $response = $event->sender;
+
+                if ($response->format !== \yii\web\Response::FORMAT_JSON) {
+                    return;
+                }
 
                 $isSuccessful = $response->isSuccessful;
                 $code         = $response->statusCode;
@@ -80,14 +88,13 @@ $config = [
                 ];
             },
         ],
-        /*
         'urlManager' => [
             'enablePrettyUrl' => true,
-            'showScriptName' => false,
+            'showScriptName'  => false,
             'rules' => [
+                'POST api/auth/register' => 'auth/register',
             ],
         ],
-        */
     ],
     'params' => $params,
 ];

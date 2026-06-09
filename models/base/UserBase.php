@@ -40,7 +40,7 @@ class UserBase extends \yii\db\ActiveRecord
             [['access_token', 'deleted_at'], 'default', 'value' => null],
             [['status'], 'default', 'value' => 1],
             [['is_deleted'], 'default', 'value' => 0],
-            [['username', 'email', 'auth_key', 'password_hash', 'created_at', 'updated_at'], 'required'],
+            [['username', 'email'], 'required'],
             [['status', 'is_deleted', 'deleted_at', 'created_at', 'updated_at'], 'integer'],
             [['username', 'email', 'password_hash', 'access_token'], 'string', 'max' => 255],
             [['auth_key'], 'string', 'max' => 32],

@@ -9,10 +9,13 @@ namespace app\models\query;
  */
 class UserQuery extends \yii\db\ActiveQuery
 {
-    /*public function active()
+    /**
+     * Filter only active and non-deleted users.
+     */
+    public function active()
     {
-        return $this->andWhere('[[status]]=1');
-    }*/
+        return $this->andWhere(['is_deleted' => 0, 'status' => 1]);
+    }
 
     /**
      * {@inheritdoc}
