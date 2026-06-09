@@ -7,6 +7,11 @@ $config = [
     'id' => 'basic',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
+    'modules' => [
+        'api' => [
+            'class' => \app\modules\api\Module::class,
+        ],
+    ],
     'container' => [
         'singletons' => [
             \yii\mail\MailerInterface::class => [
@@ -92,10 +97,11 @@ $config = [
             'enablePrettyUrl' => true,
             'showScriptName'  => false,
             'rules' => [
-                'GET  api/auth/me'       => 'auth/me',
-                'POST api/auth/register' => 'auth/register',
-                'POST api/auth/login'    => 'auth/login',
-                'POST api/auth/logout'   => 'auth/logout',
+                'GET  api/auth/me'              => 'api/auth/me',
+                'POST api/auth/register'        => 'api/auth/register',
+                'POST api/auth/login'           => 'api/auth/login',
+                'POST api/auth/logout'          => 'api/auth/logout',
+                'PUT  api/auth/change-password' => 'api/auth/change-password',
             ],
         ],
     ],
