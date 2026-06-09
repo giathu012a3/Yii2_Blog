@@ -51,17 +51,7 @@ class RegisterForm extends Model
                     $auth->assign($readerRole, $user->id);
                 }
 
-               $accessToken = new UserAccessToken();
-               $accessToken->user_id = $user->id;
-               $accessToken->token = Yii::$app->security->generateRandomString(64);
-               $accessToken->expires_at = time() + 7 * 24 * 3600;
-
-               if(!$accessToken->save()) {
-                   throw new Exception('Save access token failed.');
-               }
-
                $transaction->commit();
-               $user->access_token = $accessToken->token;
                return $user;
             }
 

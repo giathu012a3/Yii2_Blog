@@ -22,10 +22,7 @@ class AuthController extends BaseController
         $form->load(Yii::$app->request->post(), '');
         $user = $form->register();
         if ($user) {
-            return [
-                'user' => $user,
-                'access_token' => $user->access_token,
-            ];
+            return $user;
         }
         Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
         return [
@@ -41,7 +38,7 @@ class AuthController extends BaseController
         if ($user) {
             return [
                 'user' => $user,
-                'access_token' => $user->access_token,
+                'access_token' => $user->current_token->token,
             ];
         }
 

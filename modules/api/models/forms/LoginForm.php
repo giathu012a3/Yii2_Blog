@@ -56,7 +56,7 @@ class LoginForm extends Model
                 $accessToken = $this->createAccessToken($user);
 
                 if ($accessToken) {
-                    $user->access_token = $accessToken->token;
+                    $user->current_token = $accessToken;
                     return $user;
                 }
             }

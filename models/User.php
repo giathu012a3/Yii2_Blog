@@ -17,7 +17,6 @@ class User extends BaseUser implements IdentityInterface
     const ROLE_AUTHOR = 'author';
     const ROLE_READER = 'reader';
 
-    public $access_token;
     public $current_token;
 
 
