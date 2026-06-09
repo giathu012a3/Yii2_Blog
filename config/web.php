@@ -67,6 +67,7 @@ $config = [
                     'class' => 'yii\rest\UrlRule',
                     'controller' => [
                         'api/categories' => 'api/category',
+                        'api/tags'       => 'api/tag',
                     ],
                     'pluralize' => false,
                 ]
