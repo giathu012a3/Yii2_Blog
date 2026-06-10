@@ -68,6 +68,7 @@ $config = [
                     'controller' => [
                         'api/categories' => 'api/category',
                         'api/tags'       => 'api/tag',
+                        'api/posts'      => 'api/post',
                     ],
                     'pluralize' => false,
                 ]
