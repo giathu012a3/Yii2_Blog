@@ -11,20 +11,22 @@ class CategoryForm extends Category
     public function rules()
     {
         return array_merge(parent::rules(), [
-            [['name'], 'unique', 'filter' => ['is_deleted' => 0], 'when' => function ($model) {
-                return $model->isNewRecord || $model->isAttributeChanged('name');
-            }],
+            [['name'], 'unique', 'filter' => ['is_deleted' => 0]],
+            [['name'], 'validateHasChanges', 'skipOnEmpty' => false],
         ]);
     }
 
-    public function save($runValidation = true, $attributeNames = null)
+    public function validateHasChanges($attribute, $params)
     {
-        if ($runValidation && !$this->validate()) {
-            return false;
+        if ($this->isNewRecord) {
+            return;
         }
 
-        $this->is_deleted = 0;
+        $dirty = $this->getDirtyAttributes();
+        unset($dirty['updated_at']);
 
-        return parent::save(false, $attributeNames);
+        if (empty($dirty)) {
+            $this->addError($attribute, 'No changes detected.');
+        }
     }
 }
