@@ -27,6 +27,9 @@ class Category extends CategoryBase
                 'class' => SluggableBehavior::class,
                 'attribute' => 'name',
             ],
+            [
+                'class' => \app\behaviors\SoftDeleteBehavior::class,
+            ],
         ];
     }
 

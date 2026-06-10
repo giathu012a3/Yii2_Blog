@@ -2,22 +2,16 @@
 
 declare(strict_types=1);
 
-namespace app\models\forms;
+namespace app\modules\api\models\forms;
 
 use app\models\User;
 use Yii;
 
-/**
- * RegisterForm handles user registration input validation and model saving.
- */
 class RegisterForm extends User
 {
     public ?string $password = null;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function rules(): array
+    public function rules()
     {
         $rules = parent::rules();
         return array_merge($rules, [
@@ -25,14 +19,10 @@ class RegisterForm extends User
             ['password', 'string', 'min' => 6],
             ['email', 'email'],
             ['username', 'unique', 'targetClass' => User::class, 'message' => 'This username has already been taken.'],
+            ['email', 'unique', 'targetClass' => User::class, 'message' => 'This email address has already been taken.'],
         ]);
     }
 
-    /**
-     * Registers a new user.
-     *
-     * @return User|null the saved user model, or null if saving failed
-     */
     public function register()
     {
         if (!$this->validate()) {

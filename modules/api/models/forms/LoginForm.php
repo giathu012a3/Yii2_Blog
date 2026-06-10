@@ -2,15 +2,12 @@
 
 declare(strict_types=1);
 
-namespace app\models\forms;
+namespace app\modules\api\models\forms;
 
 use app\models\User;
 use Yii;
 use yii\base\Model;
 
-/**
- * LoginForm handles REST API user login verification and token generation.
- */
 class LoginForm extends Model
 {
     public ?string $username = null;
@@ -18,9 +15,6 @@ class LoginForm extends Model
 
     private $_user;
 
-    /**
-     * {@inheritdoc}
-     */
     public function rules()
     {
         return [
@@ -30,9 +24,6 @@ class LoginForm extends Model
         ];
     }
 
-    /**
-     * Inline validator for password.
-     */
     public function validatePassword($attribute, $params)
     {
         if (!$this->hasErrors()) {
@@ -43,11 +34,6 @@ class LoginForm extends Model
         }
     }
 
-    /**
-     * Authenticates user and generates bearer token.
-     *
-     * @return User|null the authenticated user with token, or null on failure
-     */
     public function login()
     {
         if (!$this->validate()) {
@@ -65,11 +51,6 @@ class LoginForm extends Model
         return null;
     }
 
-    /**
-     * Find user by username.
-     *
-     * @return User|null
-     */
     public function getUser()
     {
         if ($this->_user === null) {

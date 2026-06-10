@@ -2,24 +2,15 @@
 
 declare(strict_types=1);
 
-namespace app\models\forms;
+namespace app\modules\api\models\forms;
 
 use app\models\User;
-use yii\base\Model;
 
-class ChangePasswordForm extends Model
+class ChangePasswordForm extends User
 {
     public $current_password;
     public $new_password;
     public $confirm_password;
-
-    private $_user;
-
-    public function __construct(User $user, array $config = [])
-    {
-        $this->_user = $user;
-        parent::__construct($config);
-    }
 
     public function rules()
     {
@@ -36,7 +27,7 @@ class ChangePasswordForm extends Model
     public function validateCurrentPassword($attribute, $params)
     {
         if (!$this->hasErrors()) {
-            if (!$this->_user->validatePassword($this->current_password)) {
+            if (!$this->validatePassword($this->current_password)) {
                 $this->addError($attribute, 'Incorrect current password.');
             }
         }
@@ -48,9 +39,9 @@ class ChangePasswordForm extends Model
             return false;
         }
 
-        $this->_user->setPassword($this->new_password);
-        $this->_user->revokeAccessToken();
+        $this->setPassword($this->new_password);
+        $this->revokeAccessToken();
 
-        return $this->_user->save(false);
+        return $this->save(false);
     }
 }

@@ -9,10 +9,14 @@ namespace app\models\query;
  */
 class CategoryQuery extends \yii\db\ActiveQuery
 {
-    /*public function active()
+    /**
+     * Filter only active (non-deleted) categories.
+     */
+    public function active()
     {
-        return $this->andWhere('[[status]]=1');
-    }*/
+        return $this->andWhere(['is_deleted' => 0]);
+    }
+
 
     /**
      * {@inheritdoc}

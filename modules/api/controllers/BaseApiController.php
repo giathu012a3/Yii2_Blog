@@ -6,6 +6,7 @@ namespace app\modules\api\controllers;
 
 use yii\filters\auth\HttpBearerAuth;
 use yii\rest\Controller;
+use yii\rest\Serializer;
 
 /**
  * BaseApiController is the base class for all REST API controllers in the api module.
@@ -13,6 +14,12 @@ use yii\rest\Controller;
  */
 class BaseApiController extends Controller
 {
+    public $serializer = [
+        'class' => Serializer::class,
+        'collectionEnvelope' => 'items',
+        'metaEnvelope' => 'pagination',
+    ];
+
     /**
      * {@inheritdoc}
      */

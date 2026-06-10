@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace app\modules\api\controllers;
 
-use app\models\forms\ChangePasswordForm;
-use app\models\forms\LoginForm;
-use app\models\forms\RegisterForm;
+use app\modules\api\models\forms\ChangePasswordForm;
+use app\modules\api\models\forms\LoginForm;
+use app\modules\api\models\forms\RegisterForm;
 use app\models\User;
 use Yii;
 
@@ -95,10 +95,10 @@ class AuthController extends BaseApiController
      */
     public function actionChangePassword()
     {
-        /** @var User|null $user */
-        $user = Yii::$app->user->identity;
-        if ($user instanceof User) {
-            $model = new ChangePasswordForm($user);
+        $userId = Yii::$app->user->id;
+        $model = ChangePasswordForm::findOne($userId);
+
+        if ($model !== null) {
             $model->load(Yii::$app->request->getBodyParams(), '');
 
             if ($model->change()) {
