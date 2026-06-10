@@ -17,17 +17,10 @@ class CategoryController extends BaseApiController
     {
         $behaviors = parent::behaviors();
 
-        $behaviors['authenticator']['optional'] = ['index', 'view'];
-
         $behaviors['access'] = [
             'class' => AccessControl::class,
             'rules' => [
                 [
-                    'actions' => ['index', 'view'],
-                    'allow' => true,
-                ],
-                [
-                    'actions' => ['create', 'update', 'delete'],
                     'allow' => true,
                     'roles' => ['manageCategory'],
                 ],
