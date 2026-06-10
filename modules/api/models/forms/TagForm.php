@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+namespace app\modules\api\models\forms;
+
+use app\models\Tag;
+
+class TagForm extends Tag
+{
+    public function rules()
+    {
+        return array_merge(parent::rules(), [
+            [['name'], 'unique', 'filter' => ['is_deleted' => 0]],
+            [['name'], 'validateHasChanges', 'skipOnEmpty' => false],
+        ]);
+    }
+
+    public function validateHasChanges($attribute, $params)
+    {
+        if ($this->isNewRecord) {
+            return;
+        }
+
+        $dirty = $this->getDirtyAttributes();
+        unset($dirty['updated_at']);
+
+        if (empty($dirty)) {
+            $this->addError($attribute, 'No changes detected.');
+        }
+    }
+}

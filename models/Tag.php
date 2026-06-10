@@ -6,6 +6,7 @@ namespace app\models;
 
 use app\models\base\TagBase;
 use app\models\query\TagQuery;
+use app\behaviors\SoftDeleteBehavior;
 use yii\behaviors\SluggableBehavior;
 use yii\behaviors\TimestampBehavior;
 
@@ -26,6 +27,9 @@ class Tag extends TagBase
             [
                 'class' => SluggableBehavior::class,
                 'attribute' => 'name',
+            ],
+            [
+                'class' => SoftDeleteBehavior::class,
             ],
         ];
     }
