@@ -10,18 +10,11 @@ class CategoryForm extends Category
 {
     public function rules()
     {
-        $rules = [
-            [['name'], 'required'],
-            [['name'], 'string', 'max' => 255],
-        ];
-
-        if ($this->isNewRecord || $this->isAttributeChanged('name')) {
-            $rules[] = [['name'], 'unique', 'targetClass' => Category::class, 'filter' => function ($query) {
-                $query->andWhere(['is_deleted' => 0]);
-            }];
-        }
-
-        return $rules;
+        return array_merge(parent::rules(), [
+            [['name'], 'unique', 'filter' => ['is_deleted' => 0], 'when' => function ($model) {
+                return $model->isNewRecord || $model->isAttributeChanged('name');
+            }],
+        ]);
     }
 
     public function save($runValidation = true, $attributeNames = null)
