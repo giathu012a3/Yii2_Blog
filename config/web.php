@@ -79,6 +79,9 @@ $config = [
                 'POST api/comments/<id:\d+>/hide'        => 'api/comment/hide',
                 'DELETE api/comments/<id:\d+>'          => 'api/comment/delete',
 
+                //like
+                'POST api/posts/<post_id:\d+>/like'      => 'api/post/like',
+
 
             ],
         ],

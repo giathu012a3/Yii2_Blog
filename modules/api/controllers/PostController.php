@@ -3,6 +3,7 @@
 namespace app\modules\api\controllers;
 
 use app\models\Post;
+use app\models\PostLike;
 use app\modules\api\models\forms\PostForm;
 use app\modules\api\models\search\PostSearch;
 use Yii;
@@ -31,7 +32,7 @@ class PostController extends BaseController
                 ],
                 [
                     'allow' => true,
-                    'actions' => ['create', 'update', 'delete'],
+                    'actions' => ['create', 'update', 'delete', 'like'],
                     'roles' => ['@'],
                 ]
             ]
@@ -138,6 +139,53 @@ class PostController extends BaseController
         Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
         return [
             'message' => 'Failed to delete the post.',
+        ];
+    }
+
+    public function actionLike($post_id)
+    {
+        $post = Post::find()->notDelete()->published()->andWhere(['id' => $post_id])->one();
+        if (!$post) {
+            throw new NotFoundHttpException('The requested post does not exist.');
+        }
+        $userId = Yii::$app->user->id;
+
+        $like = PostLike::findOne(['post_id' => $post_id, 'author_id' => $userId]);
+        if ($like) {
+            if ($like->delete()) {
+                return [
+                    'liked' => false,
+                    'message' => 'Post unliked successfully.',
+                ];
+            }
+        } else {
+            $like = new PostLike();
+            $like->post_id = (int)$post_id;
+            $like->author_id = (int)$userId;
+
+            try {
+                if ($like->save()) {
+                    return [
+                        'liked' => true,
+                        'message' => 'Post liked successfully.',
+                    ];
+                }
+            } catch (\yii\db\Exception $e) {
+                return [
+                    'liked' => true,
+                    'message' => 'Post liked successfully.',
+                ];
+            }
+
+            Yii::$app->response->statusCode = self::HTTP_INTERNAL_SERVER_ERROR;
+            return [
+                'message' => 'Failed to like the post.',
+                'errors' => $like->errors,
+            ];
+        }
+        Yii::$app->response->statusCode = self::HTTP_INTERNAL_SERVER_ERROR;
+        return [
+            'message' => 'An error occurred while processing your request.',
         ];
     }
 
