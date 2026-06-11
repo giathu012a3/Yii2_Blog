@@ -5,6 +5,7 @@ namespace app\modules\api\controllers;
 use app\models\Tag;
 use app\modules\api\models\forms\TagForm;
 use app\modules\api\models\search\TagSearch;
+use app\rbac\Permission;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\NotFoundHttpException;
@@ -33,7 +34,7 @@ class TagController extends BaseController
                 [
                     'allow'   => true,
                     'actions' => ['index', 'view', 'create', 'update', 'delete'],
-                    'roles'   => ['manageTags'],
+                    'roles'   => [Permission::MANAGE_TAGS],
                 ],
             ],
         ];

@@ -5,6 +5,7 @@ namespace app\modules\api\controllers;
 use app\models\Category;
 use app\modules\api\models\forms\CategoryForm;
 use app\modules\api\models\search\CategorySearch;
+use app\rbac\Permission;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\NotFoundHttpException;
@@ -33,7 +34,7 @@ class CategoryController extends BaseController
                 [
                     'allow' => true,
                     'actions' => ['index', 'view', 'create', 'update', 'delete'],
-                    'roles' => ['manageCategories'],
+                    'roles' => [Permission::MANAGE_CATEGORIES],
                 ]
             ],
         ];

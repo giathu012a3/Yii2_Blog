@@ -2,12 +2,13 @@
 
 namespace app\modules\api\controllers;
 
-use Yii;
 use app\models\Comment;
 use app\modules\api\models\forms\CommentForm;
+use app\rbac\Permission;
+use Yii;
 use yii\filters\AccessControl;
-use yii\web\NotFoundHttpException;
 use yii\web\ForbiddenHttpException;
+use yii\web\NotFoundHttpException;
 use yii\web\ServerErrorHttpException;
 
 class CommentController extends BaseController
@@ -60,10 +61,7 @@ class CommentController extends BaseController
     {
         $model = $this->findModel($id);
 
-        $isCommentOwner = (Yii::$app->user->id === $model->author_id);
-        $isAdmin = Yii::$app->user->can('manageCategories');
-
-        if (!$isCommentOwner && !$isAdmin) {
+        if (!Yii::$app->user->can(Permission::ADMIN_ACCESS) && !Yii::$app->user->can(Permission::UPDATE_OWN_COMMENT, ['comment' => $model])) {
             throw new ForbiddenHttpException('You do not have permission to edit this comment.');
         }
 
@@ -89,10 +87,7 @@ class CommentController extends BaseController
             throw new NotFoundHttpException('Post associated with this comment not found.');
         }
 
-        $isPostOwner = (Yii::$app->user->id === $post->author_id);
-        $isAdmin = Yii::$app->user->can('manageCategories');
-
-        if (!$isPostOwner && !$isAdmin) {
+        if (!Yii::$app->user->can(Permission::ADMIN_ACCESS) && !Yii::$app->user->can(Permission::HIDE_COMMENT_ON_OWN_POST, ['post' => $post])) {
             throw new ForbiddenHttpException('You do not have permission to hide this comment.');
         }
 
@@ -121,11 +116,10 @@ class CommentController extends BaseController
 
         $post = $model->post;
 
-        $isCommentOwner = (Yii::$app->user->id === $model->author_id);
-        $isPostOwner = ($post && Yii::$app->user->id === $post->author_id);
-        $isAdmin = Yii::$app->user->can('manageCategories');
-
-        if (!$isCommentOwner && !$isPostOwner && !$isAdmin) {
+        if (!Yii::$app->user->can(Permission::ADMIN_ACCESS) &&
+            !Yii::$app->user->can(Permission::DELETE_OWN_COMMENT, ['comment' => $model]) &&
+            !Yii::$app->user->can(Permission::DELETE_COMMENT_ON_OWN_POST, ['post' => $post])
+        ) {
             throw new ForbiddenHttpException('You do not have permission to delete this comment.');
         }
 

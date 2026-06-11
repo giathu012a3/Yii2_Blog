@@ -6,6 +6,7 @@ use app\models\Post;
 use app\models\PostLike;
 use app\modules\api\models\forms\PostForm;
 use app\modules\api\models\search\PostSearch;
+use app\rbac\Permission;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\ForbiddenHttpException;
@@ -74,7 +75,7 @@ class PostController extends BaseController
     {
         $model = $this->findModel($id);
         if ($model->status !== Post::STATUS_PUBLISHED) {
-            if (Yii::$app->user->isGuest || (!Yii::$app->user->can('updatePost') && !Yii::$app->user->can('updateOwnPost', ['post' => $model]))) {
+            if (Yii::$app->user->isGuest || (!Yii::$app->user->can(Permission::UPDATE_POST) && !Yii::$app->user->can(Permission::UPDATE_OWN_POST, ['post' => $model]))) {
                 throw new ForbiddenHttpException('You do not have permission to view this post.');
             }
         }
@@ -89,7 +90,7 @@ class PostController extends BaseController
      */
     public function actionCreate()
     {
-        if (!Yii::$app->user->can('createPost')) {
+        if (!Yii::$app->user->can(Permission::CREATE_POST)) {
             throw new ForbiddenHttpException('You do not have permission to create a post.');
         }
         $model = new PostForm();
@@ -114,7 +115,7 @@ class PostController extends BaseController
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        if (!Yii::$app->user->can('updatePost') && !Yii::$app->user->can('updateOwnPost', ['post' => $model])) {
+        if (!Yii::$app->user->can(Permission::UPDATE_POST) && !Yii::$app->user->can(Permission::UPDATE_OWN_POST, ['post' => $model])) {
             throw new ForbiddenHttpException('You do not have permission to update this post.');
         }
 
@@ -138,7 +139,7 @@ class PostController extends BaseController
     public function actionDelete($id)
     {
         $model = $this->findModel($id);
-        if (!Yii::$app->user->can('deletePost') && !Yii::$app->user->can('deleteOwnPost', ['post' => $model])) {
+        if (!Yii::$app->user->can(Permission::DELETE_POST) && !Yii::$app->user->can(Permission::DELETE_OWN_POST, ['post' => $model])) {
             throw new ForbiddenHttpException('You do not have permission to delete this post.');
         }
 
@@ -210,7 +211,7 @@ class PostController extends BaseController
     protected function findModel($id)
     {
         $query = PostForm::find()->where(['id' => $id]);
-        if (!Yii::$app->user->can('updatePost')) {
+        if (!Yii::$app->user->can(Permission::ADMIN_ACCESS)) {
             $query->notDelete();
         }
         $model = $query->one();
