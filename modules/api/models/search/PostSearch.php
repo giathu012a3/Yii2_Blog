@@ -16,6 +16,7 @@ class PostSearch extends Post
 {
     public $tag;
     public $tag_id;
+    public $isManagement = false;
 
     /**
      * {@inheritdoc}
@@ -45,12 +46,16 @@ class PostSearch extends Post
      */
     public function search(array $params, ?string $formName = '')
     {
-        $userId  = (int) Yii::$app->user->id;
+        $userId  = Yii::$app->user->id;
         $isAdmin = Yii::$app->user->can('admin');
 
         $query = Post::find()->active();
-        if (!$isAdmin) {
-            $query->andWhere(['post.author_id' => $userId]);
+        if ($this->isManagement) {
+            if (!$isAdmin) {
+                $query->andWhere(['post.author_id' => $userId]);
+            }
+        } else {
+            $query->andWhere(['post.status' => Post::STATUS_PUBLISHED]);
         }
 
         $expand = array_filter(explode(',', Yii::$app->request->get('expand', '')));

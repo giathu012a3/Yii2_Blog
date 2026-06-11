@@ -70,6 +70,9 @@ class Post extends PostBase
         return true;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function fields(): array
     {
         $fields = [
@@ -104,6 +107,27 @@ class Post extends PostBase
     public static function find(): PostQuery
     {
         return new PostQuery(static::class);
+    }
+
+    public static function findPublishedBySlug(string $slug): ?self
+    {
+        return static::find()
+            ->active()
+            ->andWhere(['status' => self::STATUS_PUBLISHED, 'slug' => $slug])
+            ->one();
+    }
+
+    public static function findActive($id): ?self
+    {
+        return static::find()
+            ->active()
+            ->andWhere(['id' => $id])
+            ->one();
+    }
+
+    public function incrementViewCount(): void
+    {
+        $this->updateCounters(['view_count' => 1]);
     }
 
     /**
