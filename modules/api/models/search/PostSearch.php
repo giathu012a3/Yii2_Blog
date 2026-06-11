@@ -5,6 +5,7 @@ namespace app\modules\api\models\search;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use app\models\Post;
+use app\rbac\Permission;
 use Yii;
 
 /**
@@ -78,13 +79,13 @@ class PostSearch extends Post
             ->andFilterWhere(['like', 'slug', $this->slug])
             ->andFilterWhere(['like', 'content', $this->content]);
 
-        if (Yii::$app->user->isGuest || !Yii::$app->user->can('createPost')) {
+        if (Yii::$app->user->isGuest || !Yii::$app->user->can(Permission::AUTHOR_ACCESS)) {
             $query->published()->notDelete();
-        } elseif (!Yii::$app->user->can('updatePost')) {
+        } elseif (!Yii::$app->user->can(Permission::ADMIN_ACCESS)) {
             $query->publishedOrOwn(Yii::$app->user->id)->notDelete();
         }
 
-        if (Yii::$app->user->can('updatePost')) {
+        if (Yii::$app->user->can(Permission::ADMIN_ACCESS)) {
             if ($this->is_deleted === null || $this->is_deleted === '') {
                 $query->notDelete();
             } else {
