@@ -16,6 +16,14 @@ class Tag extends BaseTag
         ];
     }
 
+    public function beforeValidate()
+    {
+        if ($this->name !== null) {
+            $this->name = mb_strtolower(trim($this->name), 'UTF-8');
+        }
+        return parent::beforeValidate();
+    }
+
     public function fields()
     {
         return [
