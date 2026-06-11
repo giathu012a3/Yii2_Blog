@@ -42,6 +42,14 @@ class Category extends CategoryBase
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function fields()
+    {
+        return ['id', 'name', 'slug'];
+    }
+
+    /**
      * Gets query for [[Posts]].
      *
      * @return \yii\db\ActiveQuery

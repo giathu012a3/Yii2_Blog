@@ -43,6 +43,26 @@ class Tag extends TagBase
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+
+        if (!$insert && isset($changedAttributes['is_deleted']) && (int)$this->is_deleted === 1) {
+            PostTag::deleteAll(['tag_id' => $this->id]);
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function fields()
+    {
+        return ['id', 'name', 'slug'];
+    }
+
+    /**
      * Gets query for [[PostTags]].
      *
      * @return \yii\db\ActiveQuery

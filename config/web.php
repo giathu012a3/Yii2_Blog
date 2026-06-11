@@ -58,6 +58,7 @@ $config = [
         'db'          => $db,
         'authManager' => [
             'class' => \yii\rbac\DbManager::class,
+            'cache' => 'cache',
         ],
         'response'    => [
             'format'  => \yii\web\Response::FORMAT_JSON,
@@ -112,6 +113,11 @@ $config = [
                 'POST api/tags'                 => 'api/tag/create',
                 'PUT  api/tags/<id:\d+>'        => 'api/tag/update',
                 'DELETE api/tags/<id:\d+>'      => 'api/tag/delete',
+                'GET  api/posts'                => 'api/post/index',
+                'GET  api/posts/<id:\d+>'       => 'api/post/view',
+                'POST api/posts'                => 'api/post/create',
+                'PUT  api/posts/<id:\d+>'       => 'api/post/update',
+                'DELETE api/posts/<id:\d+>'     => 'api/post/delete',
             ],
         ],
     ],

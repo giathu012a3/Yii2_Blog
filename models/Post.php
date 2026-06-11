@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace app\models;
 
+use Yii;
 use app\models\base\PostBase;
 use app\models\query\PostQuery;
+use app\behaviors\SoftDeleteBehavior;
+use yii\behaviors\BlameableBehavior;
 use yii\behaviors\SluggableBehavior;
 use yii\behaviors\TimestampBehavior;
 
@@ -30,7 +33,69 @@ class Post extends PostBase
                 'class' => SluggableBehavior::class,
                 'attribute' => 'title',
             ],
+            [
+                'class' => BlameableBehavior::class,
+                'createdByAttribute' => 'author_id',
+                'updatedByAttribute' => false,
+            ],
+            [
+                'class' => SoftDeleteBehavior::class,
+            ],
         ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function rules(): array
+    {
+        return array_merge(parent::rules(), [
+            [['title'], 'unique', 'message' => 'This title has already been taken.'],
+        ]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function beforeSave($insert)
+    {
+        if (!parent::beforeSave($insert)) {
+            return false;
+        }
+
+        if ($this->status === self::STATUS_PUBLISHED && $this->published_at === null) {
+            $this->published_at = time();
+        }
+
+        return true;
+    }
+
+    public function fields(): array
+    {
+        $fields = [
+            'id',
+            'title',
+            'slug',
+            'status',
+            'view_count',
+            'category_id',
+            'author_id',
+            'published_at',
+            'created_at',
+            'updated_at',
+        ];
+
+        $action = Yii::$app->controller->action->id ?? null;
+        if ($action !== 'index') {
+            $fields[] = 'content';
+        }
+
+        return $fields;
+    }
+
+    public function extraFields(): array
+    {
+        return ['category', 'tags', 'author'];
     }
 
     /**

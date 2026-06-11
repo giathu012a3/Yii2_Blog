@@ -40,9 +40,9 @@ class PostBase extends \yii\db\ActiveRecord
     {
         return [
             [['slug', 'published_at', 'deleted_at', 'created_at', 'updated_at'], 'default', 'value' => null],
-            [['status'], 'default', 'value' => 1],
+            [['status'], 'default', 'value' => 0],
             [['is_deleted'], 'default', 'value' => 0],
-            [['title', 'content', 'category_id', 'author_id'], 'required'],
+            [['title', 'content', 'category_id'], 'required'],
             [['content'], 'string'],
             [['status', 'view_count', 'category_id', 'author_id', 'published_at', 'is_deleted', 'deleted_at', 'created_at', 'updated_at'], 'integer'],
             [['title', 'slug'], 'string', 'max' => 255],

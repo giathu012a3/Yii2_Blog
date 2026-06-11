@@ -17,7 +17,7 @@ class m260608_042821_create_table_post extends Migration
                 'title'        => $this->string(255)->notNull(),
                 'content'      => $this->text()->notNull(),
                 'slug'         => $this->string(255)->null(),
-                'status'       => $this->smallInteger()->notNull()->defaultValue(1),
+                'status'       => $this->smallInteger()->notNull()->defaultValue(0),
                 'view_count'   => $this->integer()->notNull()->defaultValue(0),
                 'category_id'  => $this->integer()->unsigned()->notNull(),
                 'author_id'    => $this->integer()->unsigned()->notNull(),

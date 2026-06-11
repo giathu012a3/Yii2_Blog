@@ -23,4 +23,16 @@ class SoftDeleteBehavior extends Behavior
 
         return $model->save(false);
     }
+
+    public function restore()
+    {
+        $model = $this->owner;
+        $model->{$this->isDeletedAttribute} = 0;
+
+        if ($this->deletedAtAttribute !== null) {
+            $model->{$this->deletedAtAttribute} = null;
+        }
+
+        return $model->save(false);
+    }
 }

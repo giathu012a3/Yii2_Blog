@@ -17,7 +17,7 @@ return [
     'charset'  => $charset,
 
     // Schema cache options (enable for production)
-    // 'enableSchemaCache'   => true,
-    // 'schemaCacheDuration' => 3600,
-    // 'schemaCache'         => 'cache',
+    'enableSchemaCache'   => true,
+    'schemaCacheDuration' => 3600,
+    'schemaCache'         => 'cache',
 ];
