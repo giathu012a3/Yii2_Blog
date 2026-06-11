@@ -1,234 +1,225 @@
-<p align="center">
-    <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://www.yiiframework.com/image/design/logo/yii3_full_for_dark.svg">
-        <source media="(prefers-color-scheme: light)" srcset="https://www.yiiframework.com/image/design/logo/yii3_full_for_light.svg">
-        <img src="https://www.yiiframework.com/image/design/logo/yii3_full_for_light.svg" alt="Yii Framework" height="100">
-    </picture>
-    <h1 align="center">Yii 2 Basic Project Template</h1>
-    <br>
-</p>
-
-Yii 2 Basic Project Template is a skeleton [Yii 2](https://www.yiiframework.com/) application best for
-rapidly creating small projects.
-
-The template contains the basic features including user login/logout and a contact page.
-It includes all commonly used configurations that would allow you to focus on adding new
-features to your application.
-
-[![Latest Stable Version](https://img.shields.io/packagist/v/yiisoft/yii2-app-basic.svg?style=for-the-badge&label=Stable&logo=packagist)](https://packagist.org/packages/yiisoft/yii2-app-basic)
-[![Total Downloads](https://img.shields.io/packagist/dt/yiisoft/yii2-app-basic.svg?style=for-the-badge&label=Downloads)](https://packagist.org/packages/yiisoft/yii2-app-basic)
-[![build](https://img.shields.io/github/actions/workflow/status/yiisoft/yii2-app-basic/build.yml?style=for-the-badge&logo=github&label=Build)](https://github.com/yiisoft/yii2-app-basic/actions?query=workflow%3Abuild)
-[![codecov](https://img.shields.io/codecov/c/github/yiisoft/yii2-app-basic.svg?style=for-the-badge&logo=codecov&logoColor=white&label=Codecov)](https://codecov.io/gh/yiisoft/yii2-app-basic)
-[![Static Analysis](https://img.shields.io/github/actions/workflow/status/yiisoft/yii2-app-basic/static.yml?style=for-the-badge&label=Static)](https://github.com/yiisoft/yii2-app-basic/actions/workflows/static.yml)
-
-<picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/home-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="docs/images/home-light.png">
-    <img src="docs/images/home-light.png" alt="Web Application Basic">
-</picture>
-
-## Docker
-
-[![Apache](https://img.shields.io/github/actions/workflow/status/yiisoft/yii2-app-basic/docker.yml?style=for-the-badge&logo=apache&label=Apache)](https://github.com/yiisoft/yii2-app-basic/actions/workflows/docker.yml)
-
-DIRECTORY STRUCTURE
--------------------
-
-      assets/             contains assets definition
-      commands/           contains console commands (controllers)
-      config/             contains application configurations
-      controllers/        contains Web controller classes
-      mail/               contains view files for e-mails
-      models/             contains model classes
-      runtime/            contains files generated during runtime
-      tests/              contains various tests for the basic application
-      vendor/             contains dependent 3rd-party packages
-      views/              contains view files for the Web application
-      web/                contains the entry script and Web resources
-
-REQUIREMENTS
-------------
-
-The minimum requirement by this project template that your Web server supports PHP 8.2.
-
-INSTALLATION
-------------
-
-> [!IMPORTANT]
-> - The minimum required [PHP](https://www.php.net/) version of Yii is PHP `8.2`.
-
-## Install via Composer
-
-If you do not have [Composer](https://getcomposer.org/), you may install it by following the instructions
-at [getcomposer.org](https://getcomposer.org/doc/00-intro.md#installation-nix).
-
-You can then install this project template using the following command:
-
-~~~
-composer create-project --prefer-dist yiisoft/yii2-app-basic basic
-~~~
-
-Now you should be able to access the application through the following URL, assuming `basic` is the directory
-directly under the Web root.
-
-~~~
-http://localhost/basic/web/
-~~~
-
-## Install from an Archive File
-
-Extract the archive file downloaded from [yiiframework.com](https://www.yiiframework.com/download/) to
-a directory named `basic` that is directly under the Web root.
-
-Set cookie validation key in `config/web.php` file to some random secret string:
-
-```php
-'request' => [
-    // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
-    'cookieValidationKey' => '<secret random string goes here>',
-],
-```
-
-You can then access the application through the following URL:
-
-~~~
-http://localhost/basic/web/
-~~~
-
-## Install with Docker
-
-Update your vendor packages
-
-    docker-compose run --rm php composer update --prefer-dist
-    
-Run the installation triggers (creating cookie validation code)
-
-    docker-compose run --rm php composer install    
-    
-Start the container
-
-    docker-compose up -d
-    
-You can then access the application through the following URL:
-
-    http://127.0.0.1:8000
-
-Run tests inside the container
-
-    docker compose exec -T php vendor/bin/codecept build
-    docker compose exec -T php vendor/bin/codecept run
-
-**NOTES:** 
-- Minimum required Docker engine version `17.04` for development (see [Performance tuning for volume mounts](https://docs.docker.com/docker-for-mac/osxfs-caching/))
-- The default configuration uses a host-volume in your home directory `~/.composer-docker/cache` for Composer caches
-
-
-CONFIGURATION
--------------
-
-## Database
-
-Edit the file `config/db.php` with real data, for example:
-
-```php
-return [
-    'class' => 'yii\db\Connection',
-    'dsn' => 'mysql:host=localhost;dbname=yii2basic',
-    'username' => 'root',
-    'password' => '1234',
-    'charset' => 'utf8',
-];
-```
-
-**NOTES:**
-- Yii won't create the database for you, this has to be done manually before you can access it.
-- Check and edit the other files in the `config/` directory to customize your application as required.
-- Refer to the README in the `tests` directory for information specific to basic application tests.
-
-TESTING
--------
-
-Tests are located in `tests` directory. They are developed with [Codeception PHP Testing Framework](https://codeception.com/).
-By default, there are 3 test suites:
-
-- `unit`
-- `functional`
-- `acceptance`
-
-Tests can be executed by running
-
-```
-vendor/bin/codecept run --env php-builtin
-```
-
-The command above will execute unit and functional tests. Unit tests are testing the system components, while functional
-tests are for testing user interaction.
-
-
-## Acceptance tests
-
-The `acceptance` suite is configured in `tests/Acceptance.suite.yml`.
-
-### Acceptance tests (PhpBrowser)
-
-By default, acceptance tests use the `PhpBrowser` module and run against the built-in PHP web server started via the
-`php-builtin` environment.
-
-```
-# run all tests with built-in web server
-composer tests
-
-# run acceptance tests only
-vendor/bin/codecept run Acceptance --env php-builtin
-```
-
-### Acceptance tests (WebDriver + Selenium)
-
-To run acceptance tests in a real browser, switch the `acceptance` suite to use the `WebDriver` module.
-`tests/Acceptance.suite.yml` contains an example WebDriver configuration (commented).
-
-1. Download and start [Selenium Server](https://www.selenium.dev/downloads/).
-2. Install the corresponding browser driver (for example. [GeckoDriver](https://github.com/mozilla/geckodriver/releases) or
-   [ChromeDriver](https://googlechromelabs.github.io/chrome-for-testing/)).
-3. Update `tests/Acceptance.suite.yml` to enable `WebDriver` and disable `PhpBrowser`.
-4. Run:
-
-```
-vendor/bin/codecept run Acceptance --env php-builtin
-```
-
-## Code coverage support
-
-Code coverage is configured in `codeception.yml`. You can run your tests and collect coverage with the following command:
-
-```
-#collect coverage for all tests
-vendor/bin/codecept run --coverage --coverage-html --coverage-xml --env php-builtin
-
-#collect coverage only for unit tests
-vendor/bin/codecept run Unit --coverage --coverage-html --coverage-xml --env php-builtin
-
-#collect coverage for unit and functional tests
-vendor/bin/codecept run Functional,Unit --coverage --coverage-html --coverage-xml --env php-builtin
-```
-
-You can see code coverage output under the `tests/Support/output` directory.
-
-## Documentation
-
-- [Internals](docs/internals.md)
-
-## Support the project
-
-[![Open Collective](https://img.shields.io/badge/Open%20Collective-sponsor-7eadf1?style=for-the-badge&logo=open%20collective&logoColor=7eadf1&labelColor=555555)](https://opencollective.com/yiisoft)
-
-## Follow updates
-
-[![Official website](https://img.shields.io/badge/Powered_by-Yii_Framework-green.svg?style=for-the-badge&logo=yii)](https://www.yiiframework.com/)
-[![Follow on X](https://img.shields.io/badge/-Follow%20on%20X-1DA1F2.svg?style=for-the-badge&logo=x&logoColor=white&labelColor=000000)](https://x.com/yiiframework)
-[![Telegram](https://img.shields.io/badge/telegram-join-1DA1F2?style=for-the-badge&logo=telegram)](https://t.me/yii_framework_in_english)
-[![Slack](https://img.shields.io/badge/slack-join-1DA1F2?style=for-the-badge&logo=slack)](https://yiiframework.com/go/slack)
-
-## License
-
-[![License](https://img.shields.io/badge/License-BSD--3--Clause-brightgreen.svg?style=for-the-badge&logo=opensourceinitiative&logoColor=white&labelColor=555555)](LICENSE.md)
+# Yii2 Blog System with AI Assistant - REST API
+
+Dự án này là hệ thống REST API Blog được xây dựng bằng framework Yii2, tích hợp cơ chế xác thực Bearer Token, phân quyền RBAC toàn diện, các nghiệp vụ Core Blog (Post, Category, Tag, Comment, Like).
+
+---
+
+## 1. Hướng dẫn thiết lập (Setup Steps)
+
+### Yêu cầu hệ thống:
+- PHP >= 8.2 (Khuyên dùng PHP 8.2.x của Laragon)
+- MySQL / MariaDB
+- Composer
+
+### Các bước cài đặt:
+
+1. **Clone dự án & Truy cập thư mục:**
+   ```bash
+   cd d:/APP/laragon/laragon6/www/yii2-blog
+   ```
+
+2. **Cài đặt các gói phụ thuộc (Dependencies):**
+   ```bash
+   composer install
+   ```
+
+3. **Cấu hình môi trường (`.env`):**
+   Sao chép file cấu hình mẫu và chỉnh sửa các thông tin kết nối Database của bạn:
+   ```bash
+   cp .env.example .env
+   ```
+   *Mở file `.env` ra điền thông tin `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` cho khớp với môi trường của bạn.*
+
+4. **Tạo Database:**
+   Tạo một cơ sở dữ liệu trống trong MySQL (ví dụ: `yii2-blog`).
+
+5. **Chạy Migrations khởi tạo bảng:**
+   ```bash
+   php yii migrate/fresh --interactive=0
+   ```
+   *Lưu ý: Nếu sử dụng Laragon trên Windows và `php` chưa được cấu hình môi trường toàn cục, hãy chạy bằng đường dẫn tuyệt đối:*
+   ```bash
+   D:\APP\laragon\laragon6\bin\php\php-8.2.10-Win32-vs16-x64\php.exe yii migrate/fresh --interactive=0
+   ```
+
+6. **Chạy các bảng RBAC gốc:**
+   ```bash
+   D:\APP\laragon\laragon6\bin\php\php-8.2.10-Win32-vs16-x64\php.exe yii migrate --migrationPath=@yii/rbac/migrations --interactive=0
+   ```
+
+7. **Chạy migrations dự án (để seed và gán quyền RBAC):**
+   ```bash
+   D:\APP\laragon\laragon6\bin\php\php-8.2.10-Win32-vs16-x64\php.exe yii migrate --interactive=0
+   ```
+
+8. **Kiểm thử hệ thống:**
+   Bạn có thể import file [Postman Collection](file:///d:/APP/laragon/laragon6/www/yii2-blog/docs/yii2_blog_postman_collection.json) vào Postman để test trực tiếp tất cả các API.
+
+---
+
+## 2. Ma trận Phân quyền (Role/Permission Matrix)
+
+| Vai trò (Role) | Thao tác cá nhân (Auth) | Quản lý Category (CRUD) | Tạo bài viết (Post) | Xem bài viết (Draft/Published) | Sửa/Xóa Post của mình | Sửa/Xóa Post người khác | Like bài viết | Viết Bình luận | Sửa/Xóa Bình luận của mình | Ẩn Bình luận bất kỳ | Xóa bình luận bất kỳ |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Guest** | Đăng nhập/Đăng ký | ❌ | ❌ | Chỉ bài viết đã xuất bản | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Reader** | Lấy Profile / Logout | ❌ | ❌ | Chỉ bài viết đã xuất bản | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| **Author** | Lấy Profile / Logout | ❌ | ✅ | Bài đã xuất bản + Bài nháp của mình | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ (Chỉ trên post của mình) | ❌ |
+| **Admin** | Lấy Profile / Logout | ✅ | ✅ | Xem toàn bộ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+---
+
+## 3. Danh sách Endpoints & Ví dụ cURL
+
+### 3.1 Authentication
+
+#### Đăng ký tài khoản (Reader mặc định)
+- **Endpoint:** `POST /api/auth/register`
+- **Ví dụ cURL:**
+  ```bash
+  curl -X POST http://localhost/yii2-blog/web/api/auth/register \
+    -H "Content-Type: application/json" \
+    -d '{"username": "newreader", "email": "reader@example.com", "password": "Reader@123", "password_confirmation": "Reader@123"}'
+  ```
+
+#### Đăng nhập
+- **Endpoint:** `POST /api/auth/login`
+- **Ví dụ cURL:**
+  ```bash
+  curl -X POST http://localhost/yii2-blog/web/api/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{"username": "admin", "password": "Admin@123"}'
+  ```
+
+#### Xem Profile hiện tại
+- **Endpoint:** `GET /api/auth/me`
+- **Ví dụ cURL:**
+  ```bash
+  curl -X GET http://localhost/yii2-blog/web/api/auth/me \
+    -H "Authorization: Bearer <your_access_token>"
+  ```
+
+---
+
+### 3.2 Category & Tag
+
+#### Tạo Danh mục (Chỉ Admin)
+- **Endpoint:** `POST /api/categories`
+- **Ví dụ cURL:**
+  ```bash
+  curl -X POST http://localhost/yii2-blog/web/api/categories \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer <admin_token>" \
+    -d '{"name": "Lifestyle"}'
+  ```
+
+#### Lấy danh sách tags
+- **Endpoint:** `GET /api/tags`
+- **Ví dụ cURL:**
+  ```bash
+  curl -X GET http://localhost/yii2-blog/web/api/tags
+  ```
+
+---
+
+### 3.3 Post (Bài viết)
+
+#### Tạo Bài viết (Author / Admin)
+- **Endpoint:** `POST /api/posts`
+- **Ví dụ cURL:**
+  ```bash
+  curl -X POST http://localhost/yii2-blog/web/api/posts \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer <author_token>" \
+    -d '{"category_id": 1, "title": "My First Post", "description": "Intro", "content": "Detailed body content", "status": 1, "tag_list": ["news", "php"]}'
+  ```
+
+#### Xem danh sách bài viết (Có phân trang & Lọc)
+- **Endpoint:** `GET /api/posts?expand=category,tags,author`
+- **Ví dụ cURL:**
+  ```bash
+  curl -X GET "http://localhost/yii2-blog/web/api/posts?category_id=1&status=1&expand=category,tags,author"
+  ```
+
+#### Sửa bài viết (Chỉ chủ bài viết hoặc Admin)
+- **Endpoint:** `PUT /api/posts/<id>`
+- **Ví dụ cURL:**
+  ```bash
+  curl -X PUT http://localhost/yii2-blog/web/api/posts/1 \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer <author_token>" \
+    -d '{"title": "Updated Title", "tag_list": ["updated", "tag"]}'
+  ```
+
+#### Xóa mềm bài viết (Chỉ chủ bài viết hoặc Admin)
+- **Endpoint:** `DELETE /api/posts/<id>`
+- **Ví dụ cURL:**
+  ```bash
+  curl -X DELETE http://localhost/yii2-blog/web/api/posts/1 \
+    -H "Authorization: Bearer <author_token>"
+  ```
+
+#### Thích/Bỏ thích bài viết (Yêu cầu đăng nhập)
+- **Endpoint:** `POST /api/posts/<id>/like`
+- **Ví dụ cURL:**
+  ```bash
+  curl -X POST http://localhost/yii2-blog/web/api/posts/1/like \
+    -H "Authorization: Bearer <user_token>"
+  ```
+
+---
+
+### 3.4 Comment (Bình luận)
+
+#### Viết bình luận
+- **Endpoint:** `POST /api/posts/<post_id>/comments`
+- **Ví dụ cURL:**
+  ```bash
+  curl -X POST http://localhost/yii2-blog/web/api/posts/1/comments \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer <user_token>" \
+    -d '{"content": "This is a comment"}'
+  ```
+
+#### Viết phản hồi bình luận (Nested Reply)
+- **Endpoint:** `POST /api/posts/<post_id>/comments`
+- **Ví dụ cURL:**
+  ```bash
+  curl -X POST http://localhost/yii2-blog/web/api/posts/1/comments \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer <user_token>" \
+    -d '{"content": "This is a reply to comment 1", "parent_id": 1}'
+  ```
+
+#### Sửa bình luận (Chỉ chủ bình luận)
+- **Endpoint:** `PUT /api/comments/<id>`
+- **Ví dụ cURL:**
+  ```bash
+  curl -X PUT http://localhost/yii2-blog/web/api/comments/1 \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer <comment_owner_token>" \
+    -d '{"content": "Updated comment content"}'
+  ```
+
+#### Ẩn bình luận (Chỉ tác giả bài viết hoặc Admin)
+- **Endpoint:** `POST /api/comments/<id>/hide`
+- **Ví dụ cURL:**
+  ```bash
+  curl -X POST http://localhost/yii2-blog/web/api/comments/1/hide \
+    -H "Authorization: Bearer <post_owner_token>"
+  ```
+
+#### Xóa bình luận (Chủ bình luận / Tác giả bài viết / Admin)
+- **Endpoint:** `DELETE /api/comments/<id>`
+- **Ví dụ cURL:**
+  ```bash
+  curl -X DELETE http://localhost/yii2-blog/web/api/comments/1 \
+    -H "Authorization: Bearer <user_token>"
+  ```
+
+---
+
+## 4. Sơ đồ thực thể quan hệ (ERD Diagram)
+
+Sơ đồ ERD hiện tại biểu diễn các quan hệ mềm (Soft relationships) trong code:
+
+https://drive.google.com/file/d/12jby51hJwU11mPKhxoqBWM-sI0slSl2f/view?usp=sharing
