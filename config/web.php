@@ -71,7 +71,14 @@ $config = [
                         'api/posts'      => 'api/post',
                     ],
                     'pluralize' => false,
-                ]
+                ],
+
+                // comments
+                'POST api/posts/<post_id:\d+>/comments' => 'api/comment/create',
+                'PUT api/comments/<id:\d+>'             => 'api/comment/update',
+                'POST api/comments/<id:\d+>/hide'        => 'api/comment/hide',
+                'DELETE api/comments/<id:\d+>'          => 'api/comment/delete',
+
 
             ],
         ],

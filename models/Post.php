@@ -29,15 +29,12 @@ class Post extends BasePost
 
     public function beforeSave($insert)
     {
-       if(parent::beforeSave($insert))
-        {
-            if($this->status == self::STATUS_PUBLISHED)
-            {
+        if (parent::beforeSave($insert)) {
+            if ($this->status == self::STATUS_PUBLISHED) {
                 $oldPubishedAt = $this->getOldAttribute('published_at');
-               if(empty($oldPubishedAt) && empty($this->published_at))
-               {
-                   $this->published_at = time();
-               }
+                if (empty($oldPubishedAt) && empty($this->published_at)) {
+                    $this->published_at = time();
+                }
             }
             return true;
         }
@@ -68,6 +65,7 @@ class Post extends BasePost
             'category',
             'author',
             'tags',
+            'comments'
         ];
     }
 
@@ -94,5 +92,11 @@ class Post extends BasePost
     public function getTags()
     {
         return $this->hasMany(Tag::class, ['id' => 'tag_id'])->viaTable('post_tag', ['post_id' => 'id']);
+    }
+
+    public function getComments()
+    {
+        return $this->hasMany(Comment::class, ['post_id' => 'id'])
+            ->andWhere(['status' => Comment::STATUS_ACTIVE]);
     }
 }
