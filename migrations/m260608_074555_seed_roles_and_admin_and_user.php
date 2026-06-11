@@ -1,5 +1,6 @@
 <?php
 
+use app\rbac\Permission;
 use yii\db\Migration;
 use yii\db\Query;
 
@@ -13,16 +14,16 @@ class m260608_074555_seed_roles_and_admin_and_user extends Migration
         $auth = Yii::$app->authManager;
         $auth->removeAll();
 
-        $admin = $auth->createRole('admin');
+        $admin = $auth->createRole(Permission::ROLE_ADMIN);
         $auth->add($admin);
 
-        $author = $auth->createRole('author');
+        $author = $auth->createRole(Permission::ROLE_AUTHOR);
         $auth->add($author);
 
-        $reader = $auth->createRole('reader');
+        $reader = $auth->createRole(Permission::ROLE_READER);
         $auth->add($reader);
 
-        //add admin
+        // Add admin
         $time = time();
 
         $adminUserId = (new Query())
@@ -49,8 +50,7 @@ class m260608_074555_seed_roles_and_admin_and_user extends Migration
             $auth->assign($admin, $adminUserId);
         }
 
-        //add user
-
+        // Add user
         $readerUserId = (new Query())
             ->select(['id'])
             ->from('user')
@@ -86,19 +86,4 @@ class m260608_074555_seed_roles_and_admin_and_user extends Migration
         $this->delete('user', ['username' => 'admin']);
         $this->delete('user', ['username' => 'reader']);
     }
-
-    /*
-    // Use up()/down() to run migration code without a transaction.
-    public function up()
-    {
-
-    }
-
-    public function down()
-    {
-        echo "m260608_074555_seed_roles_and_admin_and_user cannot be reverted.\n";
-
-        return false;
-    }
-    */
 }
