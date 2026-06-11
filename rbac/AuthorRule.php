@@ -10,6 +10,12 @@ class AuthorRule extends Rule
 
     public function execute($user, $item, $params)
     {
-        return isset($params['post']) ? $params['post']->author_id == $user : false;
+        if (isset($params['post'])) {
+            return $params['post']->author_id == $user;
+        }
+        if (isset($params['comment'])) {
+            return $params['comment']->author_id == $user;
+        }
+        return false;
     }
 }
