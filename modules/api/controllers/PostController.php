@@ -22,6 +22,17 @@ class PostController extends BaseController
     public function behaviors()
     {
         $behaviors = parent::behaviors();
+        $behaviors['verbs'] = [
+            'class' => \yii\filters\VerbFilter::class,
+            'actions' => [
+                'index' => ['GET', 'HEAD'],
+                'view' => ['GET', 'HEAD'],
+                'create' => ['POST'],
+                'update' => ['PUT', 'PATCH'],
+                'delete' => ['DELETE'],
+                'like' => ['POST'],
+            ],
+        ];
         $behaviors['authenticator']['optional'] = ['index', 'view'];
         $behaviors['access'] = [
             'class' => AccessControl::class,

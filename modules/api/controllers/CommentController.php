@@ -15,6 +15,15 @@ class CommentController extends BaseController
     public function behaviors(): array
     {
         $behaviors = parent::behaviors();
+        $behaviors['verbs'] = [
+            'class' => \yii\filters\VerbFilter::class,
+            'actions' => [
+                'create' => ['POST'],
+                'update' => ['PUT', 'PATCH'],
+                'hide' => ['POST'],
+                'delete' => ['DELETE'],
+            ],
+        ];
         $behaviors['access'] = [
             'class' => AccessControl::class,
             'rules' => [

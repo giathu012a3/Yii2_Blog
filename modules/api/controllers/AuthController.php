@@ -8,10 +8,18 @@ use Yii;
 
 class AuthController extends BaseController
 {
-
     public function behaviors()
     {
         $behaviors =  parent::behaviors();
+        $behaviors['verbs'] = [
+            'class' => \yii\filters\VerbFilter::class,
+            'actions' => [
+                'register' => ['POST'],
+                'login' => ['POST'],
+                'logout' => ['POST'],
+                'me' => ['GET'],
+            ],
+        ];
         $behaviors['authenticator']['optional'] = ['register', 'login'];
         return $behaviors;
     }
