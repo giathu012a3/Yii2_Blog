@@ -17,6 +17,19 @@ class Comment extends BaseComment
         ];
     }
 
+    public function fields()
+    {
+        return parent::fields();
+    }
+    public function extraFields()
+    {
+        return [
+            'post',
+            'author',
+            'replies',
+        ];
+    }
+
     public function getPost()
     {
         return $this->hasOne(Post::class, ['id' => 'post_id']);
@@ -25,9 +38,15 @@ class Comment extends BaseComment
     {
         return $this->hasOne(User::class, ['id' => 'author_id']);
     }
-    
+
     public static function find()
     {
         return new \app\models\query\CommentQuery(get_called_class());
+    }
+
+    public function getReplies()
+    {
+        return $this->hasMany(self::class, ['parent_id' => 'id'])
+            ->andWhere(['status' => self::STATUS_ACTIVE]);
     }
 }

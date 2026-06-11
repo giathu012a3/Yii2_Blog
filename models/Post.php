@@ -97,6 +97,9 @@ class Post extends BasePost
     public function getComments()
     {
         return $this->hasMany(Comment::class, ['post_id' => 'id'])
-            ->andWhere(['status' => Comment::STATUS_ACTIVE]);
+            ->andWhere([
+                'status' => Comment::STATUS_ACTIVE,
+                'parent_id' => null
+            ]);
     }
 }

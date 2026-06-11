@@ -18,6 +18,16 @@ class CommentForm extends Comment
                     $query->notDelete()->published();
                 },
             ],
+             ['parent_id', 'exist',
+                'targetClass' => Comment::class,
+                'targetAttribute' => 'id',
+                'filter' => function ($query) {
+                    $query->andWhere([
+                        'status' => Comment::STATUS_ACTIVE,
+                        'post_id' => $this->post_id,
+                    ]);
+                },
+            ],
         ];
     }
 

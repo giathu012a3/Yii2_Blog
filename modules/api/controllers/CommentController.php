@@ -8,6 +8,7 @@ use app\modules\api\models\forms\CommentForm;
 use yii\filters\AccessControl;
 use yii\web\NotFoundHttpException;
 use yii\web\ForbiddenHttpException;
+use yii\web\ServerErrorHttpException;
 
 class CommentController extends BaseController
 {
@@ -86,18 +87,22 @@ class CommentController extends BaseController
             throw new ForbiddenHttpException('You do not have permission to hide this comment.');
         }
 
-        $model->status = Comment::STATUS_INACTIVE;
-        if ($model->save(false)) {
-            return [
-                'message' => 'Comment has been hidden successfully.',
-                'comment' => $model,
-            ];
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $model->status = Comment::STATUS_INACTIVE;
+            if ($model->save(false)) {
+                Comment::updateAll(['status' => Comment::STATUS_INACTIVE], ['parent_id' => $model->id]);
+                $transaction->commit();
+                return [
+                    'message' => 'Comment and its replies have been hidden successfully.',
+                    'comment' => $model,
+                ];
+            }
+            throw new \Exception('Failed to hide comment.');
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            throw new ServerErrorHttpException($e->getMessage());
         }
-
-        Yii::$app->response->statusCode = self::HTTP_INTERNAL_SERVER_ERROR;
-        return [
-            'message' => 'Failed to hide the comment.',
-        ];
     }
 
 
@@ -115,17 +120,23 @@ class CommentController extends BaseController
             throw new ForbiddenHttpException('You do not have permission to delete this comment.');
         }
 
-        if ($model->delete()) {
-            return [
-                'message' => 'Comment deleted successfully.',
-            ];
+        $db = Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            Comment::deleteAll(['parent_id' => $model->id]);
+            if ($model->delete()) {
+                $transaction->commit();
+                return [
+                    'message' => 'Comment and its replies deleted successfully.',
+                ];
+            }
+            throw new \Exception('Failed to delete comment.');
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            throw new ServerErrorHttpException($e->getMessage());
         }
-
-        Yii::$app->response->statusCode = self::HTTP_INTERNAL_SERVER_ERROR;
-        return [
-            'message' => 'Failed to delete the comment.',
-        ];
     }
+
 
     protected function findModel($id)
     {
