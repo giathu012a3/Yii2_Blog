@@ -12,6 +12,13 @@ class PostForm extends Post
     public $tag_list = null;
     public $warnings;
 
+    public function scenarios()
+    {
+        $scenarios = parent::scenarios();
+        $scenarios[self::SCENARIO_DEFAULT] = ['category_id', 'title', 'description', 'thumbnail', 'content', 'status', 'tag_list'];
+        return $scenarios;
+    }
+
     public function rules()
     {
         return array_merge(parent::rules(), [
@@ -35,7 +42,7 @@ class PostForm extends Post
 
     public function beforeValidate()
     {
-        if ($this->isNewRecord && empty($this->author_id)) {
+        if ($this->isNewRecord) {
             $this->author_id = Yii::$app->user->id;
         }
         return parent::beforeValidate();
