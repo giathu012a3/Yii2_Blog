@@ -117,6 +117,14 @@ class Post extends PostBase
             ->one();
     }
 
+    public static function findPublishedById($id): ?self
+    {
+        return static::find()
+            ->active()
+            ->andWhere(['status' => self::STATUS_PUBLISHED, 'id' => $id])
+            ->one();
+    }
+
     public static function findActive($id): ?self
     {
         return static::find()
@@ -128,6 +136,30 @@ class Post extends PostBase
     public function incrementViewCount(): void
     {
         $this->updateCounters(['view_count' => 1]);
+    }
+
+    public function toggleLike(int $userId): array
+    {
+        $like = PostLike::findOne(['post_id' => $this->id, 'user_id' => $userId]);
+        if ($like !== null) {
+            $like->delete();
+            return [
+                'liked' => false,
+                'message' => 'Post unliked successfully.',
+            ];
+        }
+
+        $like = new PostLike();
+        $like->post_id = $this->id;
+        $like->user_id = $userId;
+        if ($like->save()) {
+            return [
+                'liked' => true,
+                'message' => 'Post liked successfully.',
+            ];
+        }
+
+        throw new \yii\web\ServerErrorHttpException('Failed to like post.');
     }
 
     /**

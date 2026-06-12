@@ -117,6 +117,7 @@ $config = [
                 'GET  api/posts/<id:\d+>/manage' => 'api/post/manage',
                 'GET  api/posts'                => 'api/post/index',
                 'GET  api/posts/<slug:[a-zA-Z0-9\-]+>' => 'api/post/view',
+                'POST api/posts/<id:\d+>/like'  => 'api/post/like',
                 'POST api/posts'                => 'api/post/create',
                 'PUT  api/posts/<id:\d+>'       => 'api/post/update',
                 'DELETE api/posts/<id:\d+>'     => 'api/post/delete',

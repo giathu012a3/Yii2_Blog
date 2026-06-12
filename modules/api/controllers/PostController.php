@@ -34,6 +34,11 @@ class PostController extends BaseApiController
                     'actions' => ['create', 'manage', 'manage-list', 'update', 'delete'],
                     'roles' => ['createPost'],
                 ],
+                [
+                    'allow' => true,
+                    'actions' => ['like'],
+                    'roles' => ['likePost'],
+                ],
             ],
         ];
 
@@ -131,5 +136,15 @@ class PostController extends BaseApiController
         }
 
         throw new ServerErrorHttpException('Failed to delete post.');
+    }
+
+    public function actionLike($id)
+    {
+        $post = Post::findPublishedById($id);
+        if ($post === null) {
+            throw new NotFoundHttpException('Post not found.');
+        }
+
+        return $post->toggleLike((int) Yii::$app->user->id);
     }
 }
