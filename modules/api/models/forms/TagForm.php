@@ -16,6 +16,14 @@ class TagForm extends Tag
         ]);
     }
 
+    public function load($data, $formName = null): bool
+    {
+        if (is_array($data)) {
+            unset($data['is_deleted'], $data['deleted_at']);
+        }
+        return parent::load($data, $formName);
+    }
+
     public function validateHasChanges($attribute, $params)
     {
         if ($this->isNewRecord) {

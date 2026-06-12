@@ -26,6 +26,14 @@ class PostForm extends Post
         ]);
     }
 
+    public function load($data, $formName = null): bool
+    {
+        if (is_array($data)) {
+            unset($data['author_id'], $data['view_count'], $data['is_deleted'], $data['deleted_at'], $data['published_at']);
+        }
+        return parent::load($data, $formName);
+    }
+
     public function afterFind()
     {
         parent::afterFind();

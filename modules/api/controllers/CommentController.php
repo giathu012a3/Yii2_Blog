@@ -75,7 +75,7 @@ class CommentController extends BaseApiController
             throw new NotFoundHttpException('Comment not found.');
         }
 
-        if (!Yii::$app->user->can('updateOwnComment', ['model' => $form])) {
+        if (!Yii::$app->user->can('updateComment', ['model' => $form])) {
             throw new ForbiddenHttpException('You are not allowed to update this comment.');
         }
 

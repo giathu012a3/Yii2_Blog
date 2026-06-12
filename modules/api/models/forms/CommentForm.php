@@ -17,6 +17,14 @@ class CommentForm extends Comment
         ]);
     }
 
+    public function load($data, $formName = null): bool
+    {
+        if (is_array($data)) {
+            unset($data['post_id'], $data['user_id'], $data['is_deleted'], $data['deleted_at']);
+        }
+        return parent::load($data, $formName);
+    }
+
     public function beforeValidate(): bool
     {
         if ($this->isNewRecord) {

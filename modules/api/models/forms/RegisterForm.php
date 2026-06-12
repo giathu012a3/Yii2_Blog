@@ -23,6 +23,14 @@ class RegisterForm extends User
         ]);
     }
 
+    public function load($data, $formName = null): bool
+    {
+        if (is_array($data)) {
+            unset($data['access_token'], $data['status'], $data['is_deleted'], $data['deleted_at']);
+        }
+        return parent::load($data, $formName);
+    }
+
     public function register()
     {
         if (!$this->validate()) {

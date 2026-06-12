@@ -218,11 +218,7 @@ class m260609_083500_init_rbac_permissions extends Migration
         } catch (\Throwable $e) {
             echo "    [SKIP] admin -> deletePost: " . $e->getMessage() . "\n";
         }
-        try {
-            $auth->addChild($auth->getRole('admin'), $auth->getPermission('updateComment'));
-        } catch (\Throwable $e) {
-            echo "    [SKIP] admin -> updateComment: " . $e->getMessage() . "\n";
-        }
+
         try {
             $auth->addChild($auth->getRole('admin'), $auth->getPermission('deleteComment'));
         } catch (\Throwable $e) {
