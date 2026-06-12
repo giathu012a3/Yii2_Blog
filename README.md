@@ -34,24 +34,26 @@ Tạo tệp `.env` từ `.env.example`:
 - Windows PowerShell: `Copy-Item .env.example .env`
 - Linux / macOS: `cp .env.example .env`
 
-Mở file `.env` và cập nhật thông số kết nối cơ sở dữ liệu:
+Mở file `.env` và cập nhật các cấu hình sau:
 
-```env
-DB_HOST=localhost
-DB_NAME=yii2-blog
-DB_USERNAME=root
-DB_PASSWORD=
-```
+* **Tạo Database:** Tạo một database trống trong MySQL/MariaDB (ví dụ đặt tên là `yii2-blog`).
+* **Cấu hình kết nối Database:**
+  ```env
+  DB_HOST=localhost
+  DB_NAME=yii2-blog
+  DB_USERNAME=root
+  DB_PASSWORD=
+  ```
+* **Khởi tạo Cookie Validation Key:** Điền một chuỗi ngẫu nhiên bí mật vào trường `COOKIE_VALIDATION_KEY`. Đây là cấu hình bắt buộc để ứng dụng Yii2 khởi chạy ổn định.
 
-4. Chạy migration
+4. Chạy migration và Seed dữ liệu
 
-Hãy chạy các câu lệnh migration theo đúng thứ tự sau để khởi tạo bảng RBAC trước:
+Hãy chạy các câu lệnh sau để khởi tạo cấu trúc bảng cơ sở dữ liệu. Dữ liệu mẫu (Role, Permission và 4 tài khoản thử nghiệm mặc định) đã được tích hợp sẵn dưới dạng seeder nằm trong các tệp tin migrations:
 
 ```bash
 php yii migrate --migrationPath=@yii/rbac/migrations --interactive=0
 php yii migrate --interactive=0
 ```
-*(Hệ thống sẽ tự động khởi tạo cấu trúc bảng cơ sở dữ liệu và nạp dữ liệu tài khoản thử nghiệm).*
 
 > **Lưu ý (Nếu muốn Reset Database):** Nếu bạn muốn xóa sạch toàn bộ các bảng cũ để làm mới CSDL từ đầu, hãy chạy lần lượt:
 > ```bash
