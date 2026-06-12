@@ -13,6 +13,8 @@ use Yii;
  */
 class PostSearch extends Post
 {
+    public $tag;
+
     public function behaviors()
     {
         return [];
@@ -24,7 +26,7 @@ class PostSearch extends Post
     {
         return [
             [['id', 'category_id', 'author_id', 'status', 'published_at', 'view_count', 'is_deleted', 'deleted_at', 'created_at', 'updated_at'], 'integer'],
-            [['title', 'description', 'thumbnail', 'slug', 'content'], 'safe'],
+            [['title', 'description', 'thumbnail', 'slug', 'content', 'tag'], 'safe'],
         ];
     }
 
@@ -65,19 +67,26 @@ class PostSearch extends Post
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
-            'category_id' => $this->category_id,
-            'author_id' => $this->author_id,
-            'status' => $this->status,
-            'published_at' => $this->published_at,
+            'post.id' => $this->id,
+            'post.category_id' => $this->category_id,
+            'post.author_id' => $this->author_id,
+            'post.status' => $this->status,
+            'post.published_at' => $this->published_at,
         ]);
 
+        $query->andFilterWhere(['like', 'post.title', $this->title])
+            ->andFilterWhere(['like', 'post.description', $this->description])
+            ->andFilterWhere(['like', 'post.slug', $this->slug])
+            ->andFilterWhere(['like', 'post.content', $this->content]);
 
-
-        $query->andFilterWhere(['like', 'title', $this->title])
-            ->andFilterWhere(['like', 'description', $this->description])
-            ->andFilterWhere(['like', 'slug', $this->slug])
-            ->andFilterWhere(['like', 'content', $this->content]);
+        if (!empty($this->tag)) {
+            $query->joinWith('tags')
+                ->andWhere([
+                    'or',
+                    ['tag.name' => $this->tag],
+                    ['tag.slug' => $this->tag]
+                ]);
+        }
 
         if (Yii::$app->user->isGuest || !Yii::$app->user->can(Permission::AUTHOR_ACCESS)) {
             $query->published()->notDelete();
@@ -89,7 +98,7 @@ class PostSearch extends Post
             if ($this->is_deleted === null || $this->is_deleted === '') {
                 $query->notDelete();
             } else {
-                $query->andWhere(['is_deleted' => (int)$this->is_deleted]);
+                $query->andWhere(['post.is_deleted' => (int)$this->is_deleted]);
             }
         }
 
