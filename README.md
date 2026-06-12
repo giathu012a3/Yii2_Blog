@@ -1,225 +1,260 @@
-# Yii2 Blog System with AI Assistant - REST API
+# Yii2 Blog REST API
 
-Dự án này là hệ thống REST API Blog được xây dựng bằng framework Yii2, tích hợp cơ chế xác thực Bearer Token, phân quyền RBAC toàn diện, các nghiệp vụ Core Blog (Post, Category, Tag, Comment, Like).
-
----
-
-## 1. Hướng dẫn thiết lập (Setup Steps)
-
-### Yêu cầu hệ thống:
-- PHP >= 8.2 (Khuyên dùng PHP 8.2.x của Laragon)
-- MySQL / MariaDB
-- Composer
-
-### Các bước cài đặt:
-
-1. **Clone dự án & Truy cập thư mục:**
-   ```bash
-   cd d:/APP/laragon/laragon6/www/yii2-blog
-   ```
-
-2. **Cài đặt các gói phụ thuộc (Dependencies):**
-   ```bash
-   composer install
-   ```
-
-3. **Cấu hình môi trường (`.env`):**
-   Sao chép file cấu hình mẫu và chỉnh sửa các thông tin kết nối Database của bạn:
-   ```bash
-   cp .env.example .env
-   ```
-   *Mở file `.env` ra điền thông tin `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` cho khớp với môi trường của bạn.*
-
-4. **Tạo Database:**
-   Tạo một cơ sở dữ liệu trống trong MySQL (ví dụ: `yii2-blog`).
-
-5. **Chạy Migrations khởi tạo bảng:**
-   ```bash
-   php yii migrate/fresh --interactive=0
-   ```
-   *Lưu ý: Nếu sử dụng Laragon trên Windows và `php` chưa được cấu hình môi trường toàn cục, hãy chạy bằng đường dẫn tuyệt đối:*
-   ```bash
-   D:\APP\laragon\laragon6\bin\php\php-8.2.10-Win32-vs16-x64\php.exe yii migrate/fresh --interactive=0
-   ```
-
-6. **Chạy các bảng RBAC gốc:**
-   ```bash
-   D:\APP\laragon\laragon6\bin\php\php-8.2.10-Win32-vs16-x64\php.exe yii migrate --migrationPath=@yii/rbac/migrations --interactive=0
-   ```
-
-7. **Chạy migrations dự án (để seed và gán quyền RBAC):**
-   ```bash
-   D:\APP\laragon\laragon6\bin\php\php-8.2.10-Win32-vs16-x64\php.exe yii migrate --interactive=0
-   ```
-
-8. **Kiểm thử hệ thống:**
-   Bạn có thể import file [Postman Collection](file:///d:/APP/laragon/laragon6/www/yii2-blog/docs/yii2_blog_postman_collection.json) vào Postman để test trực tiếp tất cả các API.
+REST API Blog được phát triển bằng framework Yii2, tích hợp xác thực Bearer Token, phân quyền người dùng RBAC, cùng các tính năng cốt lõi bao gồm Bài viết, Danh mục, Nhãn, Bình luận và Thích bài viết.
 
 ---
 
-## 2. Ma trận Phân quyền (Role/Permission Matrix)
+## 1. Các bước cài đặt
 
-| Vai trò (Role) | Thao tác cá nhân (Auth) | Quản lý Category (CRUD) | Tạo bài viết (Post) | Xem bài viết (Draft/Published) | Sửa/Xóa Post của mình | Sửa/Xóa Post người khác | Like bài viết | Viết Bình luận | Sửa/Xóa Bình luận của mình | Ẩn Bình luận bất kỳ | Xóa bình luận bất kỳ |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Guest** | Đăng nhập/Đăng ký | ❌ | ❌ | Chỉ bài viết đã xuất bản | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Reader** | Lấy Profile / Logout | ❌ | ❌ | Chỉ bài viết đã xuất bản | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **Author** | Lấy Profile / Logout | ❌ | ✅ | Bài đã xuất bản + Bài nháp của mình | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ (Chỉ trên post của mình) | ❌ |
-| **Admin** | Lấy Profile / Logout | ✅ | ✅ | Xem toàn bộ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+### Yêu cầu hệ thống
+
+* PHP >= 8.2
+* MySQL / MariaDB
+* Composer
+
+### Cài đặt
+
+1. Tải mã nguồn dự án
+
+```bash
+git clone <repository-url> yii2-blog
+cd yii2-blog
+```
+
+2. Cài đặt các thư viện phụ thuộc
+
+```bash
+composer install
+```
+
+3. Cấu hình môi trường
+
+Tạo tệp `.env` từ `.env.example`:
+- Windows Command Prompt (CMD): `copy .env.example .env`
+- Windows PowerShell: `Copy-Item .env.example .env`
+- Linux / macOS: `cp .env.example .env`
+
+Mở file `.env` và cập nhật thông số kết nối cơ sở dữ liệu:
+
+```env
+DB_HOST=localhost
+DB_NAME=yii2-blog
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+4. Chạy migration
+
+Hãy chạy các câu lệnh migration theo đúng thứ tự sau để khởi tạo bảng RBAC trước:
+
+```bash
+php yii migrate --migrationPath=@yii/rbac/migrations --interactive=0
+php yii migrate --interactive=0
+```
+*(Hệ thống sẽ tự động khởi tạo cấu trúc bảng cơ sở dữ liệu và nạp dữ liệu tài khoản thử nghiệm).*
+
+> **Lưu ý (Nếu muốn Reset Database):** Nếu bạn muốn xóa sạch toàn bộ các bảng cũ để làm mới CSDL từ đầu, hãy chạy lần lượt:
+> ```bash
+> php yii migrate/fresh --migrationPath=@yii/rbac/migrations --interactive=0
+> php yii migrate --interactive=0
+> ```
+
+5. Khởi chạy ứng dụng
+
+```bash
+php yii serve
+```
+
+Địa chỉ truy cập mặc định:
+
+```
+http://localhost:8080
+```
 
 ---
 
-## 3. Danh sách Endpoints & Ví dụ cURL
+## 2. Ma trận Phân quyền (RBAC)
 
-### 3.1 Authentication
+| Vai trò (Role) | Xem bài viết | CRUD Danh mục | CRUD Nhãn (Tag) | Tạo bài viết | Quản lý bài viết của mình | Quản lý mọi bài viết | Thích bài viết | Bình luận | Quản lý bình luận |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| Guest | Chỉ bài đã xuất bản | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Reader | Chỉ bài đã xuất bản | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | Chỉ bình luận của mình |
+| Author | Bài đã xuất bản + bài nháp của mình | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ | ✅ | Bình luận của mình + bình luận trên bài mình |
+| Admin | Tất cả bài viết | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Toàn quyền quản trị |
 
-#### Đăng ký tài khoản (Reader mặc định)
-- **Endpoint:** `POST /api/auth/register`
-- **Ví dụ cURL:**
-  ```bash
-  curl -X POST http://localhost/yii2-blog/web/api/auth/register \
-    -H "Content-Type: application/json" \
-    -d '{"username": "newreader", "email": "reader@example.com", "password": "Reader@123", "password_confirmation": "Reader@123"}'
-  ```
+---
+
+## 3. Danh sách API Endpoints
+
+### Xác thực (Authentication)
+
+#### Đăng ký tài khoản
+```
+POST /api/auth/register
+```
+```bash
+curl -X POST http://localhost:8080/api/auth/register \
+-H "Content-Type: application/json" \
+-d '{
+  "username":"newuser",
+  "email":"newuser@example.com",
+  "password":"User@123",
+  "password_confirmation":"User@123"
+}'
+```
 
 #### Đăng nhập
-- **Endpoint:** `POST /api/auth/login`
-- **Ví dụ cURL:**
-  ```bash
-  curl -X POST http://localhost/yii2-blog/web/api/auth/login \
-    -H "Content-Type: application/json" \
-    -d '{"username": "admin", "password": "Admin@123"}'
-  ```
+```
+POST /api/auth/login
+```
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+-H "Content-Type: application/json" \
+-d '{
+  "username":"admin",
+  "password":"Admin@123"
+}'
+```
 
-#### Xem Profile hiện tại
-- **Endpoint:** `GET /api/auth/me`
-- **Ví dụ cURL:**
-  ```bash
-  curl -X GET http://localhost/yii2-blog/web/api/auth/me \
-    -H "Authorization: Bearer <your_access_token>"
-  ```
+#### Đăng xuất
+```
+POST /api/auth/logout
+```
+```bash
+curl -X POST http://localhost:8080/api/auth/logout \
+-H "Authorization: Bearer <token>"
+```
 
----
-
-### 3.2 Category & Tag
-
-#### Tạo Danh mục (Chỉ Admin)
-- **Endpoint:** `POST /api/categories`
-- **Ví dụ cURL:**
-  ```bash
-  curl -X POST http://localhost/yii2-blog/web/api/categories \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer <admin_token>" \
-    -d '{"name": "Lifestyle"}'
-  ```
-
-#### Lấy danh sách tags
-- **Endpoint:** `GET /api/tags`
-- **Ví dụ cURL:**
-  ```bash
-  curl -X GET http://localhost/yii2-blog/web/api/tags
-  ```
+#### Thông tin cá nhân
+```
+GET /api/auth/me
+```
+```bash
+curl -X GET http://localhost:8080/api/auth/me \
+-H "Authorization: Bearer <token>"
+```
 
 ---
 
-### 3.3 Post (Bài viết)
+### Bài viết (Posts)
 
-#### Tạo Bài viết (Author / Admin)
-- **Endpoint:** `POST /api/posts`
-- **Ví dụ cURL:**
-  ```bash
-  curl -X POST http://localhost/yii2-blog/web/api/posts \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer <author_token>" \
-    -d '{"category_id": 1, "title": "My First Post", "description": "Intro", "content": "Detailed body content", "status": 1, "tag_list": ["news", "php"]}'
-  ```
+| Phương thức | Endpoint | Mô tả |
+| :--- | :--- | :--- |
+| GET | /api/posts | Lấy danh sách bài viết |
+| POST | /api/posts | Tạo bài viết mới |
+| PUT | /api/posts/{id} | Cập nhật bài viết |
+| DELETE | /api/posts/{id} | Xóa bài viết |
+| POST | /api/posts/{id}/like | Thích / Bỏ thích bài viết |
 
-#### Xem danh sách bài viết (Có phân trang & Lọc)
-- **Endpoint:** `GET /api/posts?expand=category,tags,author`
-- **Ví dụ cURL:**
-  ```bash
-  curl -X GET "http://localhost/yii2-blog/web/api/posts?category_id=1&status=1&expand=category,tags,author"
-  ```
-
-#### Sửa bài viết (Chỉ chủ bài viết hoặc Admin)
-- **Endpoint:** `PUT /api/posts/<id>`
-- **Ví dụ cURL:**
-  ```bash
-  curl -X PUT http://localhost/yii2-blog/web/api/posts/1 \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer <author_token>" \
-    -d '{"title": "Updated Title", "tag_list": ["updated", "tag"]}'
-  ```
-
-#### Xóa mềm bài viết (Chỉ chủ bài viết hoặc Admin)
-- **Endpoint:** `DELETE /api/posts/<id>`
-- **Ví dụ cURL:**
-  ```bash
-  curl -X DELETE http://localhost/yii2-blog/web/api/posts/1 \
-    -H "Authorization: Bearer <author_token>"
-  ```
-
-#### Thích/Bỏ thích bài viết (Yêu cầu đăng nhập)
-- **Endpoint:** `POST /api/posts/<id>/like`
-- **Ví dụ cURL:**
-  ```bash
-  curl -X POST http://localhost/yii2-blog/web/api/posts/1/like \
-    -H "Authorization: Bearer <user_token>"
-  ```
+Ví dụ tạo bài viết:
+```bash
+curl -X POST http://localhost:8080/api/posts \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "category_id": 1,
+  "title": "My Post",
+  "description": "Post description",
+  "content": "Hello Yii2",
+  "status": 1,
+  "tag_list": ["yii2", "php"]
+}'
+```
 
 ---
 
-### 3.4 Comment (Bình luận)
+### Danh mục (Categories)
 
-#### Viết bình luận
-- **Endpoint:** `POST /api/posts/<post_id>/comments`
-- **Ví dụ cURL:**
-  ```bash
-  curl -X POST http://localhost/yii2-blog/web/api/posts/1/comments \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer <user_token>" \
-    -d '{"content": "This is a comment"}'
-  ```
+| Phương thức | Endpoint | Mô tả |
+| :--- | :--- | :--- |
+| GET | /api/categories | Lấy danh sách danh mục (Chỉ Admin) |
+| POST | /api/categories | Tạo danh mục mới (Chỉ Admin) |
+| PUT | /api/categories/{id} | Cập nhật danh mục (Chỉ Admin) |
+| DELETE | /api/categories/{id} | Xóa danh mục (Chỉ Admin) |
 
-#### Viết phản hồi bình luận (Nested Reply)
-- **Endpoint:** `POST /api/posts/<post_id>/comments`
-- **Ví dụ cURL:**
-  ```bash
-  curl -X POST http://localhost/yii2-blog/web/api/posts/1/comments \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer <user_token>" \
-    -d '{"content": "This is a reply to comment 1", "parent_id": 1}'
-  ```
-
-#### Sửa bình luận (Chỉ chủ bình luận)
-- **Endpoint:** `PUT /api/comments/<id>`
-- **Ví dụ cURL:**
-  ```bash
-  curl -X PUT http://localhost/yii2-blog/web/api/comments/1 \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer <comment_owner_token>" \
-    -d '{"content": "Updated comment content"}'
-  ```
-
-#### Ẩn bình luận (Chỉ tác giả bài viết hoặc Admin)
-- **Endpoint:** `POST /api/comments/<id>/hide`
-- **Ví dụ cURL:**
-  ```bash
-  curl -X POST http://localhost/yii2-blog/web/api/comments/1/hide \
-    -H "Authorization: Bearer <post_owner_token>"
-  ```
-
-#### Xóa bình luận (Chủ bình luận / Tác giả bài viết / Admin)
-- **Endpoint:** `DELETE /api/comments/<id>`
-- **Ví dụ cURL:**
-  ```bash
-  curl -X DELETE http://localhost/yii2-blog/web/api/comments/1 \
-    -H "Authorization: Bearer <user_token>"
-  ```
+Ví dụ tạo danh mục:
+```bash
+curl -X POST http://localhost:8080/api/categories \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "name": "Technology"
+}'
+```
 
 ---
 
-## 4. Sơ đồ thực thể quan hệ (ERD Diagram)
+### Nhãn (Tags)
 
-Sơ đồ ERD hiện tại biểu diễn các quan hệ mềm (Soft relationships) trong code:
+| Phương thức | Endpoint | Mô tả |
+| :--- | :--- | :--- |
+| GET | /api/tags | Lấy danh sách nhãn (Chỉ Admin) |
+| POST | /api/tags | Tạo nhãn mới (Chỉ Admin) |
+| PUT | /api/tags/{id} | Cập nhật nhãn (Chỉ Admin) |
+| DELETE | /api/tags/{id} | Xóa nhãn (Chỉ Admin) |
+
+**Lưu ý:**
+Author có thể truyền `tag_list` khi tạo hoặc cập nhật bài viết. Nếu một Tag chưa tồn tại, hệ thống sẽ tự động tạo Tag đó và liên kết với bài viết. Đây không được xem là quyền quản lý trực tiếp tài nguyên Tag.
+
+Ví dụ tạo nhãn:
+```bash
+curl -X POST http://localhost:8080/api/tags \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "name": "yii2"
+}'
+```
+
+---
+
+### Bình luận (Comments)
+
+| Phương thức | Endpoint | Mô tả |
+| :--- | :--- | :--- |
+| POST | /api/posts/{post_id}/comments | Tạo hoặc phản hồi bình luận (Yêu cầu đăng nhập) |
+| PUT | /api/comments/{id} | Cập nhật bình luận (Chủ bình luận hoặc Admin) |
+| DELETE | /api/comments/{id} | Xóa bình luận (Chủ bình luận, Tác giả bài viết hoặc Admin) |
+| POST | /api/comments/{id}/hide | Ẩn bình luận (Tác giả bài viết hoặc Admin) |
+
+Ví dụ tạo bình luận:
+```bash
+curl -X POST http://localhost:8080/api/posts/1/comments \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "content": "This is a comment",
+  "parent_id": null
+}'
+```
+
+---
+
+## 4. Sơ đồ ERD
+
+Sơ đồ quan hệ thực thể cơ sở dữ liệu:
 
 https://drive.google.com/file/d/12jby51hJwU11mPKhxoqBWM-sI0slSl2f/view?usp=sharing
+
+---
+
+## 5. Kiểm thử & Tài khoản mẫu
+
+### Tài khoản thử nghiệm mặc định
+Các tài khoản sau được tự động nạp sẵn khi chạy lệnh migrations:
+* **Admin:** `admin` / `Admin@123`
+* **Author 1:** `author1` / `Author@123`
+* **Author 2:** `author2` / `Author@123`
+* **Reader:** `reader` / `Reader@123`
+
+### Postman Collection
+Import tệp tin kiểm thử Postman sau để chạy test:
+```
+docs/yii2_blog_postman_collection.json
+docs/yii2_blog_postman_environment.json
+```
+Sau khi import xong thì chọn đúng enviroment: Yii2 Blog - Local Development
+Sau đó run collection: Yii2 Blog API
+
+---Lưu ý----
+Nếu chạy thủ công: Hãy sử dụng chuỗi Bearer Token nhận được từ API Đăng nhập (`POST /api/auth/login`) gắn vào phần cấu hình `Authorization` cho các API yêu cầu xác thực.
