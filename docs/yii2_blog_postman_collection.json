@@ -1,0 +1,2163 @@
+{
+    "info": {
+        "_postman_id": "c71a3962-d9e2-45e3-9824-2c09fb03a4cb",
+        "name": "Yii2 Blog API",
+        "description": "Comprehensive API Collection for Yii2 Blog project containing individual requests for each success/failure check across all user roles.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// Reset all dynamic IDs at the start of a collection run.",
+                    "// This prevents stale environment values from a previous run",
+                    "// from overriding fresh IDs captured during this run.",
+                    "var keysToReset = [",
+                    "    'adminToken', 'authorToken', 'author1Token', 'author2Token',",
+                    "    'readerToken', 'logoutToken', 'token',",
+                    "    'category_id', 'delete_category_id', 'tag_id',",
+                    "    'post_id', 'draft_post_id', 'comment_test_post_id', 'comment_id'",
+                    "];",
+                    "",
+                    "// Only reset on the very first request of the run",
+                    "if (!pm.collectionVariables.get('_run_initialized')) {",
+                    "    keysToReset.forEach(function(key) {",
+                    "        pm.environment.unset(key);",
+                    "        pm.collectionVariables.set(key, '');",
+                    "    });",
+                    "    pm.collectionVariables.set('_run_initialized', 'true');",
+                    "}"
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [""]
+            }
+        }
+    ],
+    "item": [
+        {
+            "name": "1. Authentication",
+            "item": [
+                {
+                    "name": "Register (Success)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"username\": \"test_user_{{$randomInt}}\",\n  \"email\": \"user_{{$randomInt}}@example.com\",\n  \"password\": \"User@123\",\n  \"password_confirmation\": \"User@123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Register (Passwords Mismatch - Failure 422)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"username\": \"test_mismatch\",\n  \"email\": \"mismatch@example.com\",\n  \"password\": \"User@123\",\n  \"password_confirmation\": \"Wrong@123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login Admin (Success)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    var token = jsonData.access_token || (jsonData.data && jsonData.data.access_token);",
+                                    "    if (token) {",
+                                    "        pm.collectionVariables.set(\"token\", token);",
+                                    "        pm.environment.set(\"token\", token);",
+                                    "        pm.collectionVariables.set(\"adminToken\", token);",
+                                    "        pm.environment.set(\"adminToken\", token);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin@123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login Author 1 (Success)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    var token = jsonData.access_token || (jsonData.data && jsonData.data.access_token);",
+                                    "    if (token) {",
+                                    "        pm.collectionVariables.set(\"token\", token);",
+                                    "        pm.environment.set(\"token\", token);",
+                                    "        pm.collectionVariables.set(\"authorToken\", token);",
+                                    "        pm.environment.set(\"authorToken\", token);",
+                                    "        pm.collectionVariables.set(\"author1Token\", token);",
+                                    "        pm.environment.set(\"author1Token\", token);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"username\": \"author1\",\n    \"password\": \"Author@123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login Author 2 (Success)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    var token = jsonData.access_token || (jsonData.data && jsonData.data.access_token);",
+                                    "    if (token) {",
+                                    "        pm.collectionVariables.set(\"author2Token\", token);",
+                                    "        pm.environment.set(\"author2Token\", token);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"username\": \"author2\",\n    \"password\": \"Author@123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login Reader (Success)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    var token = jsonData.access_token || (jsonData.data && jsonData.data.access_token);",
+                                    "    if (token) {",
+                                    "        pm.collectionVariables.set(\"token\", token);",
+                                    "        pm.environment.set(\"token\", token);",
+                                    "        pm.collectionVariables.set(\"readerToken\", token);",
+                                    "        pm.environment.set(\"readerToken\", token);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"username\": \"reader\",\n  \"password\": \"Reader@123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login (Wrong Password - Failure 422)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"WrongPassword\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Profile (Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/me",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "me"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Profile (No Token - Failure 401)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/me",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "me"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login Reader for Logout (Success)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    var token = jsonData.access_token || (jsonData.data && jsonData.data.access_token);",
+                                    "    if (token) {",
+                                    "        pm.collectionVariables.set(\"logoutToken\", token);",
+                                    "        pm.environment.set(\"logoutToken\", token);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"username\": \"reader\",\n  \"password\": \"Reader@123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Logout (Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{logoutToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/logout",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "logout"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "2. Category",
+            "item": [
+                {
+                    "name": "Create Category (Admin - Success)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    var id = jsonData.id || (jsonData.data && jsonData.data.id);",
+                                    "    if (id) {",
+                                    "        pm.collectionVariables.set(\"category_id\", id);",
+                                    "        pm.environment.set(\"category_id\", id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Lifestyle {{$randomInt}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/categories",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "categories"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Category (Reader - Failure 403)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{readerToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Banned Category\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/categories",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "categories"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Category (Guest - Failure 401)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Guest Category\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/categories",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "categories"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Categories (Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/categories",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "categories"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "View Category (Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/categories/{{category_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "categories",
+                                "{{category_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "View Category (Not Found - Failure 404)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/categories/99999",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "categories",
+                                "99999"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Category (Admin - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Updated Tech Category\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/categories/{{category_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "categories",
+                                "{{category_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Category (Reader - Failure 403)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{readerToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Unauthorized Update\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/categories/{{category_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "categories",
+                                "{{category_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Category for Delete (Success)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    var id = jsonData.id || (jsonData.data && jsonData.data.id);",
+                                    "    if (id) {",
+                                    "        pm.collectionVariables.set(\"delete_category_id\", id);",
+                                    "        pm.environment.set(\"delete_category_id\", id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Lifestyle for Delete {{$randomInt}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/categories",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "categories"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Category (Reader - Failure 403)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{readerToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/categories/{{delete_category_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "categories",
+                                "{{delete_category_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Category (Admin - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/categories/{{delete_category_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "categories",
+                                "{{delete_category_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "3. Tag",
+            "item": [
+                {
+                    "name": "List Tags (Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/tags",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tags"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Tag (Admin - Success)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    var id = jsonData.id || (jsonData.data && jsonData.data.id);",
+                                    "    if (id) {",
+                                    "        pm.collectionVariables.set(\"tag_id\", id);",
+                                    "        pm.environment.set(\"tag_id\", id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"yii2-admin-tag-{{$randomInt}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/tags",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tags"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Tag (Author - Failure 403)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{authorToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"unauthorized-author-tag\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/tags",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tags"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "View Tag (Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/tags/{{tag_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tags",
+                                "{{tag_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Tag (Admin - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"yii2-admin-tag-updated\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/tags/{{tag_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tags",
+                                "{{tag_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Tag (Author - Failure 403)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{authorToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"unauthorized-edit\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/tags/{{tag_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tags",
+                                "{{tag_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Tag (Author - Failure 403)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{authorToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/tags/{{tag_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tags",
+                                "{{tag_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Tag (Admin - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/tags/{{tag_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tags",
+                                "{{tag_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "4. Post",
+            "item": [
+                {
+                    "name": "Create Post (Author - Success)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    var id = jsonData.id || (jsonData.data && jsonData.data.id);",
+                                    "    if (id) {",
+                                    "        pm.collectionVariables.set(\"post_id\", id);",
+                                    "        pm.environment.set(\"post_id\", id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{authorToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"category_id\": {{category_id}},\n  \"title\": \"RBAC Refactoring in Yii2\",\n  \"description\": \"Clean way to handle RBAC without string hardcoding.\",\n  \"content\": \"Yii2 native RBAC DbManager is used here. We created rbac/Permission.php.\",\n  \"status\": 1,\n  \"tag_list\": [\"yii2\", \"rbac\", \"refactor\"]\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Post Draft (Author - Success)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    var id = jsonData.id || (jsonData.data && jsonData.data.id);",
+                                    "    if (id) {",
+                                    "        pm.collectionVariables.set(\"draft_post_id\", id);",
+                                    "        pm.environment.set(\"draft_post_id\", id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{authorToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"category_id\": {{category_id}},\n  \"title\": \"Unfinished Thoughts\",\n  \"description\": \"Draft post description.\",\n  \"content\": \"Draft content...\",\n  \"status\": 0\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Post (Reader - Failure 403)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{readerToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"category_id\": {{category_id}},\n  \"title\": \"Reader Post attempt\",\n  \"content\": \"Reader cannot create\",\n  \"status\": 1\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Posts (Guest/Reader - Sees Published Only)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Posts (Author - Sees Published + Own Drafts)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{authorToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Posts (Admin - Sees All including Drafts)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "View Published Post (Guest/Reader - Success)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{post_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{post_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "View Draft Post (Reader - Failure 403)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{readerToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{draft_post_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{draft_post_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Own Post (Author - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{authorToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"RBAC Refactoring in Yii2 (Updated Title)\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{post_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{post_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Other's Post (Author B to A - Failure 403)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{author2Token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Malicious Edit Attempt\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{post_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{post_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Other's Post (Admin - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Post Title Overwritten by Admin\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{post_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{post_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Like Post (Reader - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{readerToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{post_id}}/like",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{post_id}}",
+                                "like"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Unlike Post (Reader - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{readerToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{post_id}}/like",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{post_id}}",
+                                "like"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Like Post (Guest - Failure 401)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{post_id}}/like",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{post_id}}",
+                                "like"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Other's Post (Author B to A - Failure 403)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{author2Token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{draft_post_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{draft_post_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Own Post (Author - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{authorToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{post_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{post_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Other's Post (Admin - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{draft_post_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{draft_post_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+
+        {
+            "name": "5. Comment",
+            "item": [
+                {
+                    "name": "Create Post for comments (Success)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    var id = jsonData.id || (jsonData.data && jsonData.data.id);",
+                                    "    if (id) {",
+                                    "        pm.collectionVariables.set(\"comment_test_post_id\", id);",
+                                    "        pm.environment.set(\"comment_test_post_id\", id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{authorToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"category_id\": {{category_id}},\n  \"title\": \"Post for comments\",\n  \"description\": \"Post specifically created for testing comments.\",\n  \"content\": \"Original content here.\",\n  \"status\": 1\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Comment (Reader - Success)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    var commentId = (jsonData.comment && jsonData.comment.id) || (jsonData.data && jsonData.data.comment && jsonData.data.comment.id);",
+                                    "    if (commentId) {",
+                                    "        pm.collectionVariables.set(\"comment_id\", commentId);",
+                                    "        pm.environment.set(\"comment_id\", commentId);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{readerToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"content\": \"Great writeup! Very informative.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{comment_test_post_id}}/comments",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{comment_test_post_id}}",
+                                "comments"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Comment (Empty Content - Failure 422)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{readerToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"content\": \"\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{comment_test_post_id}}/comments",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{comment_test_post_id}}",
+                                "comments"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Reply to Comment (Reader - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{readerToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"content\": \"Replying to the main comment...\",\n  \"parent_id\": {{comment_id}}\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{comment_test_post_id}}/comments",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{comment_test_post_id}}",
+                                "comments"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Own Comment (Reader - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{readerToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"content\": \"Great writeup! Very informative (Updated by Reader B).\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/comments/{{comment_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "comments",
+                                "{{comment_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Other's Comment (Author - Failure 403)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{authorToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"content\": \"Illegal edit attempt\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/comments/{{comment_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "comments",
+                                "{{comment_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Hide Comment (Author/Post Owner - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{authorToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/comments/{{comment_id}}/hide",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "comments",
+                                "{{comment_id}}",
+                                "hide"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Hide Own Comment (Reader/Non-Post-Owner - Failure 403)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{readerToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/comments/{{comment_id}}/hide",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "comments",
+                                "{{comment_id}}",
+                                "hide"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Comment (Author2/Non-Owner - Failure 403)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{author2Token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/comments/{{comment_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "comments",
+                                "{{comment_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Comment (Admin - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/comments/{{comment_id}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "comments",
+                                "{{comment_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://yii2-blog.test",
+            "type": "string"
+        },
+        {
+            "key": "token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "adminToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "readerToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "authorToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "author1Token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "author2Token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "logoutToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "category_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "tag_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "post_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "comment_test_post_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "draft_post_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "comment_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "delete_category_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "_run_initialized",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}
