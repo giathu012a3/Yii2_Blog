@@ -2,53 +2,15 @@
   "info": {
     "_postman_id": "757a0c85-bbfd-4816-94fb-f0411fc9c624",
     "name": "Yii2_Blog",
-    "description": "REST API collection cho Yii2 Blog System.\n\n**Base URL:** http://yii2-app-basic.test\n\n**Auth:** Lấy token từ Login, paste vào Authorization header của từng request.\n\nEndpoints: Auth · Category · Tag · Post · Comment",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "36408118"
+    "description": "REST API collection for Yii2 Blog System, structured into test scenarios with dynamic token and ID variables, including authorization checks between different authors.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Auth",
+      "name": "1. Auth & Token Initialization",
       "item": [
         {
-          "name": "Register",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"username\": \"reader_two\",\n    \"email\": \"reader_two@example.com\",\n    \"password\": \"password123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/auth/register",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "register"
-              ]
-            },
-            "description": "Đăng ký tài khoản mới. Tự động gán role `reader`."
-          },
-          "response": []
-        },
-        {
-          "name": "Login",
+          "name": "Login as Admin",
           "event": [
             {
               "listen": "test",
@@ -56,8 +18,8 @@
                 "exec": [
                   "var json = pm.response.json();",
                   "if (json.data && json.data.access_token) {",
-                  "    pm.collectionVariables.set('token', json.data.access_token);",
-                  "    console.log('Token saved:', json.data.access_token);",
+                  "    pm.collectionVariables.set('admin_token', json.data.access_token);",
+                  "    console.log('Admin Token saved:', json.data.access_token);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -83,11 +45,9 @@
               }
             },
             "url": {
-              "raw": "http://yii2-app-basic.test/api/auth/login",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/api/auth/login",
               "host": [
-                "yii2-app-basic",
-                "test"
+                "{{baseUrl}}"
               ],
               "path": [
                 "api",
@@ -95,89 +55,27 @@
                 "login"
               ]
             },
-            "description": "Đăng nhập. Token sẽ tự động lưu vào collection variable `{{token}}`."
+            "description": "Login as Admin to get bearer token and store in {{admin_token}}."
           },
           "response": []
         },
         {
-          "name": "Get My Profile",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
+          "name": "Login as Author 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.access_token) {",
+                  "    pm.collectionVariables.set('author_token', json.data.access_token);",
+                  "    console.log('Author 1 Token saved:', json.data.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
               }
-            ],
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/auth/me",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "me"
-              ]
-            },
-            "description": "Xem thông tin user đang đăng nhập."
-          },
-          "response": []
-        },
-        {
-          "name": "Change Password",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"current_password\": \"admin123456\",\n    \"new_password\": \"newpassword123\",\n    \"confirm_password\": \"newpassword123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/auth/change-password",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "change-password"
-              ]
             }
-          },
-          "response": []
-        },
-        {
-          "name": "Logout",
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -185,96 +83,290 @@
                 "key": "Content-Type",
                 "value": "application/json",
                 "type": "text"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"author_one\",\n    \"password\": \"author123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
-              "raw": "http://yii2-app-basic.test/api/auth/logout",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/api/auth/login",
               "host": [
-                "yii2-app-basic",
-                "test"
+                "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "auth",
-                "logout"
+                "login"
               ]
+            },
+            "description": "Login as Author 1 to get bearer token and store in {{author_token}}."
+          },
+          "response": []
+        },
+        {
+          "name": "Login as Author 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.access_token) {",
+                  "    pm.collectionVariables.set('author_two_token', json.data.access_token);",
+                  "    console.log('Author 2 Token saved:', json.data.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
             }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"author_two\",\n    \"password\": \"author123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login as Author 2 to get bearer token and store in {{author_two_token}}."
+          },
+          "response": []
+        },
+        {
+          "name": "Login as Reader",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.access_token) {",
+                  "    pm.collectionVariables.set('reader_token', json.data.access_token);",
+                  "    console.log('Reader Token saved:', json.data.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"reader_one\",\n    \"password\": \"reader123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login as Reader to get bearer token and store in {{reader_token}}."
+          },
+          "response": []
+        },
+        {
+          "name": "Register a New User",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "var randomInt = Math.floor(Math.random() * 100000);",
+                  "pm.collectionVariables.set('new_username', 'user_' + randomInt);",
+                  "pm.collectionVariables.set('new_email', 'user_' + randomInt + '@example.com');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"{{new_username}}\",\n    \"email\": \"{{new_email}}\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Register a new random user to test registration workflow dynamically."
+          },
+          "response": []
+        },
+        {
+          "name": "Login as New User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.access_token) {",
+                  "    pm.collectionVariables.set('new_user_token', json.data.access_token);",
+                  "    console.log('New User Token saved:', json.data.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"{{new_username}}\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login as the newly registered user to get a fresh token."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{reader_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Get current logged-in reader's profile."
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Category",
+      "name": "2. Category & Tag Management (Admin)",
       "item": [
         {
-          "name": "List Categories",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/categories",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "categories"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "View Category",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/categories/1",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "categories",
-                "1"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
           "name": "Create Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.id) {",
+                  "    pm.collectionVariables.set('category_id', json.data.id);",
+                  "    console.log('Category ID saved:', json.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "auth": {
               "type": "bearer",
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{admin_token}}",
                   "type": "string"
                 }
               ]
@@ -289,7 +381,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"Công nghệ\"\n}",
+              "raw": "{\n    \"name\": \"Technology\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -297,18 +389,16 @@
               }
             },
             "url": {
-              "raw": "http://yii2-app-basic.test/api/categories",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/api/categories",
               "host": [
-                "yii2-app-basic",
-                "test"
+                "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "categories"
               ]
             },
-            "description": "Yêu cầu permission `manageCategory` (admin)."
+            "description": "Create a new category using Admin token."
           },
           "response": []
         },
@@ -320,7 +410,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{admin_token}}",
                   "type": "string"
                 }
               ]
@@ -335,7 +425,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"Bóng đá\"\n}",
+              "raw": "{\n    \"name\": \"New Technology\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -343,30 +433,818 @@
               }
             },
             "url": {
-              "raw": "http://yii2-app-basic.test/api/categories/1",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/api/categories/{{category_id}}",
               "host": [
-                "yii2-app-basic",
-                "test"
+                "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "categories",
-                "1"
+                "{{category_id}}"
               ]
-            }
+            },
+            "description": "Update the category."
           },
           "response": []
         },
         {
-          "name": "Delete Category",
+          "name": "List Categories",
           "request": {
             "auth": {
               "type": "bearer",
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "categories"
+              ]
+            },
+            "description": "List all categories (restricted to admin)."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Tag",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Yii2\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tags",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tags"
+              ]
+            },
+            "description": "Create a new tag."
+          },
+          "response": []
+        },
+        {
+          "name": "List Tags",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tags",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tags"
+              ]
+            },
+            "description": "List all tags (restricted to admin)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Post Creation & Publishing (Author)",
+      "item": [
+        {
+          "name": "Create Post (as Draft)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.id) {",
+                  "    pm.collectionVariables.set('post_id', json.data.id);",
+                  "    pm.collectionVariables.set('post_slug', json.data.slug);",
+                  "    console.log('Post ID saved:', json.data.id);",
+                  "    console.log('Post Slug saved:', json.data.slug);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{author_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"My First Post\",\n    \"content\": \"This is my draft post...\",\n    \"category_id\": {{category_id}},\n    \"status\": 0,\n    \"tagNames\": [\"Yii2\", \"PHP\", \"API\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
+            },
+            "description": "Author 1 creates a new draft post (status = 0)."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Post as Reader (Fail 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 403 Forbidden\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{reader_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Reader Attempted Post\",\n    \"content\": \"Reader trying to create a post, should fail.\",\n    \"category_id\": {{category_id}},\n    \"status\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
+            },
+            "description": "Reader attempts to create a post, which must fail with 403 Forbidden."
+          },
+          "response": []
+        },
+        {
+          "name": "Author View Manage List",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{author_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/manage?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "manage"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Author 1 views their own posts list."
+          },
+          "response": []
+        },
+        {
+          "name": "Author View Single Manage Post",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{author_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{post_id}}/manage",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{post_id}}",
+                "manage"
+              ]
+            },
+            "description": "Author 1 views their own single post details."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Post of Another Author (Fail 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 403 Forbidden\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{author_two_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Hacked Title\",\n    \"content\": \"Attempt to edit Author 1's post\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{post_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{post_id}}"
+              ]
+            },
+            "description": "Author 2 attempts to update Author 1's post, which must fail with 403 Forbidden."
+          },
+          "response": []
+        },
+        {
+          "name": "Publish Post of Another Author (Fail 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 403 Forbidden\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{author_two_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{post_id}}/publish",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{post_id}}",
+                "publish"
+              ]
+            },
+            "description": "Author 2 attempts to publish Author 1's post, which must fail with 403 Forbidden."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Post",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.slug) {",
+                  "    pm.collectionVariables.set('post_slug', json.data.slug);",
+                  "    console.log('Post Slug updated:', json.data.slug);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{author_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"My First Post Updated\",\n    \"content\": \"Updated post content...\",\n    \"tagNames\": [\"Yii2\", \"Framework\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{post_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{post_id}}"
+              ]
+            },
+            "description": "Author 1 successfully updates their own post."
+          },
+          "response": []
+        },
+        {
+          "name": "Publish Post",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{author_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{post_id}}/publish",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{post_id}}",
+                "publish"
+              ]
+            },
+            "description": "Author 1 successfully publishes their own post."
+          },
+          "response": []
+        },
+        {
+          "name": "Client View Public Post (by slug)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/my-first-post-updated",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "my-first-post-updated"
+              ]
+            },
+            "description": "Public viewer views the published post using the SEO slug."
+          },
+          "response": []
+        },
+        {
+          "name": "Client List Public Posts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts?expand=category,tags,author",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "expand",
+                  "value": "category,tags,author"
+                }
+              ]
+            },
+            "description": "Public viewer lists all published posts."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Reader Interactions (Like & Comment)",
+      "item": [
+        {
+          "name": "Like / Unlike Post",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{reader_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{post_id}}/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{post_id}}",
+                "like"
+              ]
+            },
+            "description": "Reader likes/unlikes the published post."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Comment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.id) {",
+                  "    pm.collectionVariables.set('comment_id', json.data.id);",
+                  "    console.log('Comment ID saved:', json.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{reader_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"post_id\": {{post_id}},\n    \"content\": \"Great framework tutorial!\",\n    \"parent_id\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{post_id}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{post_id}}",
+                "comments"
+              ]
+            },
+            "description": "Reader comments on the published post."
+          },
+          "response": []
+        },
+        {
+          "name": "List Comments by Post (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{post_id}}/comments?expand=user,replies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{post_id}}",
+                "comments"
+              ],
+              "query": [
+                {
+                  "key": "expand",
+                  "value": "user,replies"
+                }
+              ]
+            },
+            "description": "View comment thread trees."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Comment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{reader_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"content\": \"I updated my comment to be more detailed.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/comments/{{comment_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "comments",
+                "{{comment_id}}"
+              ]
+            },
+            "description": "Reader updates their own comment."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Account Management & Cleanup",
+      "item": [
+        {
+          "name": "Change Password (New User)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{new_user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"current_password\": \"password123\",\n    \"new_password\": \"newpassword123\",\n    \"confirm_password\": \"newpassword123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "change-password"
+              ]
+            },
+            "description": "Change password for the temporary newly registered user."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout (Reader)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{reader_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Log out the Reader."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Comment (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
                   "type": "string"
                 }
               ]
@@ -374,621 +1252,155 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "http://yii2-app-basic.test/api/categories/1",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/api/comments/{{comment_id}}",
               "host": [
-                "yii2-app-basic",
-                "test"
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "comments",
+                "{{comment_id}}"
+              ]
+            },
+            "description": "Admin soft-deletes the comment."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Post (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{post_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{post_id}}"
+              ]
+            },
+            "description": "Admin soft-deletes the post."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Category (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories/{{category_id}}",
+              "host": [
+                "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "categories",
-                "1"
+                "{{category_id}}"
               ]
             },
-            "description": "Soft-delete category."
+            "description": "Admin soft-deletes the category."
           },
           "response": []
         }
       ]
-    },
-    {
-      "name": "Tag",
-      "item": [
-        {
-          "name": "List Tags",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/tags",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "tags"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "View Tag",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/tags/1",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "tags",
-                "1"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Create Tag",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"name\": \"Điện thoại\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/tags",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "tags"
-              ]
-            },
-            "description": "Yêu cầu permission `manageTags` (admin)."
-          },
-          "response": []
-        },
-        {
-          "name": "Update Tag",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"name\": \"Laptop\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/tags/1",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "tags",
-                "1"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Tag",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/tags/1",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "tags",
-                "1"
-              ]
-            }
-          },
-          "response": []
-        }
-      ],
-      "auth": {
-        "type": "bearer",
-        "bearer": [
-          {
-            "key": "token",
-            "value": "{{token}}",
-            "type": "string"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Post",
-      "item": [
-        {
-          "name": "Client List (Public)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/posts?page=1&limit=10&expand=category,tags,author",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "10"
-                },
-                {
-                  "key": "expand",
-                  "value": "category,tags,author"
-                },
-                {
-                  "key": "title",
-                  "value": "",
-                  "disabled": true
-                },
-                {
-                  "key": "category_id",
-                  "value": "",
-                  "disabled": true
-                },
-                {
-                  "key": "tag",
-                  "value": "",
-                  "disabled": true
-                }
-              ]
-            },
-            "description": "Danh sách bài viết đã published. Không cần đăng nhập."
-          },
-          "response": []
-        },
-        {
-          "name": "Client View (by slug)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/posts/bai-viet-dau-tien",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "bai-viet-dau-tien"
-              ]
-            },
-            "description": "Xem chi tiết bài viết theo slug. Tăng view_count."
-          },
-          "response": []
-        },
-        {
-          "name": "Create Post",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"title\": \"Bài viết đầu tiên\",\n    \"content\": \"Nội dung bài viết đầy đủ\",\n    \"category_id\": 2,\n    \"status\": 1,\n    \"tagNames\": [\"php\", \"yii2\", \"api\"]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/posts",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ]
-            },
-            "description": "Tạo bài viết. status: 0=draft, 1=published. Yêu cầu `createPost` permission."
-          },
-          "response": []
-        },
-        {
-          "name": "Update Post",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"title\": \"Tiêu đề mới cập nhật\",\n    \"content\": \"Nội dung bài viết mới...\",\n    \"tagNames\": [\"Yii2\", \"Tutorial\"]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/posts/1",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "1"
-              ]
-            },
-            "description": "Author chỉ update được post của mình. Admin update được tất cả."
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Post",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/posts/1",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "1"
-              ]
-            },
-            "description": "Soft-delete. Trả về 204 nếu thành công."
-          },
-          "response": []
-        },
-        {
-          "name": "Like / Unlike Post",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/posts/1/like",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "1",
-                "like"
-              ]
-            },
-            "description": "Toggle like. Gọi lại để unlike. Yêu cầu `likePost` (reader+)."
-          },
-          "response": []
-        },
-        {
-          "name": "Publish Post",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/posts/1/publish",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "1",
-                "publish"
-              ]
-            },
-            "description": "Xuất bản bài viết. Tác giả chỉ được xuất bản bài viết của mình. Admin được quyền xuất bản bất kỳ bài viết nào."
-          },
-          "response": []
-        },
-        {
-          "name": "Manage List (Admin/Author)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/posts/manage?page=1&limit=10",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "manage"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "10"
-                },
-                {
-                  "key": "status",
-                  "value": "0",
-                  "disabled": true
-                }
-              ]
-            },
-            "description": "Admin thấy tất cả post. Author chỉ thấy post của mình."
-          },
-          "response": []
-        },
-        {
-          "name": "Manage Single Post (for edit)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/posts/1/manage",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "1",
-                "manage"
-              ]
-            },
-            "description": "Lấy chi tiết post để edit. Kiểm tra quyền owner."
-          },
-          "response": []
-        }
-      ],
-      "auth": {
-        "type": "bearer",
-        "bearer": [
-          {
-            "key": "token",
-            "value": "{{token}}",
-            "type": "string"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Comment",
-      "description": "Comment CRUD — Tuần 2 implement.",
-      "item": [
-        {
-          "name": "List Comments by Post",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/posts/1/comments?page=1&limit=20&expand=user,replies",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "1",
-                "comments"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "20"
-                },
-                {
-                  "key": "expand",
-                  "value": "user,replies"
-                }
-              ]
-            },
-            "description": "Danh sách comment của bài viết. Public."
-          },
-          "response": []
-        },
-        {
-          "name": "Create Comment",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"post_id\": 1,\n    \"content\": \"Bài viết rất hay!\",\n    \"parent_id\": null\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/posts/1/comments",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "1",
-                "comments"
-              ]
-            },
-            "description": "Tạo comment. Set `parent_id` để reply. Yêu cầu `createComment` (reader+)."
-          },
-          "response": []
-        },
-        {
-          "name": "Update Comment",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"content\": \"Nội dung comment đã chỉnh sửa.\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/comments/1",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "comments",
-                "1"
-              ]
-            },
-            "description": "User chỉ update được comment của mình (`updateOwnComment`). Admin update tất cả."
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Comment",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "http://yii2-app-basic.test/api/comments/1",
-              "protocol": "http",
-              "host": [
-                "yii2-app-basic",
-                "test"
-              ],
-              "path": [
-                "api",
-                "comments",
-                "1"
-              ]
-            },
-            "description": "Soft-delete comment."
-          },
-          "response": []
-        }
-      ],
-      "auth": {
-        "type": "bearer",
-        "bearer": [
-          {
-            "key": "token",
-            "value": "{{token}}",
-            "type": "string"
-          }
-        ]
-      }
     }
   ],
   "variable": [
     {
-      "key": "token",
+      "key": "baseUrl",
+      "value": "http://yii2-app-basic.test",
+      "type": "string",
+      "description": "Local server base URL."
+    },
+    {
+      "key": "admin_token",
       "value": "",
       "type": "string",
-      "description": "Bearer token — tự động set sau khi chạy request Login"
+      "description": "Bearer token for Admin role."
+    },
+    {
+      "key": "author_token",
+      "value": "",
+      "type": "string",
+      "description": "Bearer token for Author 1 role."
+    },
+    {
+      "key": "author_two_token",
+      "value": "",
+      "type": "string",
+      "description": "Bearer token for Author 2 role."
+    },
+    {
+      "key": "reader_token",
+      "value": "",
+      "type": "string",
+      "description": "Bearer token for Reader role."
+    },
+    {
+      "key": "new_user_token",
+      "value": "",
+      "type": "string",
+      "description": "Bearer token for temporary registered user."
+    },
+    {
+      "key": "new_username",
+      "value": "",
+      "type": "string",
+      "description": "Random username generated dynamically."
+    },
+    {
+      "key": "new_email",
+      "value": "",
+      "type": "string",
+      "description": "Random email generated dynamically."
+    },
+    {
+      "key": "category_id",
+      "value": "",
+      "type": "string",
+      "description": "Category ID stored dynamically."
+    },
+    {
+      "key": "post_id",
+      "value": "",
+      "type": "string",
+      "description": "Post ID stored dynamically."
+    },
+    {
+      "key": "post_slug",
+      "value": "",
+      "type": "string",
+      "description": "Post SEO slug stored dynamically."
+    },
+    {
+      "key": "comment_id",
+      "value": "",
+      "type": "string",
+      "description": "Comment ID stored dynamically."
     }
   ]
 }

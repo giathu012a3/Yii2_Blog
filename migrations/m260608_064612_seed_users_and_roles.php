@@ -24,7 +24,7 @@ class m260608_064612_seed_users_and_roles extends Migration
             'auth_key'      => $authKey,
             'password_hash' => $passwordHash,
             'access_token'  => Yii::$app->security->generateRandomString(40),
-            'status'        => 10,
+            'status'        => 1,
             'is_deleted'    => 0,
             'created_at'    => $currentTime,
             'updated_at'    => $currentTime,

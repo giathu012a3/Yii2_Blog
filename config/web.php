@@ -78,7 +78,20 @@ $config = [
                 $message = $isSuccessful ? 'Success' : 'An error occurred';
                 $responseData = $data;
 
-                if (!$isSuccessful) {
+                if ($isSuccessful) {
+                    if (is_array($data) && isset($data['items'], $data['pagination'])) {
+                        $pag = $data['pagination'];
+                        $responseData = [
+                            'items' => $data['items'],
+                            'pagination' => [
+                                'total'      => isset($pag['totalCount']) ? (int)$pag['totalCount'] : 0,
+                                'page'       => isset($pag['currentPage']) ? (int)$pag['currentPage'] : 1,
+                                'limit'      => isset($pag['perPage']) ? (int)$pag['perPage'] : 10,
+                                'total_page' => isset($pag['pageCount']) ? (int)$pag['pageCount'] : 0,
+                            ],
+                        ];
+                    }
+                } else {
                     if (is_array($data) && isset($data['message'])) {
                         $message = $data['message'];
                     }
