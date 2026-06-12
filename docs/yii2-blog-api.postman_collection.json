@@ -15,18 +15,33 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json", "type": "text" }
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"username\": \"user15\",\n    \"email\": \"user15@gmail.com\",\n    \"password\": \"password123\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "http://yii2-app-basic.test/api/auth/register",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "auth", "register"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
             },
             "description": "Đăng ký tài khoản mới. Tự động gán role `reader`."
           },
@@ -52,18 +67,33 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json", "type": "text" }
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"username\": \"admin_root\",\n    \"password\": \"admin123456\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "http://yii2-app-basic.test/api/auth/login",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "auth", "login"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
             },
             "description": "Đăng nhập. Token sẽ tự động lưu vào collection variable `{{token}}`."
           },
@@ -71,18 +101,35 @@
         },
         {
           "name": "Get My Profile",
-          "protocolProfileBehavior": { "disableBodyPruning": true },
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Content-Type", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
             ],
             "url": {
               "raw": "http://yii2-app-basic.test/api/auth/me",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "auth", "me"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
             },
             "description": "Xem thông tin user đang đăng nhập."
           },
@@ -93,19 +140,38 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"current_password\": \"admin123456\",\n    \"new_password\": \"newpassword123\",\n    \"confirm_password\": \"newpassword123\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "http://yii2-app-basic.test/api/auth/change-password",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "auth", "change-password"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "change-password"
+              ]
             }
           },
           "response": []
@@ -115,14 +181,29 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
             ],
             "url": {
               "raw": "http://yii2-app-basic.test/api/auth/logout",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "auth", "logout"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
             }
           },
           "response": []
@@ -137,13 +218,23 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
             ],
             "url": {
               "raw": "http://yii2-app-basic.test/api/categories",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "categories"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "categories"
+              ]
             }
           },
           "response": []
@@ -153,13 +244,24 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
             ],
             "url": {
               "raw": "http://yii2-app-basic.test/api/categories/1",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "categories", "1"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "1"
+              ]
             }
           },
           "response": []
@@ -169,22 +271,42 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json", "type": "text" }
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Công nghệ\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "http://yii2-app-basic.test/api/categories",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "categories"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "categories"
+              ]
             },
             "description": "Yêu cầu permission `manageCategory` (admin)."
           },
@@ -195,22 +317,43 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json", "type": "text" }
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Bóng đá\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "http://yii2-app-basic.test/api/categories/1",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "categories", "1"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "1"
+              ]
             }
           },
           "response": []
@@ -220,15 +363,28 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "DELETE",
             "header": [],
             "url": {
               "raw": "http://yii2-app-basic.test/api/categories/1",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "categories", "1"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "1"
+              ]
             },
             "description": "Soft-delete category."
           },
@@ -241,15 +397,23 @@
       "item": [
         {
           "name": "List Tags",
-          "protocolProfileBehavior": { "disableBodyPruning": true },
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
           "request": {
             "method": "GET",
             "header": [],
             "url": {
               "raw": "http://yii2-app-basic.test/api/tags",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "tags"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "tags"
+              ]
             }
           },
           "response": []
@@ -262,8 +426,15 @@
             "url": {
               "raw": "http://yii2-app-basic.test/api/tags/1",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "tags", "1"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "tags",
+                "1"
+              ]
             }
           },
           "response": []
@@ -273,18 +444,32 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json", "type": "text" }
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Điện thoại\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "http://yii2-app-basic.test/api/tags",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "tags"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "tags"
+              ]
             },
             "description": "Yêu cầu permission `manageTags` (admin)."
           },
@@ -295,18 +480,33 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json", "type": "text" }
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Laptop\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "http://yii2-app-basic.test/api/tags/1",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "tags", "1"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "tags",
+                "1"
+              ]
             }
           },
           "response": []
@@ -319,8 +519,15 @@
             "url": {
               "raw": "http://yii2-app-basic.test/api/tags/1",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "tags", "1"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "tags",
+                "1"
+              ]
             }
           },
           "response": []
@@ -328,7 +535,13 @@
       ],
       "auth": {
         "type": "bearer",
-        "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token}}",
+            "type": "string"
+          }
+        ]
       }
     },
     {
@@ -342,15 +555,42 @@
             "url": {
               "raw": "http://yii2-app-basic.test/api/posts?page=1&limit=10&expand=category,tags,author",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "posts"],
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "10" },
-                { "key": "expand", "value": "category,tags,author" },
-                { "key": "title", "value": "", "disabled": true },
-                { "key": "category_id", "value": "", "disabled": true },
-                { "key": "tag", "value": "", "disabled": true }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "expand",
+                  "value": "category,tags,author"
+                },
+                {
+                  "key": "title",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "category_id",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "tag",
+                  "value": "",
+                  "disabled": true
+                }
               ]
             },
             "description": "Danh sách bài viết đã published. Không cần đăng nhập."
@@ -365,8 +605,15 @@
             "url": {
               "raw": "http://yii2-app-basic.test/api/posts/bai-viet-dau-tien",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "posts", "bai-viet-dau-tien"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "bai-viet-dau-tien"
+              ]
             },
             "description": "Xem chi tiết bài viết theo slug. Tăng view_count."
           },
@@ -377,18 +624,32 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json", "type": "text" }
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"title\": \"Bài viết đầu tiên\",\n    \"content\": \"Nội dung bài viết đầy đủ\",\n    \"category_id\": 2,\n    \"status\": 1,\n    \"tagNames\": [\"php\", \"yii2\", \"api\"]\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "http://yii2-app-basic.test/api/posts",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "posts"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
             },
             "description": "Tạo bài viết. status: 0=draft, 1=published. Yêu cầu `createPost` permission."
           },
@@ -399,18 +660,33 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json", "type": "text" }
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"title\": \"Tiêu đề mới cập nhật\",\n    \"content\": \"Nội dung bài viết mới...\",\n    \"tagNames\": [\"Yii2\", \"Tutorial\"]\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "http://yii2-app-basic.test/api/posts/1",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "posts", "1"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "1"
+              ]
             },
             "description": "Author chỉ update được post của mình. Admin update được tất cả."
           },
@@ -424,8 +700,15 @@
             "url": {
               "raw": "http://yii2-app-basic.test/api/posts/1",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "posts", "1"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "1"
+              ]
             },
             "description": "Soft-delete. Trả về 204 nếu thành công."
           },
@@ -439,8 +722,16 @@
             "url": {
               "raw": "http://yii2-app-basic.test/api/posts/1/like",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "posts", "1", "like"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "1",
+                "like"
+              ]
             },
             "description": "Toggle like. Gọi lại để unlike. Yêu cầu `likePost` (reader+)."
           },
@@ -454,12 +745,29 @@
             "url": {
               "raw": "http://yii2-app-basic.test/api/posts/manage?page=1&limit=10",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "posts", "manage"],
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "manage"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "10" },
-                { "key": "status", "value": "0", "disabled": true }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "0",
+                  "disabled": true
+                }
               ]
             },
             "description": "Admin thấy tất cả post. Author chỉ thấy post của mình."
@@ -474,8 +782,16 @@
             "url": {
               "raw": "http://yii2-app-basic.test/api/posts/1/manage",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "posts", "1", "manage"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "1",
+                "manage"
+              ]
             },
             "description": "Lấy chi tiết post để edit. Kiểm tra quyền owner."
           },
@@ -484,7 +800,13 @@
       ],
       "auth": {
         "type": "bearer",
-        "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token}}",
+            "type": "string"
+          }
+        ]
       }
     },
     {
@@ -497,13 +819,31 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://yii2-app-basic.test/api/posts/1/comments?page=1&limit=20",
+              "raw": "http://yii2-app-basic.test/api/posts/1/comments?page=1&limit=20&expand=user,replies",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "posts", "1", "comments"],
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "1",
+                "comments"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "20" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "expand",
+                  "value": "user,replies"
+                }
               ]
             },
             "description": "Danh sách comment của bài viết. Public."
@@ -515,18 +855,34 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json", "type": "text" }
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"post_id\": 1,\n    \"content\": \"Bài viết rất hay!\",\n    \"parent_id\": null\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "http://yii2-app-basic.test/api/comments",
+              "raw": "http://yii2-app-basic.test/api/posts/1/comments",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "comments"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "1",
+                "comments"
+              ]
             },
             "description": "Tạo comment. Set `parent_id` để reply. Yêu cầu `createComment` (reader+)."
           },
@@ -537,18 +893,33 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json", "type": "text" }
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"content\": \"Nội dung comment đã chỉnh sửa.\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "http://yii2-app-basic.test/api/comments/1",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "comments", "1"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "comments",
+                "1"
+              ]
             },
             "description": "User chỉ update được comment của mình (`updateOwnComment`). Admin update tất cả."
           },
@@ -562,8 +933,15 @@
             "url": {
               "raw": "http://yii2-app-basic.test/api/comments/1",
               "protocol": "http",
-              "host": ["yii2-app-basic", "test"],
-              "path": ["api", "comments", "1"]
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "comments",
+                "1"
+              ]
             },
             "description": "Soft-delete comment."
           },
@@ -572,7 +950,13 @@
       ],
       "auth": {
         "type": "bearer",
-        "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token}}",
+            "type": "string"
+          }
+        ]
       }
     }
   ],

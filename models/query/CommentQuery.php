@@ -9,24 +9,36 @@ namespace app\models\query;
  */
 class CommentQuery extends \yii\db\ActiveQuery
 {
-    /*public function active()
+    public function active(): static
     {
-        return $this->andWhere('[[status]]=1');
-    }*/
+        return $this->andWhere(['is_deleted' => 0]);
+    }
 
-    /**
-     * {@inheritdoc}
-     * @return \app\models\base\CommentBase[]|array
-     */
+    public function threadedByPost(int $postId): static
+    {
+        return $this
+            ->where(['post_id' => $postId, 'parent_id' => null, 'is_deleted' => 0])
+            ->with([
+                'replies' => function ($q) {
+                    $q->andWhere(['is_deleted' => 0])
+                      ->with('user')
+                      ->orderBy(['created_at' => SORT_ASC]);
+                },
+                'user',
+            ])
+            ->orderBy(['created_at' => SORT_ASC]);
+    }
+
+    public function findActive(int $id): ?\app\models\Comment
+    {
+        return $this->active()->andWhere(['id' => $id])->one();
+    }
+
     public function all($db = null)
     {
         return parent::all($db);
     }
 
-    /**
-     * {@inheritdoc}
-     * @return \app\models\base\CommentBase|array|null
-     */
     public function one($db = null)
     {
         return parent::one($db);
