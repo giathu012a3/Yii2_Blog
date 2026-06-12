@@ -4,7 +4,7 @@ use app\rbac\Permission;
 use yii\db\Migration;
 use yii\db\Query;
 
-class m260608_074555_seed_roles_and_admin_and_user extends Migration
+class m260608_074555_seed_roles_and_default_users extends Migration
 {
     /**
      * {@inheritdoc}
@@ -73,6 +73,54 @@ class m260608_074555_seed_roles_and_admin_and_user extends Migration
         if ($readerUserId) {
             $auth->assign($reader, $readerUserId);
         }
+
+        // Add author 1
+        $author1UserId = (new Query())
+            ->select(['id'])
+            ->from('user')
+            ->where(['username' => 'author1'])
+            ->scalar();
+
+        if (!$author1UserId) {
+            $this->insert('user', [
+                'username' => 'author1',
+                'email' => 'author1@sos.com',
+                'password_hash' => Yii::$app->security->generatePasswordHash('Author@123'),
+                'auth_key' => Yii::$app->security->generateRandomString(),
+                'status' => 1,
+                'created_at' => $time,
+                'updated_at' => $time,
+            ]);
+            $author1UserId = $this->db->getLastInsertID();
+        }
+
+        if ($author1UserId) {
+            $auth->assign($author, $author1UserId);
+        }
+
+        // Add author 2
+        $author2UserId = (new Query())
+            ->select(['id'])
+            ->from('user')
+            ->where(['username' => 'author2'])
+            ->scalar();
+
+        if (!$author2UserId) {
+            $this->insert('user', [
+                'username' => 'author2',
+                'email' => 'author2@sos.com',
+                'password_hash' => Yii::$app->security->generatePasswordHash('Author@123'),
+                'auth_key' => Yii::$app->security->generateRandomString(),
+                'status' => 1,
+                'created_at' => $time,
+                'updated_at' => $time,
+            ]);
+            $author2UserId = $this->db->getLastInsertID();
+        }
+
+        if ($author2UserId) {
+            $auth->assign($author, $author2UserId);
+        }
     }
 
     /**
@@ -85,5 +133,7 @@ class m260608_074555_seed_roles_and_admin_and_user extends Migration
 
         $this->delete('user', ['username' => 'admin']);
         $this->delete('user', ['username' => 'reader']);
+        $this->delete('user', ['username' => 'author1']);
+        $this->delete('user', ['username' => 'author2']);
     }
 }
