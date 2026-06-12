@@ -9,60 +9,63 @@ class m260612_034800_seed_authors extends Migration
     public function safeUp(): void
     {
         $currentTime = time();
-        $passwordHash = Yii::$app->security->generatePasswordHash('author123456');
         $auth = Yii::$app->authManager;
 
-        if ($auth === null) {
-            return;
-        }
+        $users = [
+            [
+                'username' => 'author_one',
+                'email' => 'author_one@example.com',
+                'password' => 'author123456',
+                'role' => 'author',
+            ],
+            [
+                'username' => 'author_two',
+                'email' => 'author_two@example.com',
+                'password' => 'author123456',
+                'role' => 'author',
+            ],
+            [
+                'username' => 'reader_one',
+                'email' => 'reader_one@example.com',
+                'password' => 'reader123456',
+                'role' => 'reader',
+            ],
+        ];
 
-        $authorRole = $auth->getRole('author');
-        if ($authorRole === null) {
-            return;
-        }
+        foreach ($users as $userData) {
+            try {
+                $passwordHash = Yii::$app->security->generatePasswordHash($userData['password']);
+                $this->insert('{{%user}}', [
+                    'username'      => $userData['username'],
+                    'email'         => $userData['email'],
+                    'auth_key'      => Yii::$app->security->generateRandomString(),
+                    'password_hash' => $passwordHash,
+                    'access_token'  => Yii::$app->security->generateRandomString(40),
+                    'status'        => 1,
+                    'is_deleted'    => 0,
+                    'created_at'    => $currentTime,
+                    'updated_at'    => $currentTime,
+                ]);
 
-        try {
-            $this->insert('{{%user}}', [
-                'username'      => 'author_one',
-                'email'         => 'author_one@example.com',
-                'auth_key'      => Yii::$app->security->generateRandomString(),
-                'password_hash' => $passwordHash,
-                'access_token'  => Yii::$app->security->generateRandomString(40),
-                'status'        => 1,
-                'is_deleted'    => 0,
-                'created_at'    => $currentTime,
-                'updated_at'    => $currentTime,
-            ]);
-            $authorOneId = $this->db->getLastInsertID();
-            $auth->assign($authorRole, $authorOneId);
-        } catch (\Throwable $e) {
-            echo "    [SKIP] author_one: " . $e->getMessage() . "\n";
-        }
-
-        try {
-            $this->insert('{{%user}}', [
-                'username'      => 'author_two',
-                'email'         => 'author_two@example.com',
-                'auth_key'      => Yii::$app->security->generateRandomString(),
-                'password_hash' => $passwordHash,
-                'access_token'  => Yii::$app->security->generateRandomString(40),
-                'status'        => 1,
-                'is_deleted'    => 0,
-                'created_at'    => $currentTime,
-                'updated_at'    => $currentTime,
-            ]);
-            $authorTwoId = $this->db->getLastInsertID();
-            $auth->assign($authorRole, $authorTwoId);
-        } catch (\Throwable $e) {
-            echo "    [SKIP] author_two: " . $e->getMessage() . "\n";
+                $userId = $this->db->getLastInsertID();
+                if ($auth !== null) {
+                    $role = $auth->getRole($userData['role']);
+                    if ($role !== null) {
+                        $auth->assign($role, $userId);
+                    }
+                }
+            } catch (\Throwable $e) {
+                echo "    [SKIP] {$userData['username']}: " . $e->getMessage() . "\n";
+            }
         }
     }
 
     public function safeDown(): void
     {
         $auth = Yii::$app->authManager;
+        $usernames = ['author_one', 'author_two', 'reader_one'];
 
-        foreach (['author_one', 'author_two'] as $username) {
+        foreach ($usernames as $username) {
             $user = (new \yii\db\Query())
                 ->select(['id'])
                 ->from('{{%user}}')

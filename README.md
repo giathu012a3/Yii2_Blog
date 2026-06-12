@@ -53,7 +53,7 @@ Sau khi chạy migration thành công, hệ thống đã chuẩn bị sẵn các
 | **Admin** | `admin_root` | `admin123456` | Toàn quyền hệ thống, quản lý danh mục/tag, xóa mọi bài viết/bình luận. |
 | **Author (1)** | `author_one` | `author123456` | Đăng bài viết, quản lý bài viết của mình, viết bình luận. |
 | **Author (2)** | `author_two` | `author123456` | Đăng bài viết, quản lý bài viết của mình, viết bình luận. |
-| **Reader (User)** | `user15` | `password123` | Người dùng đã đăng nhập. Chỉ có thể viết bình luận, chỉnh sửa/xóa bình luận của mình, thích bài viết. |
+| **Reader (User)** | `reader_one` | `reader123456` | Người dùng đã đăng nhập. Chỉ có thể viết bình luận, chỉnh sửa/xóa bình luận của mình, thích bài viết. |
 
 ---
 
@@ -119,6 +119,7 @@ Mọi API Response đều được tự động chuẩn hóa qua middleware/beha
 | **GET** | `/api/posts/manage` | Danh sách bài viết quản lý | ✍️ Author / Admin |
 | **GET** | `/api/posts/<id>/manage` | Chi tiết bài viết quản lý | ✍️ Owner / Admin |
 | **POST** | `/api/posts/<id>/like` | Thích / Bỏ thích bài bài viết | 🔑 Logged-in |
+| **POST** | `/api/posts/<id>/publish` | Xuất bản (Publish) bài viết | ✍️ Owner / Admin |
 | **GET** | `/api/posts/<postId>/comments` | Lấy cây bình luận (Threaded) | ❌ Public |
 | **POST** | `/api/posts/<postId>/comments` | Viết bình luận / Phản hồi | 🔑 Logged-in |
 | **PUT** | `/api/comments/<id>` | Cập nhật bình luận | 👤 Chỉ chủ sở hữu |

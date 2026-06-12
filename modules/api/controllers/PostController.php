@@ -31,7 +31,7 @@ class PostController extends BaseApiController
                 ],
                 [
                     'allow' => true,
-                    'actions' => ['create', 'manage', 'manage-list', 'update', 'delete'],
+                    'actions' => ['create', 'manage', 'manage-list', 'update', 'delete', 'publish'],
                     'roles' => ['createPost'],
                 ],
                 [
@@ -146,5 +146,28 @@ class PostController extends BaseApiController
         }
 
         return $post->toggleLike((int) Yii::$app->user->id);
+    }
+
+    public function actionPublish($id)
+    {
+        $post = Post::findActive($id);
+        if ($post === null) {
+            throw new NotFoundHttpException('Post not found.');
+        }
+
+        if (!Yii::$app->user->can('updatePost', ['model' => $post])) {
+            throw new ForbiddenHttpException('You are not allowed to publish this post.');
+        }
+
+        $post->status = Post::STATUS_PUBLISHED;
+        if ($post->published_at === null) {
+            $post->published_at = time();
+        }
+
+        if ($post->save(false)) {
+            return $post;
+        }
+
+        throw new ServerErrorHttpException('Failed to publish post.');
     }
 }

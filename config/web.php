@@ -124,6 +124,7 @@ $config = [
                         'GET manage'      => 'manage-list',
                         'GET {id}/manage' => 'manage',
                         'POST {id}/like'  => 'like',
+                        'POST {id}/publish' => 'publish',
                         'GET {slug}'      => 'view',
                     ],
                 ],

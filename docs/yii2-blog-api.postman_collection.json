@@ -23,7 +23,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"username\": \"user15\",\n    \"email\": \"user15@gmail.com\",\n    \"password\": \"password123\"\n}",
+              "raw": "{\n    \"username\": \"reader_two\",\n    \"email\": \"reader_two@example.com\",\n    \"password\": \"password123\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -734,6 +734,29 @@
               ]
             },
             "description": "Toggle like. Gọi lại để unlike. Yêu cầu `likePost` (reader+)."
+          },
+          "response": []
+        },
+        {
+          "name": "Publish Post",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://yii2-app-basic.test/api/posts/1/publish",
+              "protocol": "http",
+              "host": [
+                "yii2-app-basic",
+                "test"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "1",
+                "publish"
+              ]
+            },
+            "description": "Xuất bản bài viết. Tác giả chỉ được xuất bản bài viết của mình. Admin được quyền xuất bản bất kỳ bài viết nào."
           },
           "response": []
         },
