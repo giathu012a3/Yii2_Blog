@@ -17,7 +17,17 @@ class User extends BaseUser implements IdentityInterface
     const ROLE_AUTHOR = 'author';
     const ROLE_READER = 'reader';
 
-    public $current_token;
+    private $_currentToken;
+
+    public function getCurrentToken()
+    {
+        return $this->_currentToken;
+    }
+
+    public function setCurrentToken($value)
+    {
+        $this->_currentToken = $value;
+    }
 
 
     public function behaviors()
@@ -61,7 +71,7 @@ class User extends BaseUser implements IdentityInterface
         if ($accessToken) {
             $user = static::findOne(['id' => $accessToken->user_id, 'status' => self::STATUS_ACTIVE]);
             if ($user){
-                $user->current_token = $accessToken;
+                $user->currentToken = $accessToken;
                 return $user;
             }
         }

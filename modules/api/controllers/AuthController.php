@@ -46,7 +46,7 @@ class AuthController extends BaseController
         if ($user) {
             return [
                 'user' => $user,
-                'access_token' => $user->current_token->token,
+                'access_token' => $user->currentToken->token,
             ];
         }
 
@@ -60,8 +60,8 @@ class AuthController extends BaseController
     {
         $user = Yii::$app->user->identity;
 
-        if ($user->current_token) {
-            $user->current_token->updateAttributes([
+        if ($user->currentToken) {
+            $user->currentToken->updateAttributes([
                 'revoked_at' => time(),
             ]);
         }
