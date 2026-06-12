@@ -42,9 +42,9 @@ class CommentController extends BaseController
     public function actionCreate($post_id)
     {
         $model = new CommentForm();
-        $model->post_id = $post_id;
-        $model->author_id = Yii::$app->user->id;
         $model->load(Yii::$app->request->post(), '');
+        $model->post_id = (int)$post_id;
+        $model->author_id = Yii::$app->user->id;
 
         if ($model->save()) {
             return [
