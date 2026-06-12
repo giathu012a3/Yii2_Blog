@@ -93,7 +93,6 @@ class m260608_082159_setup_rbac_permissions extends Migration
         $auth->addChild($author, $createPost);
         $auth->addChild($author, $updateOwnPost);
         $auth->addChild($author, $deleteOwnPost);
-        $auth->addChild($author, $manageTags);
         // Author inherits reader's permissions
         $auth->addChild($author, $reader);
         // Author also has permissions to manage comments on own post
