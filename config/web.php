@@ -118,7 +118,12 @@ $config = [
                     ];
 
                     if ($meta) {
-                        $formatData['meta'] = $meta;
+                        $formatData['pagination'] = [
+                            'total' => isset($meta['totalCount']) ? (int)$meta['totalCount'] : null,
+                            'page' => isset($meta['currentPage']) ? (int)$meta['currentPage'] : null,
+                            'limit' => isset($meta['perPage']) ? (int)$meta['perPage'] : null,
+                            'total_page' => isset($meta['pageCount']) ? (int)$meta['pageCount'] : null,
+                        ];
                     }
 
                     $response->data = $formatData;
