@@ -18,25 +18,29 @@ class R2Component extends Component
 
     private ?S3Client $_client = null;
 
-    public function init()
+    public function init(): void
     {
         parent::init();
 
-        $accountId = $this->accountId;
-        $accessKeyId = $this->accessKeyId;
-        $secretAccessKey = $this->secretAccessKey;
+        if (
+            empty($this->accountId) ||
+            empty($this->accessKeyId) ||
+            empty($this->secretAccessKey) ||
+            empty($this->bucketName)
+        ) {
+            throw new \RuntimeException('Cloudflare R2 configuration is missing.');
+        }
 
-        $endpoint = "https://{$accountId}.r2.cloudflarestorage.com";
+        $endpoint = "https://{$this->accountId}.r2.cloudflarestorage.com";
 
         $this->_client = new S3Client([
             'version' => 'latest',
             'region' => 'auto',
             'endpoint' => $endpoint,
             'credentials' => [
-                'key' => $accessKeyId,
-                'secret' => $secretAccessKey,
+                'key' => $this->accessKeyId,
+                'secret' => $this->secretAccessKey,
             ],
-            'use_path_style_endpoint' => true,
             'http' => [
                 'timeout' => 30.0,
                 'connect_timeout' => 10.0,

@@ -63,9 +63,9 @@ $config = [
         'r2'          => [
             'class' => \app\components\R2Component::class,
             'accountId' => $_ENV['R2_ACCOUNT_ID'] ?? '',
-            'accessKeyId' => $_ENV['R2_ACCESS_KEY_ID'] ?? '',
-            'secretAccessKey' => $_ENV['R2_SECRET_ACCESS_KEY'] ?? '',
-            'bucketName' => $_ENV['R2_BUCKET_NAME'] ?? '',
+            'accessKeyId' => $_ENV['R2_ACCESS_KEY'] ?? '',
+            'secretAccessKey' => $_ENV['R2_SECRET_KEY'] ?? '',
+            'bucketName' => $_ENV['R2_BUCKET'] ?? '',
             'publicUrl' => $_ENV['R2_PUBLIC_URL'] ?? '',
         ],
         'response'    => [
