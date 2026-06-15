@@ -61,4 +61,21 @@ class R2Component extends Component
             return false;
         }
     }
+
+    public function upload(string $tempFilePath, string $fileName, string $mimeType): ?string
+    {
+        try {
+            $this->_client->putObject([
+                'Bucket' => $this->bucketName,
+                'Key' => $fileName,
+                'SourceFile' => $tempFilePath,
+                'ContentType' => $mimeType,
+            ]);
+
+            return rtrim($this->publicUrl, '/') . '/' . ltrim($fileName, '/');
+        } catch (\Throwable $e) {
+            Yii::error("Failed to upload file to R2: " . $e->getMessage(), __METHOD__);
+            return null;
+        }
+    }
 }
