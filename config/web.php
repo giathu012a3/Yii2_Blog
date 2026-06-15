@@ -60,6 +60,14 @@ $config = [
             'class' => \yii\rbac\DbManager::class,
             'cache' => 'cache',
         ],
+        'r2'          => [
+            'class' => \app\components\R2Component::class,
+            'accountId' => $_ENV['R2_ACCOUNT_ID'] ?? '',
+            'accessKeyId' => $_ENV['R2_ACCESS_KEY_ID'] ?? '',
+            'secretAccessKey' => $_ENV['R2_SECRET_ACCESS_KEY'] ?? '',
+            'bucketName' => $_ENV['R2_BUCKET_NAME'] ?? '',
+            'publicUrl' => $_ENV['R2_PUBLIC_URL'] ?? '',
+        ],
         'response'    => [
             'format'  => \yii\web\Response::FORMAT_JSON,
             'charset' => 'UTF-8',
@@ -143,6 +151,7 @@ $config = [
                 ],
                 'GET  api/posts/<postId:\d+>/comments' => 'api/comment/index',
                 'POST api/posts/<postId:\d+>/comments' => 'api/comment/create',
+                'POST api/media'                       => 'api/media/upload',
             ],
         ],
     ],
