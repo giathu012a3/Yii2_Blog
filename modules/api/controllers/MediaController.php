@@ -40,17 +40,19 @@ class MediaController extends BaseApiController
         }
 
         $media = new Media();
-        $media->user_id = Yii::$app->user->id;
-        $media->mime_type = $form->file->type;
-        $media->size = $form->file->size;
         $media->setUploadedFile($form->file);
 
-        if ($media->save(false)) {
+        if ($media->save()) {
             Yii::$app->response->statusCode = 201;
             return [
                 'media_id' => $media->id,
                 'file_url' => $media->file_url,
             ];
+        }
+
+        if ($media->hasErrors()) {
+            Yii::$app->response->statusCode = 422;
+            return $media->getErrors();
         }
 
         Yii::$app->response->statusCode = 500;

@@ -8,6 +8,7 @@ use app\models\base\MediaBase;
 use app\models\query\MediaQuery;
 use Yii;
 use yii\behaviors\TimestampBehavior;
+use yii\behaviors\BlameableBehavior;
 use yii\web\UploadedFile;
 
 /**
@@ -34,24 +35,33 @@ class Media extends MediaBase
                 'class' => TimestampBehavior::class,
                 'updatedAtAttribute' => false,
             ],
+            [
+                'class' => BlameableBehavior::class,
+                'createdByAttribute' => 'user_id',
+                'updatedByAttribute' => false,
+            ],
         ];
     }
 
-    public function beforeSave($insert): bool
+    public function beforeValidate(): bool
     {
-        if (!parent::beforeSave($insert)) {
+        if (!parent::beforeValidate()) {
             return false;
         }
 
-        if ($insert && $this->_uploadedFile instanceof UploadedFile) {
-            $uniqueName = Yii::$app->security->generateRandomString(32) . '.' . $this->_uploadedFile->extension;
-            $fileUrl = Yii::$app->r2->upload($this->_uploadedFile->tempName, $uniqueName, $this->_uploadedFile->type);
+        if ($this->isNewRecord && $this->_uploadedFile !== null) {
+            $this->mime_type = $this->_uploadedFile->type;
+            $this->size = $this->_uploadedFile->size;
+
+            $fileName = Yii::$app->security->generateRandomString(32) . '.' . $this->_uploadedFile->extension;
+            $fileUrl = Yii::$app->r2->upload($this->_uploadedFile->tempName, $fileName, $this->_uploadedFile->type);
 
             if ($fileUrl === null) {
+                $this->addError('uploadedFile', 'Failed to upload file to Cloudflare R2.');
                 return false;
             }
 
-            $this->file_name = $uniqueName;
+            $this->file_name = $fileName;
             $this->file_url = $fileUrl;
         }
 

@@ -9,19 +9,53 @@ use app\models\Category;
 use app\models\Tag;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Inflector;
+use app\models\Media;
+use app\models\MediaLink;
+use app\behaviors\MediaLinkBehavior;
 use Yii;
 
 class PostForm extends Post
 {
     public $tagNames = [];
+    public $thumbnail_id;
     private $_oldTagNames = [];
+
+    public function behaviors(): array
+    {
+        return array_merge(parent::behaviors(), [
+            [
+                'class' => MediaLinkBehavior::class,
+                'modelType' => 'Post',
+                'attributes' => [
+                    'thumbnail_id' => 'thumbnail',
+                ],
+            ],
+        ]);
+    }
 
     public function rules(): array
     {
         return array_merge(parent::rules(), [
-            [['category_id'], 'exist', 'targetClass' => Category::class, 'targetAttribute' => ['category_id' => 'id'], 'filter' => ['is_deleted' => 0], 'message' => 'The selected category is invalid or deleted.'],
+            [
+                ['category_id'],
+                'exist',
+                'targetClass' => Category::class,
+                'targetAttribute' => 'id',
+                'filter' => ['is_deleted' => 0],
+                'message' => 'The selected category is invalid or deleted.'
+            ],
             [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PUBLISHED]],
             [['tagNames'], 'safe'],
+            [['thumbnail_id'], 'integer'],
+            [
+                ['thumbnail_id'],
+                'exist',
+                'skipOnError' => true,
+                'targetClass' => Media::class,
+                'targetAttribute' => 'id',
+                'filter' => ['user_id' => Yii::$app->user->id],
+                'message' => 'The selected thumbnail is invalid.'
+            ],
             [['title'], 'validateHasChanges', 'skipOnEmpty' => false],
         ]);
     }
@@ -39,6 +73,7 @@ class PostForm extends Post
         parent::afterFind();
         $this->tagNames = ArrayHelper::getColumn($this->tags, 'name');
         $this->_oldTagNames = $this->tagNames;
+        $this->thumbnail_id = $this->thumbnailLink ? (int)$this->thumbnailLink->media_id : null;
     }
 
     public function validateHasChanges($attribute, $params)
@@ -52,11 +87,10 @@ class PostForm extends Post
 
         $oldTags = array_map('trim', $this->_oldTagNames);
         $newTags = array_filter(array_map('trim', (array)$this->tagNames));
-
         sort($oldTags);
         sort($newTags);
 
-        if (empty($dirty) && $oldTags === $newTags) {
+        if (empty($dirty) && $oldTags === $newTags && !$this->hasMediaChanges()) {
             $this->addError($attribute, 'No changes detected.');
         }
     }

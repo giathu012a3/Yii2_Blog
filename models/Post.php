@@ -11,6 +11,8 @@ use app\behaviors\SoftDeleteBehavior;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\SluggableBehavior;
 use yii\behaviors\TimestampBehavior;
+use app\models\MediaLink;
+use app\models\Media;
 
 /**
  * Post model extending PostBase.
@@ -98,7 +100,7 @@ class Post extends PostBase
 
     public function extraFields(): array
     {
-        return ['category', 'tags', 'author'];
+        return ['category', 'tags', 'author', 'thumbnail'];
     }
 
     /**
@@ -243,13 +245,19 @@ class Post extends PostBase
             ->onCondition(['model_type' => 'Post']);
     }
 
-    /**
-     * Gets query for [[Media]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
     public function getMedia()
     {
         return $this->hasMany(Media::class, ['id' => 'media_id'])->via('mediaLinks');
+    }
+
+    public function getThumbnailLink()
+    {
+        return $this->hasOne(MediaLink::class, ['model_id' => 'id'])
+            ->onCondition(['model_type' => 'Post', 'group_type' => 'thumbnail']);
+    }
+
+    public function getThumbnail()
+    {
+        return $this->hasOne(Media::class, ['id' => 'media_id'])->via('thumbnailLink');
     }
 }
