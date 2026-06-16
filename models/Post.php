@@ -51,7 +51,9 @@ class Post extends BasePost
             'description',
             'content',
             'status',
-            'thumbnail',
+            'thumbnail' => function () {
+                return $this->thumbnailMedia ? $this->thumbnailMedia->url : null;
+            },
             'slug',
             'view_count',
             'published_at',
@@ -101,5 +103,11 @@ class Post extends BasePost
                 'status' => Comment::STATUS_ACTIVE,
                 'parent_id' => null
             ]);
+    }
+
+    public function getThumbnailMedia()
+    {
+        return $this->hasOne(Media::class, ['model_id' => 'id'])
+            ->andOnCondition(['model_name' => 'Post', 'collection' => 'thumbnail']);
     }
 }

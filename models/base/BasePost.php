@@ -11,7 +11,6 @@ namespace app\models\base;
  * @property int $author_id
  * @property string $title
  * @property string|null $description
- * @property string|null $thumbnail
  * @property string $slug
  * @property string|null $content
  * @property int $status
@@ -40,12 +39,12 @@ class BasePost extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['description', 'thumbnail', 'content', 'published_at', 'deleted_at', 'created_at', 'updated_at'], 'default', 'value' => null],
+            [['description', 'content', 'published_at', 'deleted_at', 'created_at', 'updated_at'], 'default', 'value' => null],
             [['is_deleted'], 'default', 'value' => 0],
             [['category_id', 'author_id', 'title', 'slug'], 'required'],
             [['category_id', 'author_id', 'status', 'published_at', 'view_count', 'is_deleted', 'deleted_at', 'created_at', 'updated_at'], 'integer'],
             [['description', 'content'], 'string'],
-            [['title', 'thumbnail', 'slug'], 'string', 'max' => 255],
+            [['title', 'slug'], 'string', 'max' => 255],
             [['slug'], 'unique'],
         ];
     }
@@ -61,7 +60,6 @@ class BasePost extends \yii\db\ActiveRecord
             'author_id' => 'Author ID',
             'title' => 'Title',
             'description' => 'Description',
-            'thumbnail' => 'Thumbnail',
             'slug' => 'Slug',
             'content' => 'Content',
             'status' => 'Status',
