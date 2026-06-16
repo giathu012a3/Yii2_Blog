@@ -34,7 +34,7 @@ class MediaBase extends \yii\db\ActiveRecord
     {
         return [
             [['created_at'], 'default', 'value' => null],
-            [['user_id', 'file_name', 'file_url', 'mime_type', 'size'], 'required'],
+            [['user_id', 'mime_type', 'size'], 'required'],
             [['user_id', 'size', 'created_at'], 'integer'],
             [['file_name', 'file_url'], 'string', 'max' => 255],
             [['mime_type'], 'string', 'max' => 50],

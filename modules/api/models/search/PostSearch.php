@@ -59,7 +59,7 @@ class PostSearch extends Post
         }
 
         $expand = array_filter(explode(',', Yii::$app->request->get('expand', '')));
-        $validExpands = ['category', 'tags', 'author'];
+        $validExpands = ['category', 'tags', 'author', 'thumbnail'];
         $withRelations = array_intersect($expand, $validExpands);
         if (!empty($withRelations)) {
             $query->with($withRelations);

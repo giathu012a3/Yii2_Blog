@@ -17,53 +17,41 @@ class R2Component extends Component
     public string $publicUrl = '';
 
     private ?S3Client $_client = null;
-
     public function init(): void
     {
         parent::init();
 
         if (
-            empty($this->accountId) ||
-            empty($this->accessKeyId) ||
-            empty($this->secretAccessKey) ||
-            empty($this->bucketName)
+            !empty($this->accountId) &&
+            !empty($this->accessKeyId) &&
+            !empty($this->secretAccessKey) &&
+            !empty($this->bucketName)
         ) {
-            throw new \RuntimeException('Cloudflare R2 configuration is missing.');
-        }
+            $endpoint = "https://{$this->accountId}.r2.cloudflarestorage.com";
 
-        $endpoint = "https://{$this->accountId}.r2.cloudflarestorage.com";
-
-        $this->_client = new S3Client([
-            'version' => 'latest',
-            'region' => 'auto',
-            'endpoint' => $endpoint,
-            'credentials' => [
-                'key' => $this->accessKeyId,
-                'secret' => $this->secretAccessKey,
-            ],
-            'http' => [
-                'timeout' => 30.0,
-                'connect_timeout' => 10.0,
-            ],
-        ]);
-    }
-
-    public function testConnection(): bool
-    {
-        try {
-            $this->_client->listObjectsV2([
-                'Bucket' => $this->bucketName,
-                'MaxKeys' => 1,
+            $this->_client = new S3Client([
+                'version' => 'latest',
+                'region' => 'auto',
+                'endpoint' => $endpoint,
+                'credentials' => [
+                    'key' => $this->accessKeyId,
+                    'secret' => $this->secretAccessKey,
+                ],
+                'http' => [
+                    'timeout' => 30.0,
+                    'connect_timeout' => 10.0,
+                ],
             ]);
-            return true;
-        } catch (\Throwable $e) {
-            Yii::error("R2 connection test failed: " . $e->getMessage(), __METHOD__);
-            return false;
         }
     }
 
     public function upload(string $tempFilePath, string $fileName, string $mimeType): ?string
     {
+        if ($this->_client === null) {
+            Yii::error("R2 upload failed: S3Client is not configured.", __METHOD__);
+            return null;
+        }
+
         try {
             $this->_client->putObject([
                 'Bucket' => $this->bucketName,
@@ -76,6 +64,47 @@ class R2Component extends Component
         } catch (\Throwable $e) {
             Yii::error("Failed to upload file to R2: " . $e->getMessage(), __METHOD__);
             return null;
+        }
+    }
+
+    public function getPresignedUrl(string $fileName, string $expires = '+20 minutes'): ?string
+    {
+        if ($this->_client === null) {
+            Yii::error("R2 presigned URL generation failed: S3Client is not configured.", __METHOD__);
+            return null;
+        }
+
+        try {
+            $cmd = $this->_client->getCommand('GetObject', [
+                'Bucket' => $this->bucketName,
+                'Key' => $fileName,
+            ]);
+
+            $request = $this->_client->createPresignedRequest($cmd, $expires);
+
+            return (string)$request->getUri();
+        } catch (\Throwable $e) {
+            Yii::error("Failed to generate presigned URL: " . $e->getMessage(), __METHOD__);
+            return null;
+        }
+    }
+
+    public function delete(string $fileName): bool
+    {
+        if ($this->_client === null) {
+            Yii::error("R2 delete failed: S3Client is not configured.", __METHOD__);
+            return false;
+        }
+
+        try {
+            $this->_client->deleteObject([
+                'Bucket' => $this->bucketName,
+                'Key' => $fileName,
+            ]);
+            return true;
+        } catch (\Throwable $e) {
+            Yii::error("Failed to delete file from R2: " . $e->getMessage(), __METHOD__);
+            return false;
         }
     }
 }

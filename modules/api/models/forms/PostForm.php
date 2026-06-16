@@ -95,11 +95,83 @@ class PostForm extends Post
         }
     }
 
+    public function beforeSave($insert)
+    {
+        if (!parent::beforeSave($insert)) {
+            return false;
+        }
+
+        if (empty($this->thumbnail_id)) {
+            $publicUrl = rtrim(Yii::$app->r2->publicUrl ?? '', '/');
+            if (!empty($publicUrl)) {
+                $escapedUrl = preg_quote($publicUrl, '/');
+                $pattern = '/' . $escapedUrl . '\/([a-zA-Z0-9_\-]{32}\.(?:png|jpg|jpeg|webp))/i';
+                if (preg_match($pattern, (string)$this->content, $matches)) {
+                    $filename = $matches[1];
+                    $media = Media::find()->andWhere(['file_name' => $filename])->one();
+                    if ($media !== null) {
+                        $this->thumbnail_id = $media->id;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
     public function afterSave($insert, $changedAttributes)
     {
         parent::afterSave($insert, $changedAttributes);
         $this->syncTags($insert);
+        $this->syncContentMedia();
     }
+
+    protected function syncContentMedia()
+    {
+        MediaLink::deleteAll([
+            'model_type' => 'Post',
+            'model_id' => $this->id,
+            'group_type' => 'content',
+        ]);
+
+        $publicUrl = rtrim(Yii::$app->r2->publicUrl ?? '', '/');
+        if (empty($publicUrl)) {
+            return;
+        }
+
+        $escapedUrl = preg_quote($publicUrl, '/');
+        $pattern = '/' . $escapedUrl . '\/([a-zA-Z0-9_\-]{32}\.(?:png|jpg|jpeg|webp))/i';
+        preg_match_all($pattern, (string)$this->content, $matches);
+        $filenames = array_unique($matches[1] ?? []);
+
+        if (empty($filenames)) {
+            return;
+        }
+
+        $mediaList = Media::find()->andWhere(['file_name' => $filenames])->all();
+        if (empty($mediaList)) {
+            return;
+        }
+
+        $rows = [];
+        foreach ($mediaList as $media) {
+            $rows[] = [
+                'media_id' => $media->id,
+                'model_type' => 'Post',
+                'model_id' => $this->id,
+                'group_type' => 'content',
+            ];
+        }
+
+        Yii::$app->db->createCommand()
+            ->batchInsert(
+                MediaLink::tableName(),
+                ['media_id', 'model_type', 'model_id', 'group_type'],
+                $rows
+            )
+            ->execute();
+    }
+
 
     protected function syncTags(bool $insert = false)
     {

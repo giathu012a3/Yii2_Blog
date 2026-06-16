@@ -152,7 +152,9 @@ $config = [
                 'GET  api/posts/<postId:\d+>/comments' => 'api/comment/index',
                 'POST api/posts/<postId:\d+>/comments' => 'api/comment/create',
                 'POST api/media'                       => 'api/media/upload',
+                'DELETE api/media/<id:\d+>'            => 'api/media/delete',
             ],
+
         ],
     ],
     'params' => $params,
