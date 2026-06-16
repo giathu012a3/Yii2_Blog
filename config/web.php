@@ -138,6 +138,13 @@ $config = [
         'r2Component' => [
             'class' => \app\components\R2Component::class,
         ],
+        'aiComponent' => [
+            'class' => \app\components\AiComponent::class,
+            'accountId' => $_ENV['CF_ACCOUNT_ID'],
+            'apiToken' => $_ENV['CF_API_TOKEN'],
+            'model' => $_ENV['CF_AI_MODEL'],
+        ],
+
     ],
     'params' => $params,
     'modules' => [
