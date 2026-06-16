@@ -70,6 +70,43 @@ class PostForm extends Post
         }
 
         $this->syncThumbnail();
+        $this->syncContentImages();
+    }
+
+    protected function syncContentImages()
+    {
+        $publicUrl = $_ENV['R2_PUBLIC_URL'];
+        $allUrls = Media::findAllImagesInContent($this->content);
+
+        $internalUrls = array_filter($allUrls, function($url) use ($publicUrl) {
+            return strpos($url, $publicUrl) !== false;
+        });
+
+        if (!empty($internalUrls)) {
+            Media::updateAll(
+                [
+                    'model_id' => $this->id,
+                    'model_name' => self::tableName(),
+                ],
+                [
+                    'url' => $internalUrls,
+                    'model_id' => null
+                ]
+            );
+        }
+
+        $removedMedia = Media::find()
+            ->where([
+                'model_id' => $this->id,
+                'model_name' => self::tableName(),
+                'collection' => 'content'
+            ])
+            ->andWhere(['not', ['url' => $internalUrls]])
+            ->all();
+
+        foreach ($removedMedia as $media) {
+            $media->deleteMedia(true);
+        }
     }
 
     protected function resolveTagIds(array $inputs): array

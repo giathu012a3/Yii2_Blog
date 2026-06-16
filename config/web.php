@@ -82,6 +82,8 @@ $config = [
                 //like
                 'POST api/posts/<post_id:\d+>/like'      => 'api/post/like',
 
+                //upload
+                'POST api/media/upload' => 'api/media/upload',
 
             ],
         ],

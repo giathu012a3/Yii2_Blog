@@ -93,18 +93,29 @@ class Media extends BaseMedia
         }
         return $media;
     }
-    public static function findFirstImageInContent($content)
+    public static function findAllImagesInContent(?string $content): array
     {
         if (empty($content)) {
-            return null;
+            return [];
         }
-        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $content, $matches)) {
-            return $matches[1];
+
+        $urls = [];
+
+        if (preg_match_all('/<img[^>]+src=["\']([^"\']+)["\']/i', $content, $matches)) {
+            $urls = array_merge($urls, $matches[1]);
         }
-        if (preg_match('/!\[.*?\]\((.*?)\)/i', $content, $matches)) {
-            return $matches[1];
+
+        if (preg_match_all('/!\[.*?\]\((.*?)\)/i', $content, $matches)) {
+            $urls = array_merge($urls, $matches[1]);
         }
-        return null;
+
+        return array_unique($urls);
+    }
+
+    public static function findFirstImageInContent(?string $content): ?string
+    {
+        $images = self::findAllImagesInContent($content);
+        return !empty($images) ? reset($images) : null;
     }
 
     public function deleteMedia(bool $deleteFromR2 = true)
