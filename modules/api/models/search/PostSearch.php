@@ -26,7 +26,7 @@ class PostSearch extends Post
     {
         return [
             [['id', 'category_id', 'author_id', 'status', 'published_at', 'view_count', 'is_deleted', 'deleted_at', 'created_at', 'updated_at'], 'integer'],
-            [['title', 'description', 'thumbnail', 'slug', 'content', 'tag'], 'safe'],
+            [['title', 'description', 'slug', 'content', 'tag'], 'safe'],
         ];
     }
 
@@ -49,7 +49,7 @@ class PostSearch extends Post
      */
     public function search($params, $formName = null)
     {
-        $query = Post::find()->with(['category', 'author', 'tags']);
+        $query = Post::find()->with(['category', 'author', 'tags', 'thumbnailMedia']);
 
         // add conditions that should always apply here
 

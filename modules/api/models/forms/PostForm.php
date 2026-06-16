@@ -3,19 +3,22 @@
 namespace app\modules\api\models\forms;
 
 use app\models\Category;
+use app\models\Media;
 use app\models\Post;
 use app\models\Tag;
 use Yii;
+use yii\web\UploadedFile;
 
 class PostForm extends Post
 {
     public $tag_list = null;
     public $warnings;
+    public $thumbnail_file;
 
     public function scenarios()
     {
         $scenarios = parent::scenarios();
-        $scenarios[self::SCENARIO_DEFAULT] = ['category_id', 'title', 'description', 'thumbnail', 'content', 'status', 'tag_list'];
+        $scenarios[self::SCENARIO_DEFAULT] = ['category_id', 'title', 'description', 'thumbnail_file', 'content', 'status', 'tag_list'];
         return $scenarios;
     }
 
@@ -27,6 +30,7 @@ class PostForm extends Post
             [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PUBLISHED]],
             [['content'], 'required'],
             [['tag_list'], 'safe'],
+            [['thumbnail_file'], 'file', 'skipOnEmpty' => true, 'extensions' => 'png, jpg, jpeg, webp', 'maxSize' => 5 * 1024 * 1024],
         ]);
     }
 
@@ -45,23 +49,27 @@ class PostForm extends Post
         if ($this->isNewRecord) {
             $this->author_id = Yii::$app->user->id;
         }
+        $file = UploadedFile::getInstanceByName('thumbnail_file');
+        if ($file) {
+            $this->thumbnail_file = $file;
+        }
         return parent::beforeValidate();
     }
 
     public function afterSave($insert, $changedAttributes)
     {
         parent::afterSave($insert, $changedAttributes);
-        if ($this->tag_list === null) {
-            return;
+        if ($this->tag_list !== null) {
+            if (is_array($this->tag_list)) {
+                $tagIds = $this->resolveTagIds($this->tag_list);
+                $this->syncTags($tagIds);
+            } else {
+                Yii::warning("Invalid tag_list format for post ID {$this->id}: expected array, got " . gettype($this->tag_list));
+                $this->warnings[] = 'tag_list must be an array of strings, tags were not synced.';
+            }
         }
-        if (!is_array($this->tag_list)) {
 
-            Yii::warning("Invalid tag_list format for post ID {$this->id}: expected array, got " . gettype($this->tag_list));
-            $this->warnings[] = 'tag_list must be an array of strings, tags were not synced.';
-            return;
-        }
-        $tagIds = $this->resolveTagIds($this->tag_list);
-        $this->syncTags($tagIds);
+        $this->syncThumbnail();
     }
 
     protected function resolveTagIds(array $inputs): array
@@ -142,7 +150,7 @@ class PostForm extends Post
                 ])
                 ->execute();
         }
-        
+
         if (!empty($tagsToAdd)) {
             $rows = [];
             $now = time();
@@ -152,6 +160,48 @@ class PostForm extends Post
             Yii::$app->db->createCommand()
                 ->batchInsert('post_tag', ['post_id', 'tag_id', 'created_at'], $rows)
                 ->execute();
+        }
+    }
+
+    protected function syncThumbnail()
+    {
+        $uploadedFile = $this->thumbnail_file;
+        $oldThumbnail = Media::findOne([
+            'model_id' => $this->id,
+            'model_name' => self::tableName(),
+            'collection' => 'thumbnail'
+        ]);
+        if ($this->thumbnail_file === '') {
+            if ($oldThumbnail) {
+                $oldThumbnail->deleteMedia(true);
+            }
+            return;
+        }
+
+        if ($uploadedFile) {
+            if ($oldThumbnail) {
+                $oldThumbnail->deleteMedia(true);
+            }
+            $media = Media::uploadAndCreate($uploadedFile, 'thumbnail', $this->id, self::tableName());
+            if (!$media) {
+                $this->warnings[] = "Fail to upload thumbnail.";
+            }
+        } else {
+            $thumbnailUrl = Media::findFirstImageInContent($this->content);
+            if ($thumbnailUrl) {
+                if ($oldThumbnail && $oldThumbnail->url === $thumbnailUrl) {
+                    return;
+                }
+
+                if ($oldThumbnail) {
+                    $oldThumbnail->deleteMedia(false);
+                }
+
+                $media = Media::createFromUrl($thumbnailUrl, 'thumbnail', $this->id, self::tableName());
+                if (!$media) {
+                    $this->warnings[] = "Fail to create thumbnail.";
+                }
+            }
         }
     }
 }

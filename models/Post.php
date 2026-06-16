@@ -108,6 +108,6 @@ class Post extends BasePost
     public function getThumbnailMedia()
     {
         return $this->hasOne(Media::class, ['model_id' => 'id'])
-            ->andOnCondition(['model_name' => 'Post', 'collection' => 'thumbnail']);
+            ->andOnCondition(['model_name' => self::tableName(), 'collection' => 'thumbnail']);
     }
 }

@@ -33,10 +33,10 @@ class BaseMedia extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['url', 'file_size', 'mime_type', 'created_at'], 'default', 'value' => null],
+            [['url', 'file_size', 'mime_type', 'created_at', 'storage_key'], 'default', 'value' => null],
             [['model_id', 'model_name'], 'safe'],
             [['model_id', 'file_size', 'created_at'], 'integer'],
-            [['model_name', 'url', 'mime_type','collection'], 'string', 'max' => 255],
+            [['model_name', 'url', 'mime_type','collection','storage_key'], 'string', 'max' => 255],
             [['collection'], 'default', 'value' => 'content'],
 
         ];
@@ -55,6 +55,8 @@ class BaseMedia extends \yii\db\ActiveRecord
             'file_size' => 'File Size',
             'mime_type' => 'Mime Type',
             'created_at' => 'Created At',
+            'storage_key' => 'Storage Key',
+            'collection' => 'Collection',
         ];
     }
 
