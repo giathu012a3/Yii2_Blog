@@ -85,6 +85,11 @@ $config = [
                 //upload
                 'POST api/media/upload' => 'api/media/upload',
 
+                // AI assistant
+                'POST api/ai/generate-title'   => 'api/ai/generate-title',
+                'POST api/ai/generate-summary' => 'api/ai/generate-summary',
+                'POST api/ai/improve-text'     => 'api/ai/improve-text',
+
             ],
         ],
         'response' => [
