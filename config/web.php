@@ -142,6 +142,11 @@ $config = [
         ],
         'r2Component' => [
             'class' => \app\components\R2Component::class,
+            'bucket' => $_ENV['R2_BUCKET_NAME'],
+            'publicUrl' => $_ENV['R2_PUBLIC_URL'],
+            'accessKey' => $_ENV['R2_ACCESS_KEY_ID'],
+            'secretKey' => $_ENV['R2_SECRET_ACCESS_KEY'],
+            'endPoint' => $_ENV['R2_ENDPOINT'],
         ],
         'aiComponent' => [
             'class' => \app\components\AiComponent::class,

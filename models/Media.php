@@ -39,7 +39,7 @@ class Media extends BaseMedia
 
         try {
             $url = $r2->upload($file, $folder);
-            $publicUrl = $_ENV['R2_PUBLIC_URL'];
+            $publicUrl = Yii::$app->r2Component->publicUrl;
             $storageKey = str_replace(rtrim($publicUrl, '/') . '/', '', $url);
         } catch (\Exception $e) {
             Yii::error("R2 Upload failed: " . $e->getMessage(), 'media');

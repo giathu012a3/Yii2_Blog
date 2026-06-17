@@ -75,7 +75,7 @@ class PostForm extends Post
 
     protected function syncContentImages()
     {
-        $publicUrl = $_ENV['R2_PUBLIC_URL'];
+        $publicUrl = Yii::$app->r2Component->publicUrl;
         $allUrls = Media::findAllImagesInContent($this->content);
 
         $internalUrls = array_filter($allUrls, function($url) use ($publicUrl) {

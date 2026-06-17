@@ -5,28 +5,27 @@ namespace app\components;
 use Aws\Credentials\Credentials;
 use Aws\S3\S3Client;
 use Yii;
+use yii\base\Component;
 
-class R2Component
+class R2Component extends Component
 {
     private S3Client $client;
-    protected string $bucket;
-    protected string $publicUrl;
+    public $bucket;
+    public $publicUrl;
+    public $accessKey;
+    public $secretKey;
+    public $endPoint;
 
 
-    public function __construct()
+
+    public function init()
     {
-        $access_key = $_ENV['R2_ACCESS_KEY_ID'];
-        $secret_key = $_ENV['R2_SECRET_ACCESS_KEY'];
-        $endpoint = $_ENV['R2_ENDPOINT'];
-        $this->bucket = $_ENV['R2_BUCKET_NAME'];
-        $this->publicUrl = $_ENV['R2_PUBLIC_URL'];
-
-
-        $credentials = new Credentials($access_key, $secret_key);
+        parent::init();
+        $credentials = new Credentials($this->accessKey, $this->secretKey);
 
         $options = [
             'region' => 'auto', // Required by SDK but not used by R2
-            'endpoint' => $endpoint,
+            'endpoint' => $this->endPoint,
             'version' => 'latest',
             'credentials' => $credentials
         ];
