@@ -148,8 +148,8 @@ $config = [
             'secretKey' => $_ENV['R2_SECRET_ACCESS_KEY'],
             'endPoint' => $_ENV['R2_ENDPOINT'],
         ],
-        'aiComponent' => [
-            'class' => \app\components\AiComponent::class,
+        'aiWorkerComponent' => [
+            'class' => \app\components\AiWorkerComponent::class,
             'accountId' => $_ENV['CF_ACCOUNT_ID'],
             'apiToken' => $_ENV['CF_API_TOKEN'],
             'model' => $_ENV['CF_AI_MODEL'],

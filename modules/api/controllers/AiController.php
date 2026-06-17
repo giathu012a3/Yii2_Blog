@@ -90,7 +90,7 @@ class AiController extends BaseController
         ];
         $actionDbName = $actionMapping[$action] ?? $action;
         try {
-            $result = Yii::$app->aiComponent->$action($prompt);
+            $result = Yii::$app->aiWorkerComponent->$action($prompt);
 
             if ($result === false || $result === null) {
                 throw new \Exception("AI Component returned failure or empty response.");

@@ -5,7 +5,7 @@ namespace app\components;
 use Exception;
 use yii\base\Component;
 
-class AiComponent extends Component
+class AiWorkerComponent extends Component
 {
     public $accountId;
     public $apiToken;
