@@ -16,6 +16,7 @@ class UploadForm extends Model
                 'extensions' => 'png, jpg, jpeg, webp',
                 'maxSize' => 5 * 1024 * 1024,
                 'maxFiles' => 10,
+                'mimeTypes' => 'image/jpeg, image/png, image/webp',
             ],
         ];
     }
