@@ -62,11 +62,18 @@ $config = [
         ],
         'r2'          => [
             'class' => \app\components\R2Component::class,
-            'accountId' => $_ENV['R2_ACCOUNT_ID'] ?? '',
+            'accountId' => $_ENV['CF_ACCOUNT_ID'] ?? '',
             'accessKeyId' => $_ENV['R2_ACCESS_KEY'] ?? '',
             'secretAccessKey' => $_ENV['R2_SECRET_KEY'] ?? '',
             'bucketName' => $_ENV['R2_BUCKET'] ?? '',
             'publicUrl' => $_ENV['R2_PUBLIC_URL'] ?? '',
+        ],
+        'aiWorker' => [
+            'class' => \app\components\AiWorkerComponent::class,
+            'accountId' => $_ENV['CF_ACCOUNT_ID'] ?? '',
+            'workerToken' => $_ENV['AI_WORKER_TOKEN'] ?? '',
+            'model' => $_ENV['AI_WORKER_MODEL'] ?? '@cf/meta/llama-3.1-8b-instruct',
+            'workerUrl' => $_ENV['AI_WORKER_URL'] ?? '',
         ],
         'response'    => [
             'format'  => \yii\web\Response::FORMAT_JSON,
@@ -153,6 +160,9 @@ $config = [
                 'POST api/posts/<postId:\d+>/comments' => 'api/comment/create',
                 'POST api/media'                       => 'api/media/upload',
                 'DELETE api/media/<id:\d+>'            => 'api/media/delete',
+                'POST api/ai/generate-title'           => 'api/ai/generate-title',
+                'POST api/ai/generate-summary'         => 'api/ai/generate-summary',
+                'POST api/ai/improve-text'             => 'api/ai/improve-text',
             ],
 
         ],

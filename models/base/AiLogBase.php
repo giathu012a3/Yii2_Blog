@@ -37,7 +37,7 @@ class AiLogBase extends \yii\db\ActiveRecord
             [['created_at'], 'default', 'value' => null],
             [['execution_time'], 'default', 'value' => 0],
             [['status'], 'default', 'value' => 1],
-            [['user_id', 'action'], 'required'],
+            [['action'], 'required'],
             [['user_id', 'prompt_size', 'response_size', 'status', 'created_at'], 'integer'],
             [['execution_time'], 'number'],
             [['action'], 'string', 'max' => 50],
@@ -69,5 +69,4 @@ class AiLogBase extends \yii\db\ActiveRecord
     {
         return new \app\models\query\AiLogQuery(get_called_class());
     }
-
 }
