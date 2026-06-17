@@ -46,7 +46,6 @@ class PostBase extends \yii\db\ActiveRecord
             [['content'], 'string'],
             [['status', 'view_count', 'category_id', 'author_id', 'published_at', 'is_deleted', 'deleted_at', 'created_at', 'updated_at'], 'integer'],
             [['title', 'slug'], 'string', 'max' => 255],
-            [['slug'], 'unique'],
         ];
     }
 

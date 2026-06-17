@@ -7,7 +7,7 @@ namespace app\behaviors;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
 use app\models\MediaLink;
-use yii\helpers\ArrayHelper;
+use app\models\Media;
 use yii\base\InvalidConfigException;
 
 class MediaLinkBehavior extends Behavior
@@ -15,9 +15,14 @@ class MediaLinkBehavior extends Behavior
     public array $attributes = [];
     public ?string $modelType = null;
 
+    /**
+     * {@inheritdoc}
+     */
     public function events(): array
     {
         return [
+            ActiveRecord::EVENT_BEFORE_INSERT => 'autoDetectThumbnail',
+            ActiveRecord::EVENT_BEFORE_UPDATE => 'autoDetectThumbnail',
             ActiveRecord::EVENT_AFTER_INSERT => 'syncMediaLinks',
             ActiveRecord::EVENT_AFTER_UPDATE => 'syncMediaLinks',
         ];
@@ -31,107 +36,81 @@ class MediaLinkBehavior extends Behavior
         }
     }
 
-    public function syncMediaLinks()
+    public function autoDetectThumbnail($event)
+    {
+        foreach ($this->attributes as $attribute => $groupType) {
+            if ($groupType !== 'thumbnail') {
+                continue;
+            }
+
+            if (!$this->owner->canGetProperty($attribute) && !property_exists($this->owner, $attribute)) {
+                continue;
+            }
+
+            if (empty($this->owner->$attribute)) {
+                $publicUrl = rtrim(\Yii::$app->r2->publicUrl ?? '', '/');
+                if (!empty($publicUrl) && ($this->owner->canGetProperty('content') || property_exists($this->owner, 'content'))) {
+                    $escapedUrl = preg_quote($publicUrl, '/');
+                    $pattern = '/' . $escapedUrl . '\/([a-zA-Z0-9_\-]{32}\.(?:png|jpg|jpeg|webp))/i';
+                    
+                    if (preg_match($pattern, (string)$this->owner->content, $matches)) {
+                        $filename = $matches[1];
+                        $media = Media::find()->andWhere(['file_name' => $filename])->one();
+                        if ($media !== null && ($this->owner->canSetProperty($attribute) || property_exists($this->owner, $attribute))) {
+                            $this->owner->$attribute = $media->id;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public function syncMediaLinks($event)
     {
         if (empty($this->owner->id)) {
             return;
         }
 
-        foreach ($this->attributes as $attribute => $config) {
-            $isMultiple = is_array($config) && ($config['multiple'] ?? false);
-            $groupType = is_array($config) ? ($config['groupType'] ?? 'default') : $config;
+        $isInsert = ($event->name === ActiveRecord::EVENT_AFTER_INSERT);
 
-            if ($isMultiple) {
-                $this->syncMultipleLinks($attribute, $groupType);
+        foreach ($this->attributes as $attribute => $groupType) {
+            if (!$this->owner->canGetProperty($attribute) && !property_exists($this->owner, $attribute)) {
+                continue;
+            }
+
+            $currentValue = $this->owner->$attribute;
+            $newVal = $currentValue !== null ? (int)$currentValue : null;
+
+            if ($isInsert) {
+                $link = null;
+                $oldVal = null;
             } else {
-                $this->syncSingleLink($attribute, $groupType);
+                $link = MediaLink::findOne([
+                    'model_type' => $this->modelType,
+                    'model_id' => $this->owner->id,
+                    'group_type' => $groupType,
+                ]);
+                $oldVal = $link ? (int)$link->media_id : null;
             }
-        }
-    }
 
-    private function syncSingleLink(string $attribute, string $groupType)
-    {
-        $currentValue = $this->owner->$attribute;
-        $newVal = $currentValue !== null ? (int)$currentValue : null;
-
-        $link = MediaLink::findOne([
-            'model_type' => $this->modelType,
-            'model_id' => $this->owner->id,
-            'group_type' => $groupType,
-        ]);
-        $oldVal = $link ? (int)$link->media_id : null;
-
-        if ($oldVal === $newVal && !$this->owner->isNewRecord) {
-            return;
-        }
-
-        if (empty($newVal)) {
-            if ($link !== null) {
-                $link->delete();
+            if ($oldVal === $newVal && !$isInsert) {
+                continue;
             }
-        } else {
-            if ($link === null) {
-                $link = new MediaLink();
-                $link->model_type = $this->modelType;
-                $link->model_id = $this->owner->id;
-                $link->group_type = $groupType;
-            }
-            $link->media_id = $newVal;
-            $link->save(false);
-        }
-    }
 
-    private function syncMultipleLinks(string $attribute, string $groupType)
-    {
-        $currentValue = $this->owner->$attribute;
-
-        $existingLinks = MediaLink::find()
-            ->andWhere([
-                'model_type' => $this->modelType,
-                'model_id' => $this->owner->id,
-                'group_type' => $groupType,
-            ])
-            ->all();
-
-        $oldIds = array_map('intval', ArrayHelper::getColumn($existingLinks, 'media_id'));
-        $newIds = array_filter(array_map('intval', (array)$currentValue));
-        sort($oldIds);
-        sort($newIds);
-
-        if ($oldIds === $newIds && !$this->owner->isNewRecord) {
-            return;
-        }
-
-        $transaction = \Yii::$app->db->beginTransaction();
-        try {
-            MediaLink::deleteAll([
-                'model_type' => $this->modelType,
-                'model_id' => $this->owner->id,
-                'group_type' => $groupType,
-            ]);
-
-            if (!empty($newIds)) {
-                $rows = [];
-                foreach ($newIds as $mediaId) {
-                    $rows[] = [
-                        'media_id' => $mediaId,
-                        'model_type' => $this->modelType,
-                        'model_id' => $this->owner->id,
-                        'group_type' => $groupType,
-                    ];
+            if (empty($newVal)) {
+                if ($link !== null) {
+                    $link->delete();
                 }
-                \Yii::$app->db->createCommand()
-                    ->batchInsert(
-                        MediaLink::tableName(),
-                        ['media_id', 'model_type', 'model_id', 'group_type'],
-                        $rows
-                    )
-                    ->execute();
+            } else {
+                if ($link === null) {
+                    $link = new MediaLink();
+                    $link->model_type = $this->modelType;
+                    $link->model_id = $this->owner->id;
+                    $link->group_type = $groupType;
+                }
+                $link->media_id = $newVal;
+                $link->save(false);
             }
-            $transaction->commit();
-        } catch (\Throwable $e) {
-            $transaction->rollBack();
-            throw $e;
         }
     }
 
@@ -141,34 +120,21 @@ class MediaLinkBehavior extends Behavior
             return false;
         }
 
-        foreach ($this->attributes as $attribute => $config) {
-            $isMultiple = is_array($config) && ($config['multiple'] ?? false);
-            $groupType = is_array($config) ? ($config['groupType'] ?? 'default') : $config;
-            $currentValue = $this->owner->$attribute;
+        foreach ($this->attributes as $attribute => $groupType) {
+            if (!$this->owner->canGetProperty($attribute) && !property_exists($this->owner, $attribute)) {
+                continue;
+            }
+            
+            $existingLink = MediaLink::findOne([
+                'model_type' => $this->modelType,
+                'model_id' => $this->owner->id,
+                'group_type' => $groupType,
+            ]);
+            $oldVal = $existingLink ? (int)$existingLink->media_id : null;
+            $newVal = $this->owner->$attribute !== null ? (int)$this->owner->$attribute : null;
 
-            $existingLinks = MediaLink::find()
-                ->andWhere([
-                    'model_type' => $this->modelType,
-                    'model_id' => $this->owner->id,
-                    'group_type' => $groupType,
-                ])
-                ->all();
-
-            if ($isMultiple) {
-                $oldIds = array_map('intval', ArrayHelper::getColumn($existingLinks, 'media_id'));
-                $newIds = array_filter(array_map('intval', (array)$currentValue));
-                sort($oldIds);
-                sort($newIds);
-                if ($oldIds !== $newIds) {
-                    return true;
-                }
-            } else {
-                $oldVal = $existingLinks ? (int)$existingLinks[0]->media_id : null;
-                $newVal = $currentValue !== null ? (int)$currentValue : null;
-
-                if ($oldVal !== $newVal) {
-                    return true;
-                }
+            if ($oldVal !== $newVal) {
+                return true;
             }
         }
         return false;

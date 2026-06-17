@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace app\models;
 
-use Yii;
 use app\models\base\PostBase;
 use app\models\query\PostQuery;
 use app\behaviors\SoftDeleteBehavior;
@@ -13,6 +12,7 @@ use yii\behaviors\SluggableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\models\MediaLink;
 use app\models\Media;
+use app\models\Tag;
 
 /**
  * Post model extending PostBase.
@@ -34,6 +34,7 @@ class Post extends PostBase
             [
                 'class' => SluggableBehavior::class,
                 'attribute' => 'title',
+                'ensureUnique' => true,
             ],
             [
                 'class' => BlameableBehavior::class,
@@ -42,6 +43,22 @@ class Post extends PostBase
             ],
             [
                 'class' => SoftDeleteBehavior::class,
+            ],
+            [
+                'class' => \app\behaviors\MediaLinkBehavior::class,
+                'modelType' => 'Post',
+                'attributes' => [
+                    'thumbnail_id' => 'thumbnail',
+                ],
+            ],
+            [
+                'class' => \app\behaviors\TagSyncBehavior::class,
+                'tagNamesAttribute' => 'tagNames',
+            ],
+            [
+                'class' => \app\behaviors\ContentMediaSyncBehavior::class,
+                'contentAttribute' => 'content',
+                'modelType' => 'Post',
             ],
         ];
     }
@@ -77,7 +94,7 @@ class Post extends PostBase
      */
     public function fields(): array
     {
-        $fields = [
+        return [
             'id',
             'title',
             'slug',
@@ -87,20 +104,13 @@ class Post extends PostBase
             'author_id',
             'published_at',
             'created_at',
-            'updated_at',
+            'updated_at'
         ];
-
-        $action = Yii::$app->controller->action->id ?? null;
-        if ($action !== 'index') {
-            $fields[] = 'content';
-        }
-
-        return $fields;
     }
 
     public function extraFields(): array
     {
-        return ['category', 'tags', 'author', 'thumbnail'];
+        return ['content', 'category', 'tags', 'author', 'thumbnail'];
     }
 
     /**
