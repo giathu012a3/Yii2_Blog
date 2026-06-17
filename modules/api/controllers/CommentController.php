@@ -69,7 +69,7 @@ class CommentController extends BaseController
 
         if ($model->save()) {
             return [
-                'message' => 'Comment added successfully.',
+                'message' => 'Comment updated successfully.',
                 'comment' => $model,
             ];
         }
