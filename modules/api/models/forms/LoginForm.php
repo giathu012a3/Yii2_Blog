@@ -10,7 +10,7 @@ use yii\base\Model;
 class LoginForm extends Model
 {
     private const MAX_FAILED_LOGIN_ATTEMPTS = 5;
-    private const BLOCK_DURATION = 300;
+    private const BLOCK_DURATION = 60;
     private const TOKEN_EXPIRE_DURATION = 7 * 24 * 3600;
     private const CACHE_KEY_BLOCK_PREFIX = 'login_block_';
     private const CACHE_KEY_FAILED_PREFIX = 'login_failed_';
@@ -43,7 +43,7 @@ class LoginForm extends Model
         $ip = Yii::$app->request->userIP;
 
         if($this->isBlocked($ip)) {
-            $this->addError('Login error', 'Too many failed login attempts. Please try again in 5 minute.');
+            $this->addError('Login error', 'Too many failed login attempts. Please try again in 1 minute.');
             return null;
         }
 
