@@ -27,7 +27,7 @@ class MediaController extends BaseController
                 [
                     'allow' => true,
                     'actions' => ['upload'],
-                    'roles' => [Permission::ROLE_AUTHOR, Permission::ROLE_ADMIN],
+                    'roles' => [Permission::AUTHOR_ACCESS, Permission::ADMIN_ACCESS],
                 ]
             ]
         ];
