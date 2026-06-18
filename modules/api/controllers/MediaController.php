@@ -40,15 +40,18 @@ class MediaController extends BaseController
         $model->files = UploadedFile::getInstancesByName('files');
 
         if ($model->validate()) {
-            $urls = [];
+            $uploads = [];
             foreach ($model->files as $file) {
                 $media = Media::uploadAndCreate($file, 'content');
                 if ($media) {
-                    $urls[] = $media->url;
+                  $uploads[] = [
+                    'url' => $media->url,
+                    'id' => $media->id
+                  ];
                 }
             }
 
-            if (empty($urls)) {
+            if (empty($uploads)) {
                 Yii::$app->response->statusCode = self::HTTP_INTERNAL_SERVER_ERROR;
                 return [
                     'message' => 'Failed to upload files.',
@@ -56,7 +59,7 @@ class MediaController extends BaseController
             }
 
             return [
-                'urls' => $urls,
+                'upload' => $uploads,
             ];
         }
 

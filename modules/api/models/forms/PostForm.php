@@ -75,21 +75,16 @@ class PostForm extends Post
 
     protected function syncContentImages()
     {
-        $publicUrl = Yii::$app->r2Component->publicUrl;
-        $allUrls = Media::findAllImagesInContent($this->content);
+        $mediaIds = Media::extractAllImagesInContentById($this->content);
 
-        $internalUrls = array_filter($allUrls, function($url) use ($publicUrl) {
-            return strpos($url, $publicUrl) !== false;
-        });
-
-        if (!empty($internalUrls)) {
+        if (!empty($mediaIds)) {
             Media::updateAll(
                 [
                     'model_id' => $this->id,
                     'model_name' => self::tableName(),
                 ],
                 [
-                    'url' => $internalUrls,
+                    'id' => $mediaIds,
                     'model_id' => null
                 ]
             );
@@ -101,7 +96,7 @@ class PostForm extends Post
                 'model_name' => self::tableName(),
                 'collection' => 'content'
             ])
-            ->andWhere(['not', ['url' => $internalUrls]])
+            ->andWhere(['not', ['id' => $mediaIds]])
             ->all();
 
         foreach ($removedMedia as $media) {
@@ -202,43 +197,73 @@ class PostForm extends Post
 
     protected function syncThumbnail()
     {
-        $uploadedFile = $this->thumbnail_file;
-        $oldThumbnail = Media::findOne([
+
+        if ($this->thumbnail_file === '') {
+            $this->deleteOldThumbnail(true);
+            return;
+        }
+
+        if ($this->thumbnail_file) {
+            $this->handleUploadedThumbnail();
+            return;
+        }
+
+        $this->handleFallbackThumbnail();
+    }
+
+    private function getOldThumbnail()
+    {
+        return Media::findOne([
             'model_id' => $this->id,
             'model_name' => self::tableName(),
             'collection' => 'thumbnail'
         ]);
-        if ($this->thumbnail_file === '') {
-            if ($oldThumbnail) {
-                $oldThumbnail->deleteMedia(true);
-            }
+    }
+
+    private function deleteOldThumbnail(bool $deleteFromR2 = true)
+    {
+        $oldThumbnail = $this->getOldThumbnail();
+        if ($oldThumbnail) {
+            $oldThumbnail->deleteMedia($deleteFromR2);
+        }
+    }
+
+    private function handleUploadedThumbnail()
+    {
+        $this->deleteOldThumbnail(true);
+        $media = Media::uploadAndCreate($this->thumbnail_file, 'thumbnail', $this->id, self::tableName());
+        if (!$media) {
+            $this->warnings[] = "Fail to upload thumbnail.";
+        }
+    }
+
+    private function handleFallbackThumbnail()
+    {
+        $thumbnailSource = Media::findFirstImageInContent($this->content);
+        if (empty($thumbnailSource)) {
+            return;
+        }
+        $existingMedia = Media::findByIdOrUrl($thumbnailSource);
+
+
+        $url = $existingMedia ? $existingMedia->url : $thumbnailSource;
+        $oldThumbnail = $this->getOldThumbnail();
+        if ($oldThumbnail && $oldThumbnail->url === $url) {
             return;
         }
 
-        if ($uploadedFile) {
-            if ($oldThumbnail) {
-                $oldThumbnail->deleteMedia(true);
-            }
-            $media = Media::uploadAndCreate($uploadedFile, 'thumbnail', $this->id, self::tableName());
-            if (!$media) {
-                $this->warnings[] = "Fail to upload thumbnail.";
-            }
-        } else {
-            $thumbnailUrl = Media::findFirstImageInContent($this->content);
-            if ($thumbnailUrl) {
-                if ($oldThumbnail && $oldThumbnail->url === $thumbnailUrl) {
-                    return;
-                }
-
-                if ($oldThumbnail) {
-                    $oldThumbnail->deleteMedia(false);
-                }
-
-                $media = Media::createFromUrl($thumbnailUrl, 'thumbnail', $this->id, self::tableName());
-                if (!$media) {
-                    $this->warnings[] = "Fail to create thumbnail.";
-                }
-            }
+        $this->deleteOldThumbnail(false);
+        $media = new Media([
+            'model_id' => $this->id,
+            'model_name' => self::tableName(),
+            'collection' => 'thumbnail',
+            'url' => $url,
+            'storage_key' => $existingMedia ? $existingMedia->storage_key : null,
+            'file_size' => $existingMedia ? $existingMedia->file_size : null,
+            'mime_type' => $existingMedia ? $existingMedia->mime_type : null,
+        ]);
+        if (!$media->save()) {
+            $this->warnings[] = "Fail to create thumbnail.";
         }
     }
 }
