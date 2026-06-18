@@ -15,6 +15,15 @@ class PostSearch extends Post
 {
     public $tag;
 
+    private function getExpandableRelations(): array
+    {
+        return [
+            'category' => [],
+            'tags' => [],
+            'comments' => ['author', 'replies'],
+        ];
+    }
+
     public function behaviors()
     {
         return [];
@@ -55,7 +64,7 @@ class PostSearch extends Post
         if (is_string($expand) && !empty($expand)) {
             $requested = explode(',', $expand);
 
-            $allowed = ['category', 'tags', 'comments'];
+            $allowed = $this->getExpandableRelations();
             foreach ($requested as $relation) {
                 $relation = trim($relation);
                 if (in_array($relation, $allowed) && !in_array($relation, $with)) {
