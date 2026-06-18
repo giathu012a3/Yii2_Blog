@@ -95,7 +95,6 @@ class PostController extends BaseController
         }
         $model = new PostForm();
         $model->load($this->request->post(), '');
-        //dd($model->tag_list);
 
         if ($model->save()) {
             return $model;
