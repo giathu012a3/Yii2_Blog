@@ -45,11 +45,8 @@ class Post extends BasePost
     {
         return [
             'id',
-            'category_id',
-            'author_id',
             'title',
             'description',
-            'content',
             'status',
             'thumbnail' => function () {
                 return $this->thumbnailMedia ? $this->thumbnailMedia->url : null;

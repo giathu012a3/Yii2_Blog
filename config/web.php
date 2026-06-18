@@ -139,6 +139,7 @@ $config = [
         ],
         'authManager' => [
             'class' => \yii\rbac\DbManager::class,
+            'cache' => 'cache',
         ],
         'r2Component' => [
             'class' => \app\components\R2Component::class,

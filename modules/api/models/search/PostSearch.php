@@ -49,7 +49,7 @@ class PostSearch extends Post
      */
     public function search($params, $formName = null)
     {
-        $query = Post::find()->with(['category', 'author', 'tags', 'thumbnailMedia']);
+        $query = Post::find()->with(['author', 'thumbnailMedia']);
 
         // add conditions that should always apply here
 
@@ -88,13 +88,16 @@ class PostSearch extends Post
                 ]);
         }
 
-        if (Yii::$app->user->isGuest || !Yii::$app->user->can(Permission::AUTHOR_ACCESS)) {
+        $isGuest = Yii::$app->user->isGuest;
+        $isAuthor = Yii::$app->user->can(Permission::AUTHOR_ACCESS);
+        $isAdmin = Yii::$app->user->can(Permission::ADMIN_ACCESS);
+        if ($isGuest) {
             $query->published()->notDelete();
-        } elseif (!Yii::$app->user->can(Permission::ADMIN_ACCESS)) {
+        } elseif ($isAuthor) {
             $query->publishedOrOwn(Yii::$app->user->id)->notDelete();
         }
 
-        if (Yii::$app->user->can(Permission::ADMIN_ACCESS)) {
+        if ($isAdmin) {
             if ($this->is_deleted === null || $this->is_deleted === '') {
                 $query->notDelete();
             } else {
