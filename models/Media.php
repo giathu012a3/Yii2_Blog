@@ -93,6 +93,7 @@ class Media extends BaseMedia
         }
         return $media;
     }
+
     public static function findAllImagesInContent(?string $content): array
     {
         if (empty($content)) {
@@ -105,11 +106,16 @@ class Media extends BaseMedia
             $urls = array_merge($urls, $matches[1]);
         }
 
-        if (preg_match_all('/!\[.*?\]\((.*?)\)/i', $content, $matches)) {
+        if (preg_match_all('/!\[[^\]]*]\(([^)]+)\)/', $content, $matches)) {
             $urls = array_merge($urls, $matches[1]);
         }
 
-        return array_unique($urls);
+        $urls = array_map(
+            static fn(string $url) => trim(html_entity_decode($url)),
+            $urls
+        );
+
+        return array_values(array_unique(array_filter($urls)));
     }
 
     public static function findFirstImageInContent(?string $content): ?string
