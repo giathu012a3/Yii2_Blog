@@ -2076,6 +2076,170 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "6. Media",
+            "item": [
+                {
+                    "name": "Upload Media (Author - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{authorToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "files[]",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/media/upload",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "media",
+                                "upload"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "7. AI",
+            "item": [
+                {
+                    "name": "AI Generate Title (Author - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{authorToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"description\": \"Write about advanced programming patterns in Yii2 framework\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ai/generate-title",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "generate-title"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "AI Generate Summary (Author - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{authorToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"content\": \"Yii is a high-performance PHP framework best for developing Web 2.0 applications. Yii helps Web developers build complex applications and deliver them on-time. Yii is pronounced as Yee or [ji:], and in Chinese it means simple and evolutionary.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ai/generate-summary",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "generate-summary"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "AI Improve Text (Author - Success)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{authorToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"text\": \"i is write some code but it is have many error and look bad. please help make it better.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ai/improve-text",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "improve-text"
+                            ]
+                        }
+                    },
+                    "call": [],
+                    "response": []
+                }
+            ]
         }
     ],
     "variable": [
