@@ -67,10 +67,16 @@ class PostSearch extends Post
             $allowed = $this->getExpandableRelations();
             foreach ($requested as $relation) {
                 $relation = trim($relation);
-                if (in_array($relation, $allowed) && !in_array($relation, $with)) {
-                    $with[] = $relation;
+                if (!isset($allowed[$relation])) {
+                    continue;
+                }
+                $with[] = $relation;
+                foreach ($allowed[$relation] as $child) {
+                    $with[] = "{$relation}.{$child}";
                 }
             }
+
+            $with = array_unique($with);
         }
         $query = Post::find()->with($with);
 
