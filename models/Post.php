@@ -45,6 +45,7 @@ class Post extends BasePost
     {
         return [
             'id',
+            'author_id',
             'title',
             'description',
             'status',
@@ -64,7 +65,8 @@ class Post extends BasePost
             'category',
             'author',
             'tags',
-            'comments'
+            'comments',
+            'content'
         ];
     }
 

@@ -49,7 +49,22 @@ class PostSearch extends Post
      */
     public function search($params, $formName = null)
     {
-        $query = Post::find()->with(['author', 'thumbnailMedia']);
+        $expand = Yii::$app->request->get('expand');
+        $with = ['author', 'thumbnailMedia'];
+
+        if (is_string($expand) && !empty($expand)) {
+            $requested = explode(',', $expand);
+
+            $allowed = ['category', 'tags', 'comments'];
+            foreach ($requested as $relation) {
+                $relation = trim($relation);
+                if (in_array($relation, $allowed) && !in_array($relation, $with)) {
+                    $with[] = $relation;
+                }
+            }
+        }
+        $query = Post::find()->with($with);
+
 
         // add conditions that should always apply here
 
@@ -89,8 +104,8 @@ class PostSearch extends Post
         }
 
         $isGuest = Yii::$app->user->isGuest;
-        $isAuthor = Yii::$app->user->can(Permission::AUTHOR_ACCESS);
-        $isAdmin = Yii::$app->user->can(Permission::ADMIN_ACCESS);
+        $isAuthor = !$isGuest && Yii::$app->user->can(Permission::AUTHOR_ACCESS);
+        $isAdmin = !$isGuest && Yii::$app->user->can(Permission::ADMIN_ACCESS);
         $isReader = !$isGuest && !$isAuthor && !$isAdmin;
 
         if ($isGuest || $isReader) {
