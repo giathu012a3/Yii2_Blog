@@ -60,7 +60,7 @@ class AiWorkerComponent extends Component
     {
         $systemPrompt = "Bạn là trợ lý viết blog chuyên nghiệp. Hãy gợi ý đúng 5 tiêu đề blog hấp dẫn, lôi cuốn dựa trên mô tả của người dùng. Trả về kết quả ngắn gọn dạng danh sách gạch đầu dòng, không thêm bất kỳ câu dẫn hay giải thích nào khác.";
         $response = $this->callAi($systemPrompt, $description);
-        return $this->parseList($response, 5);
+        return $this->parseList($response, 7);
     }
 
     public function generateSummary($content)
