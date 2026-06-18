@@ -45,6 +45,21 @@ Mở file `.env` và cập nhật các cấu hình sau:
   DB_PASSWORD=
   ```
 * **Khởi tạo Cookie Validation Key:** Điền một chuỗi ngẫu nhiên bí mật vào trường `COOKIE_VALIDATION_KEY`. Đây là cấu hình bắt buộc để ứng dụng Yii2 khởi chạy ổn định.
+* **Cấu hình Cloudflare R2 (Cho tính năng Upload):** Điền các khóa kết nối Cloudflare R2 của bạn để tính năng tải lên ảnh hoạt động:
+  ```env
+  R2_ACCOUNT_ID=your_cloudflare_account_id
+  R2_ACCESS_KEY_ID=your_r2_access_key_id
+  R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
+  R2_BUCKET_NAME=your_r2_bucket_name
+  R2_ENDPOINT=https://your_cloudflare_account_id.r2.cloudflarestorage.com
+  R2_PUBLIC_URL=https://your_r2_public_url.r2.dev
+  ```
+* **Cấu hình Cloudflare AI (Cho trợ lý AI):** Điền thông tin API Token để kích hoạt các tính năng tạo tiêu đề, tóm tắt và cải thiện văn bản:
+  ```env
+  CF_ACCOUNT_ID=your_cloudflare_account_id
+  CF_API_TOKEN=your_cloudflare_api_token
+  CF_AI_MODEL=your_model
+  ```
 
 4. Chạy migration và Seed dữ liệu
 
@@ -227,6 +242,83 @@ curl -X POST http://localhost:8080/api/posts/1/comments \
 -d '{
   "content": "This is a comment",
   "parent_id": null
+}'
+```
+
+---
+
+### Tải lên Phương tiện (Media Upload)
+
+| Phương thức | Endpoint | Mô tả |
+| :--- | :--- | :--- |
+| POST | /api/media/upload | Tải ảnh lên Cloudflare R2 (Yêu cầu quyền Author hoặc Admin) |
+
+Ví dụ tải lên ảnh:
+```bash
+curl -X POST http://localhost:8080/api/media/upload \
+-H "Authorization: Bearer <token>" \
+-F "files=@/path/to/image.png"
+```
+Phản hồi mẫu:
+```json
+{
+  "urls": [
+    "https://pub-c72d381ae12447c9bf46b66d74e81240.r2.dev/content/2026/06/66712345abcd.png"
+  ],
+  "media": [
+    {
+      "id": 12,
+      "url": "https://pub-c72d381ae12447c9bf46b66d74e81240.r2.dev/content/2026/06/66712345abcd.png"
+    }
+  ]
+}
+```
+
+---
+
+### Hỗ trợ Trí tuệ Nhân tạo (AI Assistant)
+
+*Tích hợp Cloudflare AI Worker để tối ưu bài viết. Chỉ áp dụng cho Author và Admin.*
+
+#### 1. Gợi ý Tiêu đề (Generate Title)
+Đầu vào là mô tả (`description`), kết quả trả về đúng 5 gợi ý tiêu đề blog hấp dẫn.
+```
+POST /api/ai/generate-title
+```
+```bash
+curl -X POST http://localhost:8080/api/ai/generate-title \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "description": "Bài viết hướng dẫn về lập trình REST API bằng framework Yii2 cho người mới bắt đầu"
+}'
+```
+
+#### 2. Tóm tắt nội dung (Generate Summary)
+Đầu vào là nội dung bài viết (`content`), kết quả trả về tóm tắt ngắn gọn trong 2-3 câu.
+```
+POST /api/ai/generate-summary
+```
+```bash
+curl -X POST http://localhost:8080/api/ai/generate-summary \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "content": "[Nội dung bài viết dài cần tóm tắt...]"
+}'
+```
+
+#### 3. Cải thiện văn bản (Improve Text)
+Đầu vào là văn bản gốc (`text`), kết quả trả về văn bản đã được tối ưu diễn đạt và sửa lỗi.
+```
+POST /api/ai/improve-text
+```
+```bash
+curl -X POST http://localhost:8080/api/ai/improve-text \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "text": "code yii2 viet nhu nay co ok khong nhi"
 }'
 ```
 
