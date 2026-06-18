@@ -42,7 +42,7 @@ class CommentController extends BaseApiController
 
     public function actionIndex(int $postId): array
     {
-        if (Post::findPublishedById($postId) === null) {
+        if (!Post::find()->active()->published()->byId($postId)->exists()) {
             throw new NotFoundHttpException('Post not found.');
         }
 
@@ -51,7 +51,7 @@ class CommentController extends BaseApiController
 
     public function actionCreate(int $postId): CommentForm|array
     {
-        if (Post::findPublishedById($postId) === null) {
+        if (!Post::find()->active()->published()->byId($postId)->exists()) {
             throw new NotFoundHttpException('Post not found.');
         }
 
@@ -70,7 +70,7 @@ class CommentController extends BaseApiController
 
     public function actionUpdate(int $id): CommentForm|array
     {
-        $form = CommentForm::find()->findActive($id);
+        $form = CommentForm::find()->active()->byId($id)->one();
         if ($form === null) {
             throw new NotFoundHttpException('Comment not found.');
         }
@@ -91,7 +91,7 @@ class CommentController extends BaseApiController
 
     public function actionDelete(int $id): void
     {
-        $comment = Comment::find()->findActive($id);
+        $comment = Comment::find()->active()->byId($id)->one();
 
         if ($comment === null) {
             throw new NotFoundHttpException('Comment not found.');

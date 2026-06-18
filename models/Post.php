@@ -12,7 +12,7 @@ use yii\behaviors\SluggableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\models\MediaLink;
 use app\models\Media;
-use app\models\Tag;
+
 
 /**
  * Post model extending PostBase.
@@ -43,17 +43,6 @@ class Post extends PostBase
             ],
             [
                 'class' => SoftDeleteBehavior::class,
-            ],
-            [
-                'class' => \app\behaviors\MediaLinkBehavior::class,
-                'modelType' => 'Post',
-                'attributes' => [
-                    'thumbnail_id' => 'thumbnail',
-                ],
-            ],
-            [
-                'class' => \app\behaviors\TagSyncBehavior::class,
-                'tagNamesAttribute' => 'tagNames',
             ],
             [
                 'class' => \app\behaviors\ContentMediaSyncBehavior::class,
@@ -121,29 +110,6 @@ class Post extends PostBase
         return new PostQuery(static::class);
     }
 
-    public static function findPublishedBySlug(string $slug): ?self
-    {
-        return static::find()
-            ->active()
-            ->andWhere(['status' => self::STATUS_PUBLISHED, 'slug' => $slug])
-            ->one();
-    }
-
-    public static function findPublishedById($id): ?self
-    {
-        return static::find()
-            ->active()
-            ->andWhere(['status' => self::STATUS_PUBLISHED, 'id' => $id])
-            ->one();
-    }
-
-    public static function findActive($id): ?self
-    {
-        return static::find()
-            ->active()
-            ->andWhere(['id' => $id])
-            ->one();
-    }
 
     public function incrementViewCount(): void
     {

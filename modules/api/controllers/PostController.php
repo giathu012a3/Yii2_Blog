@@ -61,7 +61,7 @@ class PostController extends BaseApiController
 
     public function actionView($slug)
     {
-        $post = Post::findPublishedBySlug($slug);
+        $post = Post::find()->active()->published()->bySlug($slug)->one();
         if ($post === null) {
             throw new NotFoundHttpException('Post not found.');
         }
@@ -73,7 +73,7 @@ class PostController extends BaseApiController
 
     public function actionManage($id)
     {
-        $post = Post::findActive($id);
+        $post = Post::find()->active()->byId((int)$id)->one();
         if ($post === null) {
             throw new NotFoundHttpException('Post not found.');
         }
@@ -100,7 +100,7 @@ class PostController extends BaseApiController
 
     public function actionUpdate($id)
     {
-        $model = PostForm::findActive($id);
+        $model = PostForm::find()->active()->byId((int)$id)->one();
         if ($model === null) {
             throw new NotFoundHttpException('Post not found.');
         }
@@ -121,7 +121,7 @@ class PostController extends BaseApiController
 
     public function actionDelete($id)
     {
-        $post = Post::findActive($id);
+        $post = Post::find()->active()->byId((int)$id)->one();
         if ($post === null) {
             throw new NotFoundHttpException('Post not found.');
         }
@@ -140,7 +140,7 @@ class PostController extends BaseApiController
 
     public function actionLike($id)
     {
-        $post = Post::findPublishedById($id);
+        $post = Post::find()->active()->published()->byId((int)$id)->one();
         if ($post === null) {
             throw new NotFoundHttpException('Post not found.');
         }
@@ -150,7 +150,7 @@ class PostController extends BaseApiController
 
     public function actionPublish($id)
     {
-        $post = Post::findActive($id);
+        $post = Post::find()->active()->byId((int)$id)->one();
         if ($post === null) {
             throw new NotFoundHttpException('Post not found.');
         }

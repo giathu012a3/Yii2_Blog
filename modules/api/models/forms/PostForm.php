@@ -7,12 +7,31 @@ namespace app\modules\api\models\forms;
 use app\models\Post;
 use app\models\Category;
 use app\models\Media;
+use app\behaviors\MediaLinkBehavior;
+use app\behaviors\TagSyncBehavior;
 use Yii;
 
 class PostForm extends Post
 {
     public $tagNames = [];
     public $thumbnail_id;
+
+    public function behaviors(): array
+    {
+        return array_merge(parent::behaviors(), [
+            [
+                'class' => MediaLinkBehavior::class,
+                'modelType' => 'Post',
+                'attributes' => [
+                    'thumbnail_id' => 'thumbnail',
+                ],
+            ],
+            [
+                'class' => TagSyncBehavior::class,
+                'tagNamesAttribute' => 'tagNames',
+            ],
+        ]);
+    }
 
     public function scenarios(): array
     {

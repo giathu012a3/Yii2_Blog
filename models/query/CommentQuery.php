@@ -14,7 +14,7 @@ class CommentQuery extends \yii\db\ActiveQuery
         return $this->andWhere(['is_deleted' => 0]);
     }
 
-    public function threadedByPost(int $postId): static
+    public function threadedByPost(int $postId)
     {
         return $this
             ->where(['post_id' => $postId, 'parent_id' => null, 'is_deleted' => 0])
@@ -29,9 +29,9 @@ class CommentQuery extends \yii\db\ActiveQuery
             ->orderBy(['created_at' => SORT_ASC]);
     }
 
-    public function findActive(int $id): ?\app\models\Comment
+    public function byId(int $id): static
     {
-        return $this->active()->andWhere(['id' => $id])->one();
+        return $this->andWhere(['comment.id' => $id]);
     }
 
     public function all($db = null)

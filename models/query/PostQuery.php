@@ -22,4 +22,14 @@ class PostQuery extends \yii\db\ActiveQuery
     {
         return $this->andWhere(['post.status' => Post::STATUS_PUBLISHED]);
     }
+
+    public function bySlug(string $slug): static
+    {
+        return $this->andWhere(['post.slug' => $slug]);
+    }
+
+    public function byId(int $id): static
+    {
+        return $this->andWhere(['post.id' => $id]);
+    }
 }
