@@ -43,8 +43,7 @@ class LoginForm extends Model
         $ip = Yii::$app->request->userIP;
 
         if($this->isBlocked($ip)) {
-            $this->addError('Login error', 'Too many failed login attempts. Please try again in 1 minute.');
-            return null;
+            throw new \yii\web\TooManyRequestsHttpException('Too many failed login attempts. Please try again in 1 minute.');
         }
 
         if ($this->validate()) {
