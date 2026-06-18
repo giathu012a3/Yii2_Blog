@@ -74,9 +74,15 @@ class Post extends PostBase
             'view_count',
             'category_id',
             'author_id',
-            'published_at',
-            'created_at',
-            'updated_at'
+            'published_at' => function () {
+                return $this->published_at ? Yii::$app->formatter->asDatetime($this->published_at) : null;
+            },
+            'created_at' => function () {
+                return $this->created_at ? Yii::$app->formatter->asDatetime($this->created_at) : null;
+            },
+            'updated_at' => function () {
+                return $this->updated_at ? Yii::$app->formatter->asDatetime($this->updated_at) : null;
+            }
         ];
     }
 

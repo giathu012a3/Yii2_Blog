@@ -128,7 +128,9 @@ class Media extends MediaBase
             'file_url',
             'mime_type',
             'size',
-            'created_at',
+            'created_at' => function () {
+                return $this->created_at ? Yii::$app->formatter->asDatetime($this->created_at) : null;
+            },
             'presigned_url' => function () {
                 return $this->getPresignedUrl();
             },

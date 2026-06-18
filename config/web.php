@@ -27,6 +27,13 @@ $config = [
         '@npm'   => '@vendor/npm-asset',
     ],
     'components' => [
+        'formatter' => [
+            'class'          => \yii\i18n\Formatter::class,
+            'datetimeFormat' => 'php:d/m/Y H:i:s',
+            'dateFormat'     => 'php:d/m/Y',
+            'timeFormat'     => 'php:H:i:s',
+            'nullDisplay'    => null,
+        ],
         'request' => [
             'cookieValidationKey' => $_ENV['COOKIE_VALIDATION_KEY'] ?? '',
             'parsers' => [

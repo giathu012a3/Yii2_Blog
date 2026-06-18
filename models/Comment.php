@@ -8,6 +8,7 @@ use app\behaviors\SoftDeleteBehavior;
 use app\models\base\CommentBase;
 use app\models\query\CommentQuery;
 use yii\behaviors\TimestampBehavior;
+use Yii;
 
 /**
  * Comment model extending CommentBase.
@@ -79,7 +80,18 @@ class Comment extends CommentBase
 
     public function fields(): array
     {
-        return ['id', 'post_id', 'parent_id', 'content', 'created_at', 'updated_at'];
+        return [
+            'id',
+            'post_id',
+            'parent_id',
+            'content',
+            'created_at' => function () {
+                return $this->created_at ? Yii::$app->formatter->asDatetime($this->created_at) : null;
+            },
+            'updated_at' => function () {
+                return $this->updated_at ? Yii::$app->formatter->asDatetime($this->updated_at) : null;
+            },
+        ];
     }
 
     public function extraFields(): array
@@ -100,8 +112,8 @@ class Comment extends CommentBase
                         'post_id'    => $reply->post_id,
                         'parent_id'  => $reply->parent_id,
                         'content'    => $reply->content,
-                        'created_at' => $reply->created_at,
-                        'updated_at' => $reply->updated_at,
+                        'created_at' => $reply->created_at ? Yii::$app->formatter->asDatetime($reply->created_at) : null,
+                        'updated_at' => $reply->updated_at ? Yii::$app->formatter->asDatetime($reply->updated_at) : null,
                         'user'       => $reply->user
                             ? ['id' => $reply->user->id, 'username' => $reply->user->username]
                             : null,
