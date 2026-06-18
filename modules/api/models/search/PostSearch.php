@@ -91,9 +91,11 @@ class PostSearch extends Post
         $isGuest = Yii::$app->user->isGuest;
         $isAuthor = Yii::$app->user->can(Permission::AUTHOR_ACCESS);
         $isAdmin = Yii::$app->user->can(Permission::ADMIN_ACCESS);
-        if ($isGuest) {
+        $isReader = !$isGuest && !$isAuthor && !$isAdmin;
+
+        if ($isGuest || $isReader) {
             $query->published()->notDelete();
-        } elseif ($isAuthor) {
+        } elseif ($isAuthor && !$isAdmin) {
             $query->publishedOrOwn(Yii::$app->user->id)->notDelete();
         }
 
