@@ -12,7 +12,7 @@ use yii\behaviors\SluggableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\models\MediaLink;
 use app\models\Media;
-
+use Yii;
 
 /**
  * Post model extending PostBase.
@@ -22,9 +22,6 @@ class Post extends PostBase
     public const STATUS_PUBLISHED = 1;
     public const STATUS_DRAFT = 0;
 
-    /**
-     * {@inheritdoc}
-     */
     public function behaviors(): array
     {
         return [
@@ -44,17 +41,9 @@ class Post extends PostBase
             [
                 'class' => SoftDeleteBehavior::class,
             ],
-            [
-                'class' => \app\behaviors\ContentMediaSyncBehavior::class,
-                'contentAttribute' => 'content',
-                'modelType' => 'Post',
-            ],
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function rules(): array
     {
         return array_merge(parent::rules(), [
@@ -62,9 +51,6 @@ class Post extends PostBase
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function beforeSave($insert)
     {
         if (!parent::beforeSave($insert)) {
@@ -78,9 +64,6 @@ class Post extends PostBase
         return true;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function fields(): array
     {
         return [
@@ -102,14 +85,10 @@ class Post extends PostBase
         return ['content', 'category', 'tags', 'author', 'thumbnail'];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public static function find(): PostQuery
     {
         return new PostQuery(static::class);
     }
-
 
     public function incrementViewCount(): void
     {
@@ -140,81 +119,41 @@ class Post extends PostBase
         throw new \yii\web\ServerErrorHttpException('Failed to like post.');
     }
 
-    /**
-     * Gets query for [[Category]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
     public function getCategory()
     {
         return $this->hasOne(Category::class, ['id' => 'category_id']);
     }
 
-    /**
-     * Gets query for [[Author]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
     public function getAuthor()
     {
         return $this->hasOne(User::class, ['id' => 'author_id']);
     }
 
-    /**
-     * Gets query for [[Comments]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
     public function getComments()
     {
         return $this->hasMany(Comment::class, ['post_id' => 'id']);
     }
 
-    /**
-     * Gets query for [[PostLikes]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
     public function getPostLikes()
     {
         return $this->hasMany(PostLike::class, ['post_id' => 'id']);
     }
 
-    /**
-     * Gets query for [[LikedUsers]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
     public function getLikedUsers()
     {
         return $this->hasMany(User::class, ['id' => 'user_id'])->via('postLikes');
     }
 
-    /**
-     * Gets query for [[PostTags]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
     public function getPostTags()
     {
         return $this->hasMany(PostTag::class, ['post_id' => 'id']);
     }
 
-    /**
-     * Gets query for [[Tags]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
     public function getTags()
     {
         return $this->hasMany(Tag::class, ['id' => 'tag_id'])->via('postTags');
     }
 
-    /**
-     * Gets query for [[MediaLinks]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
     public function getMediaLinks()
     {
         return $this->hasMany(MediaLink::class, ['model_id' => 'id'])
