@@ -6,6 +6,7 @@ use app\behaviors\SlugBehavior;
 use app\behaviors\SoftDeleteBehaviors;
 use app\models\base\BasePost;
 use yii\behaviors\TimestampBehavior;
+use yii\helpers\HtmlPurifier;
 
 class Post extends BasePost
 {
@@ -35,6 +36,9 @@ class Post extends BasePost
                 if (empty($oldPubishedAt) && empty($this->published_at)) {
                     $this->published_at = time();
                 }
+            }
+            if (!empty($this->content)) {
+                $this->content = HtmlPurifier::process($this->content);
             }
             return true;
         }
