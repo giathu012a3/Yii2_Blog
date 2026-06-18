@@ -31,8 +31,13 @@ class PostController extends BaseApiController
                 ],
                 [
                     'allow' => true,
-                    'actions' => ['create', 'manage', 'manage-list', 'update', 'delete', 'publish'],
+                    'actions' => ['create'],
                     'roles' => ['createPost'],
+                ],
+                [
+                    'allow' => true,
+                    'actions' => ['manage', 'manage-list', 'update', 'publish', 'delete'],
+                    'roles' => ['admin', 'author'],
                 ],
                 [
                     'allow' => true,
