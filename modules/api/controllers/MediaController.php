@@ -59,7 +59,7 @@ class MediaController extends BaseController
             }
 
             return [
-                'upload' => $uploads,
+                'media' => $uploads,
             ];
         }
 
