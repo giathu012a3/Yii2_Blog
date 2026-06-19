@@ -74,6 +74,9 @@ class Post extends PostBase
             'view_count',
             'category_id',
             'author_id',
+            'like_count' => function () {
+                return (int)$this->getPostLikes()->count();
+            },
             'published_at' => function () {
                 return $this->published_at ? Yii::$app->formatter->asDatetime($this->published_at) : null;
             },
