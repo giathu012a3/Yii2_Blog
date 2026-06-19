@@ -344,11 +344,16 @@ Các tài khoản sau được tự động nạp sẵn khi chạy lệnh migrat
 ### Postman Collection
 Import tệp tin kiểm thử Postman sau để chạy test:
 ```
-docs/yii2_blog_postman_collection.json
-docs/yii2_blog_postman_environment.json
+docs/postman/yii2_blog_postman_collection.json
+docs/postman/yii2_blog_postman_environment.json
 ```
 Sau khi import xong thì chọn đúng enviroment: Yii2 Blog - Local Development
 Sau đó run collection: Yii2 Blog API
 
 ---Lưu ý----
 Nếu chạy thủ công: Hãy sử dụng chuỗi Bearer Token nhận được từ API Đăng nhập (`POST /api/auth/login`) gắn vào phần cấu hình `Authorization` cho các API yêu cầu xác thực.
+
+## 6. Video Demo
+
+Link: https://www.youtube.com/watch?v=VLpxcPRbV6g
+
