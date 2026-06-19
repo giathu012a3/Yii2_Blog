@@ -4,6 +4,12 @@ REST API Blog System xây dựng trên **Yii2**, phân quyền **RBAC native**, 
 
 ---
 
+## 🎥 Video Demo
+
+* 📺 **Video Demo**: [Xem Video Demo trên Google Drive](https://drive.google.com/drive/folders/1SWYLZ8vS79PCBNfvqJaa6xSL02F_iPyj?usp=sharing)
+
+---
+
 ## ⚡ Cài đặt trong 5 phút
 
 ### 1. Clone & cài dependencies
@@ -58,7 +64,7 @@ php yii serve
 ```
 
 ### 5. Import Postman
-Import file [`docs/yii2-blog-api.postman_collection.json`](docs/yii2-blog-api.postman_collection.json) vào Postman.
+Import file [docs/yii2-blog-api.postman_collection.json](file:///c:/laragon/www/yii2-app-basic/docs/yii2-blog-api.postman_collection.json) vào Postman.
 
 > [!NOTE]
 > Migration **không dùng foreign key constraint** ở tầng DB. Quan hệ được quản lý hoàn toàn qua ActiveRecord relations và Form Model validation.
@@ -293,65 +299,3 @@ curl -X POST http://localhost/api/posts/5/comments \
 curl -X POST http://localhost/api/posts/5/like \
   -H "Authorization: Bearer <token>"
 ```
-
----
-
-## 🏗️ Kiến trúc
-
-```
-modules/api/
-├── controllers/          # Controllers (orchestration only, no business logic)
-│   ├── AuthController    # register, login, logout, me, change-password
-│   ├── PostController    # CRUD post + like + publish
-│   ├── CategoryController
-│   ├── TagController
-│   ├── CommentController
-│   ├── MediaController   # Upload lên Cloudflare R2
-│   └── AiController      # generate-title, generate-summary, improve-text
-└── models/
-    ├── forms/            # Form Models (validation + upload fields tách khỏi AR)
-    └── search/           # Search Models (filter + eager load)
-
-models/                   # AR Models (DB mapping, relations, behaviors)
-behaviors/
-├── SoftDeleteBehavior    # Soft-delete tự viết
-└── LoginRateLimiter      # Rate limit login (5 fail/60s)
-components/
-├── R2Component           # Cloudflare R2 upload/delete/presigned URL
-└── AiWorkerComponent     # Cloudflare Workers AI (timeout 30s, error 502)
-rbac/
-└── AuthorRule            # Owner check (post.author_id / comment.user_id)
-migrations/               # Toàn bộ schema + index + seed (chạy sạch từ DB trống)
-```
-
-**Design decisions:**
-- AR model không chứa upload field — tách vào Form Model
-- Business logic post-save (sync tag, set published_at, slug) nằm trong `beforeSave`/`afterSave`
-- Soft-delete qua `SoftDeleteBehavior` custom (không dùng FK constraint)
-- Eager loading bằng `with()` trong Search model — tránh N+1
-- Response envelope chuẩn hóa tại `web.php` `response.beforeSend`
-
----
-
-## 🔒 Bảo mật
-
-- Bearer token authentication (`HttpBearerAuth`)
-- Password hash bằng `Yii::$app->security->generatePasswordHash()` (bcrypt)
-- Token revoke khi logout
-- Rate limit login: **5 lần thất bại / 60 giây** → block IP
-- Không có secret/credential nào trong source code (đọc từ `.env`)
-- RBAC check bằng `Yii::$app->user->can()` — không hardcode trong action
-
----
-
-## 📦 Tech Stack
-
-| Thành phần | Công nghệ |
-|:---|:---|
-| Framework | Yii2 (PHP 8.x) |
-| Database | MySQL 8+ |
-| Auth | Bearer Token (Yii2 native) |
-| RBAC | `yii\rbac\DbManager` |
-| File storage | Cloudflare R2 (S3-compatible, `aws/aws-sdk-php`) |
-| AI | Cloudflare Workers AI |
-| Env | `vlucas/phpdotenv` |
