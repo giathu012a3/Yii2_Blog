@@ -7,6 +7,7 @@ namespace app\modules\api\models\search;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use app\models\Post;
+use app\models\PostLike;
 use Yii;
 
 /**
@@ -17,6 +18,14 @@ class PostSearch extends Post
     public $tag;
     public $tag_id;
     public $isManagement = false;
+
+    /**
+     * Override behaviors to avoid running SluggableBehavior and generating unique slug checks during search.
+     */
+    public function behaviors(): array
+    {
+        return [];
+    }
 
     /**
      * {@inheritdoc}
@@ -50,6 +59,13 @@ class PostSearch extends Post
         $isAdmin = Yii::$app->user->can('admin');
 
         $query = Post::find()->active();
+        $query->select([
+            'post.*',
+            'like_count' => PostLike::find()
+                ->select('COUNT(*)')
+                ->where('post_like.post_id = post.id')
+        ]);
+
         if ($this->isManagement) {
             if (!$isAdmin) {
                 $query->andWhere(['post.author_id' => $userId]);
@@ -61,6 +77,12 @@ class PostSearch extends Post
         $expand = array_filter(explode(',', Yii::$app->request->get('expand', '')));
         $validExpands = ['category', 'tags', 'author', 'thumbnail'];
         $withRelations = array_intersect($expand, $validExpands);
+
+        // Always eager load the thumbnail relation to prevent N+1 queries for thumbnail_url
+        if (!in_array('thumbnail', $withRelations, true)) {
+            $withRelations[] = 'thumbnail';
+        }
+
         if (!empty($withRelations)) {
             $query->with($withRelations);
         }

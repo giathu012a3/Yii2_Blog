@@ -22,6 +22,8 @@ class Post extends PostBase
     public const STATUS_PUBLISHED = 1;
     public const STATUS_DRAFT = 0;
 
+    public $like_count;
+
     public function behaviors(): array
     {
         return [
@@ -75,7 +77,11 @@ class Post extends PostBase
             'category_id',
             'author_id',
             'like_count' => function () {
-                return (int)$this->getPostLikes()->count();
+                return $this->like_count !== null ? (int)$this->like_count : (int)$this->getPostLikes()->count();
+            },
+            'thumbnail_url' => function () {
+                $thumbnail = $this->thumbnail;
+                return $thumbnail ? $thumbnail->file_url : null;
             },
             'published_at' => function () {
                 return $this->published_at ? Yii::$app->formatter->asDatetime($this->published_at) : null;
