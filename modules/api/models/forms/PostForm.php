@@ -30,7 +30,7 @@ class PostForm extends Post
             [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PUBLISHED]],
             [['content'], 'required'],
             [['tag_list'], 'safe'],
-            [['thumbnail_file'], 'file', 'skipOnEmpty' => true, 'extensions' => 'png, jpg, jpeg, webp', 'maxSize' => 5 * 1024 * 1024],
+            [['thumbnail_file'], 'file', 'skipOnEmpty' => true, 'extensions' => 'png, jpg, jpeg, webp', 'maxSize' => 5 * 1024 * 1024, 'mimeTypes' => 'image/jpeg, image/png, image/webp'],
         ]);
     }
 
