@@ -3,7 +3,7 @@
 namespace app\models;
 
 use app\behaviors\SlugBehavior;
-use app\behaviors\SoftDeleteBehaviors;
+use app\behaviors\SoftDeleteBehavior;
 use app\models\base\BasePost;
 use yii\behaviors\TimestampBehavior;
 use yii\helpers\HtmlPurifier;
@@ -24,7 +24,7 @@ class Post extends BasePost
                 'class' => SlugBehavior::class,
                 'attribute' => 'title'
             ],
-            SoftDeleteBehaviors::class,
+            SoftDeleteBehavior::class,
         ];
     }
 

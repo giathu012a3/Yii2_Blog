@@ -4,7 +4,7 @@ namespace app\behaviors;
 
 use yii\base\Behavior;
 
-class SoftDeleteBehaviors extends Behavior
+class SoftDeleteBehavior extends Behavior
 {
     public $deletedAttribute = 'is_deleted';
     public $deletedAtAttribute = 'deleted_at';
