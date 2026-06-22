@@ -49,7 +49,10 @@ class PostForm extends Post
                 'targetClass' => Media::class,
                 'targetAttribute' => 'id',
                 'filter' => function ($query) {
-                    $userId = (Yii::$app->has('user') && Yii::$app->user->id !== null) ? Yii::$app->user->id : 0;
+                    if (Yii::$app->user->can('updatePost')) {
+                        return;
+                    }
+                    $userId = Yii::$app->user->id ?? 0;
                     $query->andWhere(['user_id' => $userId]);
                 },
                 'message' => 'The selected thumbnail is invalid.'

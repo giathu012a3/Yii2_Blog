@@ -50,7 +50,6 @@ $config = [
             'loginUrl'        => null,
         ],
         'errorHandler' => [
-            'errorAction' => 'site/error',
         ],
         'mailer' => \yii\mail\MailerInterface::class,
         'log' => [
