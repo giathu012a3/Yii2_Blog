@@ -259,16 +259,8 @@ class PostForm extends Post
         }
 
         $this->deleteOldThumbnail(false);
-        $media = new Media([
-            'model_id' => $this->id,
-            'model_name' => self::tableName(),
-            'collection' => 'thumbnail',
-            'url' => $url,
-            'storage_key' => $existingMedia ? $existingMedia->storage_key : null,
-            'file_size' => $existingMedia ? $existingMedia->file_size : null,
-            'mime_type' => $existingMedia ? $existingMedia->mime_type : null,
-        ]);
-        if (!$media->save()) {
+        $media = Media::createFromUrl($url, 'thumbnail', $this->id, self::tableName());
+        if (!$media) {
             $this->warnings[] = "Fail to create thumbnail.";
         }
     }
