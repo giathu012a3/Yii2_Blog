@@ -143,11 +143,4 @@ class Media extends BaseMedia
         return (bool)$this->delete();
     }
 
-    public static function findByUrl($source): ?self
-    {
-        if (empty($source)) {
-            return null;
-        }
-        return self::findOne(['url' => $source]);
-    }
 }

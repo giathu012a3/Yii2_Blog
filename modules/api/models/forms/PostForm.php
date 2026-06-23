@@ -250,16 +250,13 @@ class PostForm extends Post
             return;
         }
 
-        $existingMedia = Media::findByUrl($thumbnailUrl);
-        $url = $existingMedia ? $existingMedia->url : $thumbnailUrl;
-
         $oldThumbnail = $this->getOldThumbnail();
-        if ($oldThumbnail && $oldThumbnail->url === $url) {
+        if ($oldThumbnail && $oldThumbnail->url === $thumbnailUrl) {
             return;
         }
 
         $this->deleteOldThumbnail(false);
-        $media = Media::createFromUrl($url, 'thumbnail', $this->id, self::tableName());
+        $media = Media::createFromUrl($thumbnailUrl, 'thumbnail', $this->id, self::tableName());
         if (!$media) {
             $this->warnings[] = "Fail to create thumbnail.";
         }
