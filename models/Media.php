@@ -118,28 +118,8 @@ class Media extends BaseMedia
         return array_values(array_unique(array_filter($urls)));
     }
 
-    public static function extractAllImagesInContentById($content)
-    {
-        if (empty($content)) {
-            return [];
-        }
-
-        preg_match_all(
-            '/data-media-id\s*=\s*["\'](\d+)["\']/i',
-            $content,
-            $matches
-        );
-
-        return array_values(array_unique(array_map('intval', $matches[1] ?? [])));
-    }
-
     public static function findFirstImageInContent($content)
     {
-        $ids = self::extractAllImagesInContentById($content);
-        if (!empty($ids)) {
-            return $ids[0];
-        }
-
         $images = self::findAllImagesInContent($content);
         return !empty($images) ? reset($images) : null;
     }
@@ -163,13 +143,10 @@ class Media extends BaseMedia
         return (bool)$this->delete();
     }
 
-    public static function findByIdOrUrl($source): ?self
+    public static function findByUrl($source): ?self
     {
         if (empty($source)) {
             return null;
-        }
-        if (is_numeric($source)) {
-            return self::findOne((int)$source);
         }
         return self::findOne(['url' => $source]);
     }

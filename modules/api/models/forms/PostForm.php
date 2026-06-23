@@ -75,7 +75,9 @@ class PostForm extends Post
 
     protected function syncContentImages()
     {
-        $mediaIds = Media::extractAllImagesInContentById($this->content);
+        $mediaUrls = Media::findAllImagesInContent($this->content);
+
+        $mediaIds = Media::find()->select('id')->where(['url' => $mediaUrls])->column();
 
         if (!empty($mediaIds)) {
             Media::updateAll(
@@ -239,14 +241,14 @@ class PostForm extends Post
 
     private function handleFallbackThumbnail()
     {
-        $thumbnailSource = Media::findFirstImageInContent($this->content);
-        if (empty($thumbnailSource)) {
+        $thumbnailUrl = Media::findFirstImageInContent($this->content);
+        if (empty($thumbnailUrl)) {
             return;
         }
-        $existingMedia = Media::findByIdOrUrl($thumbnailSource);
 
+        $existingMedia = Media::findByUrl($thumbnailUrl);
+        $url = $existingMedia ? $existingMedia->url : $thumbnailUrl;
 
-        $url = $existingMedia ? $existingMedia->url : $thumbnailSource;
         $oldThumbnail = $this->getOldThumbnail();
         if ($oldThumbnail && $oldThumbnail->url === $url) {
             return;
