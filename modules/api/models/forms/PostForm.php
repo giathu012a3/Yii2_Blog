@@ -92,14 +92,18 @@ class PostForm extends Post
             );
         }
 
-        $removedMedia = Media::find()
+        $removedMediaQuery = Media::find()
             ->where([
                 'model_id' => $this->id,
                 'model_name' => self::tableName(),
                 'collection' => 'content'
-            ])
-            ->andWhere(['not', ['id' => $mediaIds]])
-            ->all();
+            ]);
+
+        if (!empty($mediaIds)) {
+            $removedMediaQuery->andWhere(['not', ['id' => $mediaIds]]);
+        }
+
+        $removedMedia = $removedMediaQuery->all();
 
         foreach ($removedMedia as $media) {
             $media->deleteMedia(true);
