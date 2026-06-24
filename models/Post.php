@@ -5,8 +5,11 @@ namespace app\models;
 use app\behaviors\SlugBehavior;
 use app\behaviors\SoftDeleteBehavior;
 use app\models\base\BasePost;
+use app\rbac\Permission;
+use Yii;
 use yii\behaviors\TimestampBehavior;
 use yii\helpers\HtmlPurifier;
+use yii\web\Cookie;
 
 class Post extends BasePost
 {
@@ -72,6 +75,40 @@ class Post extends BasePost
             'comments',
             'content'
         ];
+    }
+
+    public function handleView()
+    {
+        if ($this->status != self::STATUS_PUBLISHED) {
+            return;
+        }
+
+        $userId = Yii::$app->user->isGuest ? 'guest' : Yii::$app->user->id;
+
+        if ($userId == $this->author_id) {
+            return;
+        }
+
+        if ($userId && Yii::$app->user->can(Permission::ADMIN_ACCESS)) {
+            return;
+        }
+
+        $coookieName = "user-{$userId}-view-post-{$this->id}";
+
+        if (Yii::$app->request->cookies->has($coookieName)) {
+            return;
+        }
+        $this->updateCounters([
+            'view_count' => 1
+        ]);
+
+        Yii::$app->response->cookies->add(
+            new Cookie([
+                'name' => $coookieName,
+                'value' => 1,
+                "expire" => time() + 86400
+            ])
+        );
     }
 
 

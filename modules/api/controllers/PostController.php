@@ -79,7 +79,7 @@ class PostController extends BaseController
                 throw new ForbiddenHttpException('You do not have permission to view this post.');
             }
         }
-        $model->updateCounters(['view_count' => 1]);
+        $model->handleView();
         return $model;
     }
 
