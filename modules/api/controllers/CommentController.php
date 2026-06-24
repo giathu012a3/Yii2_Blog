@@ -43,7 +43,7 @@ class CommentController extends BaseApiController
     public function actionIndex(int $postId): array
     {
         if (!Post::find()->active()->published()->byId($postId)->exists()) {
-            throw new NotFoundHttpException('Post not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Post not found.'));
         }
 
         return Comment::find()->threadedByPost($postId)->all();
@@ -52,7 +52,7 @@ class CommentController extends BaseApiController
     public function actionCreate(int $postId): CommentForm|array
     {
         if (!Post::find()->active()->published()->byId($postId)->exists()) {
-            throw new NotFoundHttpException('Post not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Post not found.'));
         }
 
         $form = new CommentForm();
@@ -72,11 +72,11 @@ class CommentController extends BaseApiController
     {
         $form = CommentForm::find()->active()->byId($id)->one();
         if ($form === null) {
-            throw new NotFoundHttpException('Comment not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Comment not found.'));
         }
 
         if (!Yii::$app->user->can('updateComment', ['model' => $form])) {
-            throw new ForbiddenHttpException('You are not allowed to update this comment.');
+            throw new ForbiddenHttpException(\Yii::t('app', 'You are not allowed to update this comment.'));
         }
 
         $form->load(Yii::$app->request->getBodyParams(), '');
@@ -94,11 +94,11 @@ class CommentController extends BaseApiController
         $comment = Comment::find()->active()->byId($id)->one();
 
         if ($comment === null) {
-            throw new NotFoundHttpException('Comment not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Comment not found.'));
         }
 
         if (!Yii::$app->user->can('deleteComment', ['model' => $comment])) {
-            throw new ForbiddenHttpException('You are not allowed to delete this comment.');
+            throw new ForbiddenHttpException(\Yii::t('app', 'You are not allowed to delete this comment.'));
         }
 
         if ($comment->softDelete()) {
@@ -106,6 +106,6 @@ class CommentController extends BaseApiController
             return;
         }
 
-        throw new ServerErrorHttpException('Failed to delete comment.');
+        throw new ServerErrorHttpException(\Yii::t('app', 'Failed to delete comment.'));
     }
 }

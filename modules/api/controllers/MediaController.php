@@ -72,13 +72,13 @@ class MediaController extends BaseApiController
             }
             Yii::$app->response->statusCode = 502;
             return [
-                'message' => 'Failed to save media metadata or upload file to R2: ' . $e->getMessage()
+                'message' => \Yii::t('app', 'Failed to save media metadata or upload file to R2: {error}', ['error' => $e->getMessage()])
             ];
         }
 
         Yii::$app->response->statusCode = 502;
         return [
-            'message' => 'Failed to upload file to Cloudflare R2.'
+            'message' => \Yii::t('app', 'Failed to upload file to Cloudflare R2.')
         ];
     }
 
@@ -86,11 +86,11 @@ class MediaController extends BaseApiController
     {
         $media = Media::findOne($id);
         if ($media === null) {
-            throw new NotFoundHttpException('Media not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Media not found.'));
         }
 
         if ($media->user_id !== (int)Yii::$app->user->id && !Yii::$app->user->can('admin')) {
-            throw new ForbiddenHttpException('You are not allowed to delete this media.');
+            throw new ForbiddenHttpException(\Yii::t('app', 'You are not allowed to delete this media.'));
         }
 
         if ($media->delete()) {
@@ -98,6 +98,6 @@ class MediaController extends BaseApiController
             return null;
         }
 
-        throw new ServerErrorHttpException('Failed to delete media.');
+        throw new ServerErrorHttpException(\Yii::t('app', 'Failed to delete media.'));
     }
 }

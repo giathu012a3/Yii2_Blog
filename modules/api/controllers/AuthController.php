@@ -85,14 +85,14 @@ class AuthController extends BaseApiController
             $user->revokeAccessToken();
             if ($user->save(false)) {
                 return [
-                    'message' => 'Logged out successfully.',
+                    'message' => \Yii::t('app', 'Logged out successfully.'),
                 ];
             }
         }
 
         Yii::$app->response->statusCode = 500;
         return [
-            'message' => 'Failed to logout.',
+            'message' => \Yii::t('app', 'Failed to logout.'),
         ];
     }
 
@@ -109,7 +109,7 @@ class AuthController extends BaseApiController
 
             if ($model->change()) {
                 return [
-                    'message' => 'Password changed successfully. Please login again with your new password.',
+                    'message' => \Yii::t('app', 'Password changed successfully. Please login again with your new password.'),
                 ];
             }
 
@@ -119,7 +119,7 @@ class AuthController extends BaseApiController
 
         Yii::$app->response->statusCode = 401;
         return [
-            'message' => 'Unauthorized.',
+            'message' => \Yii::t('app', 'Unauthorized.'),
         ];
     }
 }

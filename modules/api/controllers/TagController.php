@@ -41,7 +41,7 @@ class TagController extends BaseApiController
         $tag = Tag::find()->active()->andWhere(['id' => $id])->one();
 
         if ($tag === null) {
-            throw new NotFoundHttpException('Tag not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Tag not found.'));
         }
 
         return $tag;
@@ -66,7 +66,7 @@ class TagController extends BaseApiController
         $model = TagForm::find()->active()->andWhere(['id' => $id])->one();
 
         if ($model === null) {
-            throw new NotFoundHttpException('Tag not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Tag not found.'));
         }
 
         $model->load(Yii::$app->request->getBodyParams(), '');
@@ -84,14 +84,14 @@ class TagController extends BaseApiController
         $tag = Tag::find()->active()->andWhere(['id' => $id])->one();
 
         if ($tag === null) {
-            throw new NotFoundHttpException('Tag not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Tag not found.'));
         }
 
         if ($tag->softDelete()) {
-            return ['message' => 'Tag deleted successfully.'];
+            return ['message' => \Yii::t('app', 'Tag deleted successfully.')];
         }
 
         Yii::$app->response->statusCode = 500;
-        return ['message' => 'Failed to delete tag.'];
+        return ['message' => \Yii::t('app', 'Failed to delete tag.')];
     }
 }

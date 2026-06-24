@@ -37,7 +37,7 @@ class PostForm extends Post
                 'targetClass' => Category::class,
                 'targetAttribute' => 'id',
                 'filter' => ['is_deleted' => 0],
-                'message' => 'The selected category is invalid or deleted.'
+                'message' => \Yii::t('app', 'The selected category is invalid or deleted.')
             ],
             [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PUBLISHED]],
             [['thumbnail_id'], 'default', 'value' => null],
@@ -55,7 +55,7 @@ class PostForm extends Post
                     $userId = Yii::$app->user->id ?? 0;
                     $query->andWhere(['user_id' => $userId]);
                 },
-                'message' => 'The selected thumbnail is invalid.'
+                'message' => \Yii::t('app', 'The selected thumbnail is invalid.')
             ],
             [['tagNames'], 'each', 'rule' => ['string', 'max' => 255], 'skipOnEmpty' => true],
             [['title'], 'validateHasChanges', 'skipOnEmpty' => false],
@@ -80,7 +80,7 @@ class PostForm extends Post
         $newThumb = $this->thumbnail_id !== null && $this->thumbnail_id !== '' ? (int)$this->thumbnail_id : null;
 
         if (empty($dirty) && $oldTags === $newTags && $oldThumb === $newThumb) {
-            $this->addError($attribute, 'No changes detected.');
+            $this->addError($attribute, \Yii::t('app', 'No changes detected.'));
         }
     }
 

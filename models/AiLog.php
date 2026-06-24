@@ -131,7 +131,7 @@ class AiLog extends AiLogBase
             $log->status = 0;
             $log->response_size = 0;
             Yii::error('AI Service Error: ' . $e->getMessage(), __METHOD__);
-            throw new HttpException(502, 'AI Service Error: ' . $e->getMessage(), 0, $e);
+            throw new HttpException(502, \Yii::t('app', 'AI Service Error: {error}', ['error' => $e->getMessage()]), 0, $e);
         } finally {
             $endTime = microtime(true);
             $log->execution_time = round($endTime - $startTime, 4);

@@ -41,7 +41,7 @@ class CategoryController extends BaseApiController
         $category = Category::find()->active()->andWhere(['id' => $id])->one();
 
         if ($category === null) {
-            throw new NotFoundHttpException('Category not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Category not found.'));
         }
 
         return $category;
@@ -66,7 +66,7 @@ class CategoryController extends BaseApiController
         $model = CategoryForm::find()->active()->andWhere(['id' => $id])->one();
 
         if ($model === null) {
-            throw new NotFoundHttpException('Category not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Category not found.'));
         }
 
         $model->load(Yii::$app->request->getBodyParams(), '');
@@ -84,18 +84,18 @@ class CategoryController extends BaseApiController
         $category = Category::find()->active()->andWhere(['id' => $id])->one();
 
         if ($category === null) {
-            throw new NotFoundHttpException('Category not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Category not found.'));
         }
 
         if ($category->softDelete()) {
             return [
-                'message' => 'Category deleted successfully.'
+                'message' => \Yii::t('app', 'Category deleted successfully.')
             ];
         }
 
         Yii::$app->response->statusCode = 500;
         return [
-            'message' => 'Failed to delete category.'
+            'message' => \Yii::t('app', 'Failed to delete category.')
         ];
     }
 }

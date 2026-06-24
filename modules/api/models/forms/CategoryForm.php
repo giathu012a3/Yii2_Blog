@@ -34,7 +34,7 @@ class CategoryForm extends Category
         unset($dirty['updated_at']);
 
         if (empty($dirty)) {
-            $this->addError($attribute, 'No changes detected.');
+            $this->addError($attribute, \Yii::t('app', 'No changes detected.'));
         }
     }
 }

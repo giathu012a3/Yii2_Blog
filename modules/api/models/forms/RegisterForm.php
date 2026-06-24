@@ -18,8 +18,8 @@ class RegisterForm extends User
             ['password', 'required'],
             ['password', 'string', 'min' => 6],
             ['email', 'email'],
-            ['username', 'unique', 'targetClass' => User::class, 'message' => 'This username has already been taken.'],
-            ['email', 'unique', 'targetClass' => User::class, 'message' => 'This email address has already been taken.'],
+            ['username', 'unique', 'targetClass' => User::class, 'message' => \Yii::t('app', 'This username has already been taken.')],
+            ['email', 'unique', 'targetClass' => User::class, 'message' => \Yii::t('app', 'This email address has already been taken.')],
         ]);
     }
 

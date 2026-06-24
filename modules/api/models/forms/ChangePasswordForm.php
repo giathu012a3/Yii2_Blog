@@ -19,8 +19,8 @@ class ChangePasswordForm extends User
             [['current_password', 'new_password', 'confirm_password'], 'trim'],
             [['current_password', 'new_password', 'confirm_password'], 'string', 'min' => 6],
             ['current_password', 'validateCurrentPassword'],
-            ['confirm_password', 'compare', 'compareAttribute' => 'new_password', 'message' => 'Passwords do not match.'],
-            ['new_password', 'compare', 'compareAttribute' => 'current_password', 'operator' => '!=', 'message' => 'New password must be different from current password.'],
+            ['confirm_password', 'compare', 'compareAttribute' => 'new_password', 'message' => \Yii::t('app', 'Passwords do not match.')],
+            ['new_password', 'compare', 'compareAttribute' => 'current_password', 'operator' => '!=', 'message' => \Yii::t('app', 'New password must be different from current password.')],
         ];
     }
 
@@ -28,7 +28,7 @@ class ChangePasswordForm extends User
     {
         if (!$this->hasErrors()) {
             if (!$this->validatePassword($this->current_password)) {
-                $this->addError($attribute, 'Incorrect current password.');
+                $this->addError($attribute, \Yii::t('app', 'Incorrect current password.'));
             }
         }
     }

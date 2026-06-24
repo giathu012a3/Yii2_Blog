@@ -27,11 +27,26 @@ $config = [
         '@npm'   => '@vendor/npm-asset',
     ],
     'components' => [
+        'i18n' => [
+            'translations' => [
+                'app*' => [
+                    'class' => \yii\i18n\PhpMessageSource::class,
+                    'basePath' => '@app/messages',
+                    'sourceLanguage' => 'en-US',
+                    'fileMap' => [
+                        'app' => 'app.php',
+                    ],
+                    'enableCaching' => !YII_DEBUG,
+                    'cachingDuration' => 3600,
+                ],
+            ],
+        ],
         'formatter' => [
             'class'          => \yii\i18n\Formatter::class,
-            'datetimeFormat' => 'php:d/m/Y H:i:s',
-            'dateFormat'     => 'php:d/m/Y',
+            'datetimeFormat' => 'php:Y-m-d\TH:i:s\Z',
+            'dateFormat'     => 'php:Y-m-d',
             'timeFormat'     => 'php:H:i:s',
+            'timeZone'       => 'UTC',
             'nullDisplay'    => null,
         ],
         'request' => [
@@ -49,8 +64,7 @@ $config = [
             'enableSession'   => false,
             'loginUrl'        => null,
         ],
-        'errorHandler' => [
-        ],
+        'errorHandler' => [],
         'mailer' => \yii\mail\MailerInterface::class,
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
@@ -96,7 +110,7 @@ $config = [
                 $data         = $response->data;
 
                 $status  = $isSuccessful ? 'success' : 'error';
-                $message = $isSuccessful ? 'Success' : 'An error occurred';
+                $message = $isSuccessful ? \Yii::t('app', 'Success') : \Yii::t('app', 'An error occurred');
                 $responseData = $data;
 
                 if ($isSuccessful) {

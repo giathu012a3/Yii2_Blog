@@ -68,7 +68,7 @@ class PostController extends BaseApiController
     {
         $post = Post::find()->active()->published()->bySlug($slug)->one();
         if ($post === null) {
-            throw new NotFoundHttpException('Post not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Post not found.'));
         }
 
         $post->incrementViewCount();
@@ -80,11 +80,11 @@ class PostController extends BaseApiController
     {
         $post = Post::find()->active()->byId((int)$id)->one();
         if ($post === null) {
-            throw new NotFoundHttpException('Post not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Post not found.'));
         }
 
         if (!Yii::$app->user->can('updatePost', ['model' => $post])) {
-            throw new ForbiddenHttpException('You are not allowed to manage this post.');
+            throw new ForbiddenHttpException(\Yii::t('app', 'You are not allowed to manage this post.'));
         }
 
         return $post;
@@ -107,11 +107,11 @@ class PostController extends BaseApiController
     {
         $model = PostForm::find()->active()->byId((int)$id)->one();
         if ($model === null) {
-            throw new NotFoundHttpException('Post not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Post not found.'));
         }
 
         if (!Yii::$app->user->can('updatePost', ['model' => $model])) {
-            throw new ForbiddenHttpException('You are not allowed to update this post.');
+            throw new ForbiddenHttpException(\Yii::t('app', 'You are not allowed to update this post.'));
         }
 
         $model->load(Yii::$app->request->getBodyParams(), '');
@@ -128,11 +128,11 @@ class PostController extends BaseApiController
     {
         $post = Post::find()->active()->byId((int)$id)->one();
         if ($post === null) {
-            throw new NotFoundHttpException('Post not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Post not found.'));
         }
 
         if (!Yii::$app->user->can('deletePost', ['model' => $post])) {
-            throw new ForbiddenHttpException('You are not allowed to delete this post.');
+            throw new ForbiddenHttpException(\Yii::t('app', 'You are not allowed to delete this post.'));
         }
 
         if ($post->softDelete()) {
@@ -140,14 +140,14 @@ class PostController extends BaseApiController
             return null;
         }
 
-        throw new ServerErrorHttpException('Failed to delete post.');
+        throw new ServerErrorHttpException(\Yii::t('app', 'Failed to delete post.'));
     }
 
     public function actionLike($id)
     {
         $post = Post::find()->active()->published()->byId((int)$id)->one();
         if ($post === null) {
-            throw new NotFoundHttpException('Post not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Post not found.'));
         }
 
         return $post->toggleLike((int) Yii::$app->user->id);
@@ -157,11 +157,11 @@ class PostController extends BaseApiController
     {
         $post = Post::find()->active()->byId((int)$id)->one();
         if ($post === null) {
-            throw new NotFoundHttpException('Post not found.');
+            throw new NotFoundHttpException(\Yii::t('app', 'Post not found.'));
         }
 
         if (!Yii::$app->user->can('updatePost', ['model' => $post])) {
-            throw new ForbiddenHttpException('You are not allowed to publish this post.');
+            throw new ForbiddenHttpException(\Yii::t('app', 'You are not allowed to publish this post.'));
         }
 
         $post->status = Post::STATUS_PUBLISHED;
@@ -173,6 +173,6 @@ class PostController extends BaseApiController
             return $post;
         }
 
-        throw new ServerErrorHttpException('Failed to publish post.');
+        throw new ServerErrorHttpException(\Yii::t('app', 'Failed to publish post.'));
     }
 }

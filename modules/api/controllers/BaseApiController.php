@@ -27,6 +27,9 @@ class BaseApiController extends Controller
     {
         $behaviors = parent::behaviors();
 
+        $behaviors['contentNegotiator']['languages'] = ['en-US', 'vi'];
+        $behaviors['contentNegotiator']['languageParam'] = 'lang';
+
         $behaviors['authenticator'] = [
             'class' => HttpBearerAuth::class,
         ];
