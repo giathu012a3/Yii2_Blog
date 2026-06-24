@@ -1,102 +1,154 @@
 <?php
 
-declare(strict_types=1);
-
 namespace app\modules\api\controllers;
 
 use app\models\Category;
 use app\modules\api\models\forms\CategoryForm;
 use app\modules\api\models\search\CategorySearch;
+use app\rbac\Permission;
+use Yii;
 use yii\filters\AccessControl;
 use yii\web\NotFoundHttpException;
-use Yii;
 
-class CategoryController extends BaseApiController
+/**
+ * CategoryController implements the CRUD actions for Category model.
+ */
+class CategoryController extends BaseController
 {
     public function behaviors()
     {
         $behaviors = parent::behaviors();
-
+        $behaviors['verbs'] = [
+            'class' => \yii\filters\VerbFilter::class,
+            'actions' => [
+                'index' => ['GET', 'HEAD'],
+                'view' => ['GET', 'HEAD'],
+                'create' => ['POST'],
+                'update' => ['PUT', 'PATCH'],
+                'delete' => ['DELETE'],
+            ],
+        ];
+        $behaviors['authenticator']['optional'] = ['index', 'view'];
         $behaviors['access'] = [
             'class' => AccessControl::class,
             'rules' => [
                 [
                     'allow' => true,
-                    'roles' => ['manageCategory'],
+                    'actions' => ['index', 'view'],
+                    'roles' => ['?', '@'],
                 ],
+                [
+                    'allow' => true,
+                    'actions' => ['create', 'update', 'delete'],
+                    'roles' => [Permission::MANAGE_CATEGORIES],
+                ]
             ],
         ];
-
         return $behaviors;
     }
 
+    /**
+     * Lists all Category models.
+     *
+     * @return string
+     */
     public function actionIndex()
     {
         $searchModel = new CategorySearch();
-        return $searchModel->search(Yii::$app->request->getQueryParams(), '');
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        return $dataProvider;
     }
 
+    /**
+     * Displays a single Category model.
+     * @param int $id ID
+     * @return string
+     * @throws NotFoundHttpException if the model cannot be found
+     */
     public function actionView($id)
     {
-        $category = Category::find()->active()->andWhere(['id' => $id])->one();
-
-        if ($category === null) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Category not found.'));
-        }
-
-        return $category;
+        return $this->findModel($id);
     }
 
+    /**
+     * Creates a new Category model.
+     * If creation is successful, the browser will be redirected to the 'view' page.
+     * @return string|\yii\web\Response
+     */
     public function actionCreate()
     {
         $model = new CategoryForm();
-        $model->load(Yii::$app->request->getBodyParams(), '');
-
+        $model->load($this->request->post(), '');
         if ($model->save()) {
-            Yii::$app->response->statusCode = 201;
             return $model;
         }
-
-        Yii::$app->response->statusCode = 422;
-        return $model->getErrors();
+        Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
+        return $model->errors;
     }
 
+    /**
+     * Updates an existing Category model.
+     * If update is successful, the browser will be redirected to the 'view' page.
+     * @param int $id ID
+     * @return string|\yii\web\Response
+     * @throws NotFoundHttpException if the model cannot be found
+     */
     public function actionUpdate($id)
     {
-        $model = CategoryForm::find()->active()->andWhere(['id' => $id])->one();
-
-        if ($model === null) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Category not found.'));
-        }
-
-        $model->load(Yii::$app->request->getBodyParams(), '');
-
+        $model = $this->findModel($id);
+        $model->load($this->request->post(), '');
         if ($model->save()) {
             return $model;
         }
-
-        Yii::$app->response->statusCode = 422;
-        return $model->getErrors();
+        Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
+        return $model->errors;
     }
 
+    /**
+     * Deletes an existing Category model.
+     * If deletion is successful, the browser will be redirected to the 'index' page.
+     * @param int $id ID
+     * @return \yii\web\Response
+     * @throws NotFoundHttpException if the model cannot be found
+     */
     public function actionDelete($id)
     {
-        $category = Category::find()->active()->andWhere(['id' => $id])->one();
+        $model = $this->findModel($id);
 
-        if ($category === null) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Category not found.'));
-        }
-
-        if ($category->softDelete()) {
+        // Check if there are posts using this category
+        if (\app\models\Post::find()->where(['category_id' => $id])->exists()) {
+            Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
             return [
-                'message' => \Yii::t('app', 'Category deleted successfully.')
+                'message' => Yii::t('app', 'Cannot delete category because it has associated posts.'),
             ];
         }
 
-        Yii::$app->response->statusCode = 500;
+        try {
+            $model->delete();
+        } catch (\yii\db\Exception $e) {
+            Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
+            return ['message' => Yii::t('app', 'Cannot delete this category')];
+        }
+
         return [
-            'message' => \Yii::t('app', 'Failed to delete category.')
+            'message' => Yii::t('app', 'Category deleted successfully.'),
         ];
     }
-}
 
+    /**
+     * Finds the Category model based on its primary key value.
+     * If the model is not found, a 404 HTTP exception will be thrown.
+     * @param int $id ID
+     * @return Category the loaded model
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    protected function findModel($id)
+    {
+        if (($model = CategoryForm::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
+}

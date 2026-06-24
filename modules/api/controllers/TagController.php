@@ -1,97 +1,150 @@
 <?php
 
-declare(strict_types=1);
-
 namespace app\modules\api\controllers;
 
 use app\models\Tag;
 use app\modules\api\models\forms\TagForm;
 use app\modules\api\models\search\TagSearch;
+use app\rbac\Permission;
+use Yii;
 use yii\filters\AccessControl;
 use yii\web\NotFoundHttpException;
-use Yii;
 
-class TagController extends BaseApiController
+/**
+ * TagController implements the CRUD actions for Tag model.
+ */
+class TagController extends BaseController
 {
     public function behaviors()
     {
         $behaviors = parent::behaviors();
-
+        $behaviors['verbs'] = [
+            'class' => \yii\filters\VerbFilter::class,
+            'actions' => [
+                'index' => ['GET', 'HEAD'],
+                'view' => ['GET', 'HEAD'],
+                'create' => ['POST'],
+                'update' => ['PUT', 'PATCH'],
+                'delete' => ['DELETE'],
+            ],
+        ];
+        $behaviors['authenticator']['optional'] = ['index', 'view'];
         $behaviors['access'] = [
             'class' => AccessControl::class,
             'rules' => [
                 [
-                    'allow' => true,
-                    'roles' => ['manageTags'],
+                    'allow'   => true,
+                    'actions' => ['index', 'view'],
+                    'roles'   => ['?', '@'],
+                ],
+                [
+                    'allow'   => true,
+                    'actions' => ['create', 'update', 'delete'],
+                    'roles'   => [Permission::MANAGE_TAGS],
                 ],
             ],
         ];
-
         return $behaviors;
     }
 
+    /**
+     * Lists all Tag models.
+     * GET /api/tags
+     */
     public function actionIndex()
     {
         $searchModel = new TagSearch();
-        return $searchModel->search(Yii::$app->request->getQueryParams(), '');
+        return $searchModel->search($this->request->queryParams);
     }
 
+    /**
+     * Displays a single Tag model.
+     * GET /api/tags/<id>
+     *
+     * @throws NotFoundHttpException
+     */
     public function actionView($id)
     {
-        $tag = Tag::find()->active()->andWhere(['id' => $id])->one();
-
-        if ($tag === null) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Tag not found.'));
-        }
-
-        return $tag;
+        return $this->findModel($id);
     }
 
+    /**
+     * Creates a new Tag model.
+     * POST /api/tags
+     */
     public function actionCreate()
     {
         $model = new TagForm();
-        $model->load(Yii::$app->request->getBodyParams(), '');
+        $model->load($this->request->post(), '');
 
         if ($model->save()) {
-            Yii::$app->response->statusCode = 201;
+            Yii::$app->response->statusCode = self::HTTP_CREATED;
             return $model;
         }
 
-        Yii::$app->response->statusCode = 422;
-        return $model->getErrors();
+        Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
+        return $model->errors;
     }
 
+    /**
+     * Updates an existing Tag model.
+     * PUT /api/tags/<id>
+     *
+     * @throws NotFoundHttpException
+     */
     public function actionUpdate($id)
     {
-        $model = TagForm::find()->active()->andWhere(['id' => $id])->one();
-
-        if ($model === null) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Tag not found.'));
-        }
-
-        $model->load(Yii::$app->request->getBodyParams(), '');
+        $model = $this->findModel($id);
+        $model->load($this->request->post(), '');
 
         if ($model->save()) {
             return $model;
         }
 
-        Yii::$app->response->statusCode = 422;
-        return $model->getErrors();
+        Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
+        return $model->errors;
     }
 
+    /**
+     * Deletes an existing Tag model.
+     * DELETE /api/tags/<id>
+     *
+     * @throws NotFoundHttpException
+     */
     public function actionDelete($id)
     {
-        $tag = Tag::find()->active()->andWhere(['id' => $id])->one();
+        $model = $this->findModel($id);
 
-        if ($tag === null) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Tag not found.'));
+        $db = Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            // Delete association records in post_tag pivot table
+            $db->createCommand()
+                ->delete('post_tag', ['tag_id' => $model->id])
+                ->execute();
+
+            $model->delete();
+            $transaction->commit();
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
+            return ['message' => Yii::t('app', 'Cannot delete this tag: ') . $e->getMessage()];
         }
 
-        if ($tag->softDelete()) {
-            return ['message' => \Yii::t('app', 'Tag deleted successfully.')];
+        return ['message' => Yii::t('app', 'Tag deleted successfully.')];
+    }
+
+    /**
+     * Finds the Tag model based on its primary key value.
+     *
+     * @throws NotFoundHttpException
+     */
+    protected function findModel($id)
+    {
+        if (($model = TagForm::findOne(['id' => $id])) !== null) {
+            return $model;
         }
 
-        Yii::$app->response->statusCode = 500;
-        return ['message' => \Yii::t('app', 'Failed to delete tag.')];
+        throw new NotFoundHttpException('The requested page does not exist.');
     }
 }

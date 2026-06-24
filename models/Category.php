@@ -1,61 +1,47 @@
 <?php
-
-declare(strict_types=1);
-
 namespace app\models;
 
-use app\models\base\CategoryBase;
-use app\models\query\CategoryQuery;
-use yii\behaviors\SluggableBehavior;
+use app\models\base\BaseCategory;
+use app\behaviors\SlugBehavior;
+use app\helpers\CacheHelper;
+use Yii;
 use yii\behaviors\TimestampBehavior;
+use yii\caching\TagDependency;
 
-/**
- * Category model extending CategoryBase.
- */
-class Category extends CategoryBase
+class Category extends BaseCategory
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function behaviors(): array
+    const STATUS_ACTIVE = 1;
+    const STATUS_INACTIVE = 0;
+
+    public function behaviors()
     {
         return [
-            [
-                'class' => TimestampBehavior::class,
-            ],
-            [
-                'class' => SluggableBehavior::class,
-                'attribute' => 'name',
-            ],
-            [
-                'class' => \app\behaviors\SoftDeleteBehavior::class,
-            ],
+            SlugBehavior::class,
+            TimestampBehavior::class,
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function find(): CategoryQuery
+    public function afterSave($insert, $changedAttributes)
     {
-        return new CategoryQuery(static::class);
+        parent::afterSave($insert, $changedAttributes);
+        TagDependency::invalidate(Yii::$app->cache, [CacheHelper::getPostId($this->id)]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    public function afterDelete()
+    {
+        parent::afterDelete();
+        TagDependency::invalidate(Yii::$app->cache, [CacheHelper::getPostId($this->id)]);
+    }
+
     public function fields()
     {
-        return ['id', 'name', 'slug'];
-    }
-
-    /**
-     * Gets query for [[Posts]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getPosts()
-    {
-        return $this->hasMany(Post::class, ['category_id' => 'id']);
+        return [
+            'id',
+            'name',
+            'status',
+            'slug',
+            'created_at',
+            'updated_at',
+        ];
     }
 }

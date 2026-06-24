@@ -1,38 +1,37 @@
 <?php
 
-declare(strict_types=1);
-
 namespace app\modules\api\controllers;
 
 use app\models\Comment;
-use app\models\Post;
 use app\modules\api\models\forms\CommentForm;
+use app\rbac\Permission;
+use Yii;
 use yii\filters\AccessControl;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\ServerErrorHttpException;
-use Yii;
 
-class CommentController extends BaseApiController
+class CommentController extends BaseController
 {
     public function behaviors(): array
     {
         $behaviors = parent::behaviors();
-
-        $behaviors['authenticator']['optional'] = ['index'];
-
+        $behaviors['verbs'] = [
+            'class' => \yii\filters\VerbFilter::class,
+            'actions' => [
+                'create' => ['POST'],
+                'update' => ['PUT', 'PATCH'],
+                'hide' => ['POST'],
+                'delete' => ['DELETE'],
+            ],
+        ];
         $behaviors['access'] = [
             'class' => AccessControl::class,
             'rules' => [
                 [
-                    'allow'   => true,
-                    'actions' => ['index'],
-                    'roles'   => ['?', '@'],
-                ],
-                [
-                    'allow'   => true,
-                    'actions' => ['create', 'update', 'delete'],
-                    'roles'   => ['createComment'],
+                    'allow' => true,
+                    'actions' => ['create', 'update', 'hide', 'delete'],
+                    'roles' => ['@'],
                 ],
             ],
         ];
@@ -40,72 +39,114 @@ class CommentController extends BaseApiController
         return $behaviors;
     }
 
-    public function actionIndex(int $postId): array
+    public function actionCreate($post_id)
     {
-        if (!Post::find()->active()->published()->byId($postId)->exists()) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Post not found.'));
+        $model = new CommentForm();
+        $model->load(Yii::$app->request->post(), '');
+        $model->post_id = (int)$post_id;
+        $model->author_id = Yii::$app->user->id;
+
+        if ($model->save()) {
+            return [
+                'message' => Yii::t('app', 'Comment added successfully.'),
+                'comment' => $model,
+            ];
         }
 
-        return Comment::find()->threadedByPost($postId)->all();
+        Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
+        return $model->errors;
     }
 
-    public function actionCreate(int $postId): CommentForm|array
+    public function actionUpdate($id)
     {
-        if (!Post::find()->active()->published()->byId($postId)->exists()) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Post not found.'));
+        $model = $this->findModel($id);
+
+        if (!Yii::$app->user->can(Permission::ADMIN_ACCESS) && !Yii::$app->user->can(Permission::UPDATE_OWN_COMMENT, ['comment' => $model])) {
+            throw new ForbiddenHttpException(Yii::t('app', 'You do not have permission to edit this comment.'));
         }
 
-        $form = new CommentForm();
-        $form->load(Yii::$app->request->getBodyParams(), '');
-        $form->post_id = $postId;
+        $model->load(Yii::$app->request->post(), '');
 
-        if ($form->save()) {
-            Yii::$app->response->statusCode = 201;
-            return $form;
+        if ($model->save()) {
+            return [
+                'message' => Yii::t('app', 'Comment updated successfully.'),
+                'comment' => $model,
+            ];
         }
 
-        Yii::$app->response->statusCode = 422;
-        return $form->getErrors();
+        Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
+        return $model->errors;
     }
 
-    public function actionUpdate(int $id): CommentForm|array
+    public function actionHide($id)
     {
-        $form = CommentForm::find()->active()->byId($id)->one();
-        if ($form === null) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Comment not found.'));
+        $model = $this->findModel($id);
+
+        $post = $model->post;
+        if (!$post) {
+            throw new NotFoundHttpException(Yii::t('app', 'Post associated with this comment not found.'));
         }
 
-        if (!Yii::$app->user->can('updateComment', ['model' => $form])) {
-            throw new ForbiddenHttpException(\Yii::t('app', 'You are not allowed to update this comment.'));
+        if (!Yii::$app->user->can(Permission::ADMIN_ACCESS) && !Yii::$app->user->can(Permission::HIDE_COMMENT_ON_OWN_POST, ['post' => $post])) {
+            throw new ForbiddenHttpException(Yii::t('app', 'You do not have permission to hide this comment.'));
         }
 
-        $form->load(Yii::$app->request->getBodyParams(), '');
-
-        if ($form->save()) {
-            return $form;
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $model->status = Comment::STATUS_INACTIVE;
+            if ($model->save(false)) {
+                Comment::updateAll(['status' => Comment::STATUS_INACTIVE], ['parent_id' => $model->id]);
+                $transaction->commit();
+                return [
+                    'message' => Yii::t('app', 'Comment and its replies have been hidden successfully.'),
+                    'comment' => $model,
+                ];
+            }
+            throw new \Exception('Failed to hide comment.');
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            throw new ServerErrorHttpException($e->getMessage());
         }
-
-        Yii::$app->response->statusCode = 422;
-        return $form->getErrors();
     }
 
-    public function actionDelete(int $id): void
+
+    public function actionDelete($id)
     {
-        $comment = Comment::find()->active()->byId($id)->one();
+        $model = $this->findModel($id);
 
-        if ($comment === null) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Comment not found.'));
+        $post = $model->post;
+
+        if (!Yii::$app->user->can(Permission::ADMIN_ACCESS) &&
+            !Yii::$app->user->can(Permission::DELETE_OWN_COMMENT, ['comment' => $model]) &&
+            !Yii::$app->user->can(Permission::DELETE_COMMENT_ON_OWN_POST, ['post' => $post])
+        ) {
+            throw new ForbiddenHttpException(Yii::t('app', 'You do not have permission to delete this comment.'));
         }
 
-        if (!Yii::$app->user->can('deleteComment', ['model' => $comment])) {
-            throw new ForbiddenHttpException(\Yii::t('app', 'You are not allowed to delete this comment.'));
+        $db = Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            Comment::deleteAll(['parent_id' => $model->id]);
+            if ($model->delete()) {
+                $transaction->commit();
+                return [
+                    'message' => Yii::t('app', 'Comment and its replies deleted successfully.'),
+                ];
+            }
+            throw new \Exception('Failed to delete comment.');
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            throw new ServerErrorHttpException($e->getMessage());
+        }
+    }
+
+
+    protected function findModel($id)
+    {
+        if (($model = CommentForm::findOne(['id' => $id])) !== null) {
+            return $model;
         }
 
-        if ($comment->softDelete()) {
-            Yii::$app->response->statusCode = 204;
-            return;
-        }
-
-        throw new ServerErrorHttpException(\Yii::t('app', 'Failed to delete comment.'));
+        throw new NotFoundHttpException(Yii::t('app', 'The requested page does not exist.'));
     }
 }

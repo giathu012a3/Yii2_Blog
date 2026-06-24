@@ -1,159 +1,88 @@
-# Yii2 REST API Blog System
+# Yii2 Blog REST API
 
-REST API Blog System xây dựng trên **Yii2**, phân quyền **RBAC native**, tích hợp **Cloudflare R2** (lưu ảnh) và **Cloudflare Workers AI** (sinh nội dung).
-
----
-
-## 🎥 Video Demo
-
-* 📺 **Video Demo**: [Xem Video Demo trên Google Drive](https://drive.google.com/drive/folders/1SWYLZ8vS79PCBNfvqJaa6xSL02F_iPyj?usp=sharing)
+REST API Blog được phát triển bằng framework Yii2, tích hợp xác thực Bearer Token, phân quyền người dùng RBAC, cùng các tính năng cốt lõi bao gồm Bài viết, Danh mục, Nhãn, Bình luận và Thích bài viết.
 
 ---
 
-## ⚡ Cài đặt trong 5 phút
+## 1. Các bước cài đặt
 
-### 1. Clone & cài dependencies
+### Yêu cầu hệ thống
+
+* PHP >= 8.2
+* MySQL / MariaDB
+* Composer
+
+### Cài đặt
+
+1. Tải mã nguồn dự án
+
 ```bash
-git clone <repo-url>
-cd yii2-app-basic
+git clone <repository-url> yii2-blog
+cd yii2-blog
+```
+
+2. Cài đặt các thư viện phụ thuộc
+
+```bash
 composer install
 ```
 
-### 2. Cấu hình môi trường
+3. Cấu hình môi trường
+
+Tạo tệp `.env` từ `.env.example`:
+- Windows Command Prompt (CMD): `copy .env.example .env`
+- Windows PowerShell: `Copy-Item .env.example .env`
+- Linux / macOS: `cp .env.example .env`
+
+Mở file `.env` và cập nhật các cấu hình sau:
+
+* **Tạo Database:** Tạo một database trống trong MySQL/MariaDB (ví dụ đặt tên là `yii2-blog`).
+* **Cấu hình kết nối Database:**
+  ```env
+  DB_HOST=localhost
+  DB_NAME=yii2-blog
+  DB_USERNAME=root
+  DB_PASSWORD=
+  ```
+* **Khởi tạo Cookie Validation Key:** Điền một chuỗi ngẫu nhiên bí mật vào trường `COOKIE_VALIDATION_KEY`. Đây là cấu hình bắt buộc để ứng dụng Yii2 khởi chạy ổn định.
+* **Cấu hình Cloudflare R2 (Cho tính năng Upload):** Điền các khóa kết nối Cloudflare R2 của bạn để tính năng tải lên ảnh hoạt động:
+  ```env
+  R2_ACCOUNT_ID=your_cloudflare_account_id
+  R2_ACCESS_KEY_ID=your_r2_access_key_id
+  R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
+  R2_BUCKET_NAME=your_r2_bucket_name
+  R2_ENDPOINT=https://your_cloudflare_account_id.r2.cloudflarestorage.com
+  R2_PUBLIC_URL=https://your_r2_public_url.r2.dev
+  ```
+* **Cấu hình Cloudflare AI (Cho trợ lý AI):** Điền thông tin API Token để kích hoạt các tính năng tạo tiêu đề, tóm tắt và cải thiện văn bản:
+  ```env
+  CF_ACCOUNT_ID=your_cloudflare_account_id
+  CF_API_TOKEN=your_cloudflare_api_token
+  CF_AI_MODEL=your_model
+  ```
+
+4. Chạy migration và Seed dữ liệu
+
+Hãy chạy các câu lệnh sau để khởi tạo cấu trúc bảng cơ sở dữ liệu. Dữ liệu mẫu (Role, Permission và 4 tài khoản thử nghiệm mặc định) đã được tích hợp sẵn dưới dạng seeder nằm trong các tệp tin migrations:
+
 ```bash
-cp .env.example .env
-```
-Mở `.env` và điền thông tin:
-```env
-# Database
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_NAME=yii2_blog
-DB_USER=root
-DB_PASS=
-
-# Cookie (bắt buộc)
-COOKIE_VALIDATION_KEY=random-secret-key-here
-
-# Cloudflare R2 (tuỳ chọn — bỏ trống nếu chưa cần upload)
-CF_ACCOUNT_ID=
-R2_ACCESS_KEY=
-R2_SECRET_KEY=
-R2_BUCKET=
-R2_PUBLIC_URL=
-
-# Cloudflare Workers AI (tuỳ chọn — bỏ trống nếu chưa cần AI)
-AI_WORKER_URL=
-AI_WORKER_TOKEN=
-AI_WORKER_MODEL=@cf/meta/llama-3.1-8b-instruct
+php yii migrate --migrationPath=@yii/rbac/migrations --interactive=0
+php yii migrate --interactive=0
 ```
 
-### 3. Tạo database & chạy migration
-Tạo database trống tên `yii2_blog` (hoặc tên khác khớp với `.env`), sau đó:
+> **Lưu ý (Nếu muốn Reset Database):** Nếu bạn muốn xóa sạch toàn bộ các bảng cũ để làm mới CSDL từ đầu, hãy chạy lần lượt:
+> ```bash
+> php yii migrate/fresh --migrationPath=@yii/rbac/migrations --interactive=0
+> php yii migrate --interactive=0
+> ```
+
+5. Khởi chạy ứng dụng
+
 ```bash
-php yii migrate
-```
-> Migration sẽ tự động tạo bảng, thiết lập RBAC (3 role), và seed tài khoản admin + author mẫu.
-
-### 4. Chạy server
-```bash
-# PHP built-in server (dev)
 php yii serve
-
-# Hoặc trỏ Virtual Host (Laragon/XAMPP) vào thư mục web/
 ```
 
-### 5. Import Postman
-Import file [docs/yii2-blog-api.postman_collection.json](file:///c:/laragon/www/yii2-app-basic/docs/yii2-blog-api.postman_collection.json) vào Postman.
-
-> [!NOTE]
-> Migration **không dùng foreign key constraint** ở tầng DB. Quan hệ được quản lý hoàn toàn qua ActiveRecord relations và Form Model validation.
-
----
-
-## 👥 Tài khoản seed mặc định
-
-| Role | Username | Password | Quyền |
-|:---|:---|:---|:---|
-| **admin** | `admin_root` | `admin123456` | Toàn quyền |
-| **author** | `author_one` | `author123456` | Tạo/sửa/xóa bài của mình |
-| **author** | `author_two` | `author123456` | Tạo/sửa/xóa bài của mình |
-| **reader** | `reader_one` | `reader123456` | Comment + like |
-
----
-
-## 🔑 RBAC Matrix
-
-| Tính năng | Guest | Reader | Author | Admin |
-|:---|:---:|:---:|:---:|:---:|
-| Đăng ký / Đăng nhập | ✅ | ✅ | ✅ | ✅ |
-| Xem post công khai | ✅ | ✅ | ✅ | ✅ |
-| Xem comment | ✅ | ✅ | ✅ | ✅ |
-| Like / Unlike post | ❌ | ✅ | ✅ | ✅ |
-| Tạo comment | ❌ | ✅ | ✅ | ✅ |
-| Sửa / Xóa comment của mình | ❌ | ✅ | ✅ | ✅ |
-| Xóa comment bất kỳ | ❌ | ❌ | ❌ | ✅ |
-| Tạo post | ❌ | ❌ | ✅ | ✅ |
-| Sửa / Xóa post của mình | ❌ | ❌ | ✅ | ✅ |
-| Sửa / Xóa post bất kỳ | ❌ | ❌ | ❌ | ✅ |
-| Upload ảnh | ❌ | ❌ | ✅ | ✅ |
-| Gọi AI (generate/improve) | ❌ | ❌ | ✅ | ✅ |
-| CRUD Category (kể cả xem) | ❌ | ❌ | ❌ | ✅ |
-| CRUD Tag (kể cả xem) | ❌ | ❌ | ❌ | ✅ |
-
-> Row-level check (owner check) thực hiện qua `rbac\AuthorRule` — Yii RBAC native `DbManager`.
-
----
-
-## 🗄️ ERD
-
-👉 [Xem ERD trên Google Drive](https://drive.google.com/file/d/1m-qB_-vV0Lkhe6UJ3ZtW2b6mYc76JR5c/view?usp=sharing)
-
-**Các bảng chính:**
-`user` · `post` · `category` · `tag` · `post_tag` · `comment` · `post_like` · `media` · `media_link` · `ai_log`
-
----
-
-## 📋 Danh sách Endpoints
-
-Tất cả response đều theo envelope:
-```json
-{
-  "status": "success",
-  "code": 200,
-  "message": "Success",
-  "data": { ... }
-}
-```
-List endpoint trả thêm:
-```json
-{
-  "data": {
-    "items": [...],
-    "pagination": { "total": 50, "page": 1, "limit": 10, "total_page": 5 }
-  }
-}
-```
-
-### 🔐 Authentication
-| Method | Endpoint | Mô tả | Auth |
-|:---|:---|:---|:---:|
-| POST | `/api/auth/register` | Đăng ký tài khoản | ❌ |
-| POST | `/api/auth/login` | Đăng nhập → nhận Bearer token | ❌ |
-| GET | `/api/auth/me` | Thông tin user hiện tại | 🔑 |
-| PUT | `/api/auth/change-password` | Đổi mật khẩu | 🔑 |
-| POST | `/api/auth/logout` | Đăng xuất (revoke token) | 🔑 |
-
-### 📁 Categories
-> Toàn bộ CRUD category (kể cả đọc) yêu cầu quyền **admin** — theo đề bài "Category: CRUD (admin)".
-
-| Method | Endpoint | Mô tả | Auth |
-|:---|:---|:---|:---:|
-| GET | `/api/categories` | Danh sách category | 👑 Admin |
-| GET | `/api/categories/<id>` | Chi tiết category | 👑 Admin |
-| POST | `/api/categories` | Tạo category | 👑 Admin |
-| PUT | `/api/categories/<id>` | Cập nhật category | 👑 Admin |
-| DELETE | `/api/categories/<id>` | Xóa mềm category | 👑 Admin |
+Địa chỉ truy cập mặc định:
 
 ### 🏷️ Tags
 > Toàn bộ CRUD tag (kể cả đọc) yêu cầu quyền **admin** — theo đề bài "Tag: many-to-many với post, auto-create khi dùng tag mới".
@@ -181,121 +110,275 @@ List endpoint trả thêm:
 
 **Query params cho `GET /api/posts`:**
 ```
-?title=keyword       # Tìm theo tiêu đề (LIKE)
-?category_id=1       # Lọc theo category
-?tag=php             # Lọc theo tên tag
-?tag_id=3            # Lọc theo tag ID
-?status=0            # Lọc theo trạng thái (chỉ dùng ở manage)
-?expand=category,tags,author,thumbnail   # Eager load relations
-?limit=10&page=1     # Phân trang
-?sort=-view_count    # Sắp xếp (dấu - = DESC)
+http://localhost:8080
 ```
-
-### 💬 Comments
-| Method | Endpoint | Mô tả | Auth |
-|:---|:---|:---|:---:|
-| GET | `/api/posts/<postId>/comments` | Lấy cây comment (threaded) | ❌ |
-| POST | `/api/posts/<postId>/comments` | Thêm comment / reply | 🔑 |
-| PUT | `/api/comments/<id>` | Sửa comment | 👤 Owner |
-| DELETE | `/api/comments/<id>` | Xóa mềm comment | 👤 Owner / 👑 Admin |
-
-### 🖼️ Media (Upload ảnh → Cloudflare R2)
-| Method | Endpoint | Mô tả | Auth |
-|:---|:---|:---|:---:|
-| POST | `/api/media` | Upload ảnh (≤5MB, jpeg/png/webp) | ✍️ Author/Admin |
-| DELETE | `/api/media/<id>` | Xóa ảnh | ✍️ Owner/Admin |
-
-### 🤖 AI Assistant (Cloudflare Workers AI)
-| Method | Endpoint | Mô tả | Auth |
-|:---|:---|:---|:---:|
-| POST | `/api/ai/generate-title` | Sinh 5 gợi ý tiêu đề từ mô tả | ✍️ Author/Admin |
-| POST | `/api/ai/generate-summary` | Tóm tắt nội dung dài | ✍️ Author/Admin |
-| POST | `/api/ai/improve-text` | Cải thiện / rewrite đoạn văn | ✍️ Author/Admin |
 
 ---
 
-## 🧪 Curl Examples
+## 2. Ma trận Phân quyền (RBAC)
 
-### Đăng ký & Đăng nhập
+| Vai trò (Role) | Xem bài viết | CRUD Danh mục | CRUD Nhãn (Tag) | Tạo bài viết | Quản lý bài viết của mình | Quản lý mọi bài viết | Thích bài viết | Bình luận | Quản lý bình luận |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| Guest | Chỉ bài đã xuất bản | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Reader | Chỉ bài đã xuất bản | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | Chỉ bình luận của mình |
+| Author | Bài đã xuất bản + bài nháp của mình | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ | ✅ | Bình luận của mình + bình luận trên bài mình |
+| Admin | Tất cả bài viết | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Toàn quyền quản trị |
+
+---
+
+## 3. Danh sách API Endpoints
+
+### Xác thực (Authentication)
+
+#### Đăng ký tài khoản
+```
+POST /api/auth/register
+```
 ```bash
-# Đăng ký
-curl -X POST http://localhost/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"username":"john","email":"john@example.com","password":"Secret123!"}'
-
-# Đăng nhập → lấy token
-curl -X POST http://localhost/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin_root","password":"admin123456"}'
+curl -X POST http://localhost:8080/api/auth/register \
+-H "Content-Type: application/json" \
+-d '{
+  "username":"newuser",
+  "email":"newuser@example.com",
+  "password":"User@123",
+  "password_confirmation":"User@123"
+}'
 ```
 
-### Tạo Category (Admin)
+#### Đăng nhập
+```
+POST /api/auth/login
+```
 ```bash
-curl -X POST http://localhost/api/categories \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Technology","slug":"technology"}'
+curl -X POST http://localhost:8080/api/auth/login \
+-H "Content-Type: application/json" \
+-d '{
+  "username":"admin",
+  "password":"Admin@123"
+}'
 ```
 
-### Tạo Post (Author)
+#### Đăng xuất
+```
+POST /api/auth/logout
+```
 ```bash
-curl -X POST http://localhost/api/posts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Yii2 Tips & Tricks",
-    "content": "Nội dung bài viết...",
-    "category_id": 1,
-    "status": 0,
-    "tagNames": ["yii2", "php", "backend"]
-  }'
+curl -X POST http://localhost:8080/api/auth/logout \
+-H "Authorization: Bearer <token>"
 ```
 
-### List Posts với filter + expand
+#### Thông tin cá nhân
+```
+GET /api/auth/me
+```
 ```bash
-curl "http://localhost/api/posts?expand=category,tags,author,thumbnail&tag=php&limit=5&page=1"
+curl -X GET http://localhost:8080/api/auth/me \
+-H "Authorization: Bearer <token>"
 ```
 
-### Upload ảnh lên R2
+---
+
+### Bài viết (Posts)
+
+| Phương thức | Endpoint | Mô tả |
+| :--- | :--- | :--- |
+| GET | /api/posts | Lấy danh sách bài viết |
+| POST | /api/posts | Tạo bài viết mới |
+| PUT | /api/posts/{id} | Cập nhật bài viết |
+| DELETE | /api/posts/{id} | Xóa bài viết |
+| POST | /api/posts/{id}/like | Thích / Bỏ thích bài viết |
+
+Ví dụ tạo bài viết:
 ```bash
-curl -X POST http://localhost/api/media \
-  -H "Authorization: Bearer <token>" \
-  -F "file=@/path/to/image.jpg"
+curl -X POST http://localhost:8080/api/posts \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "category_id": 1,
+  "title": "My Post",
+  "description": "Post description",
+  "content": "Hello Yii2",
+  "status": 1,
+  "tag_list": ["yii2", "php"]
+}'
 ```
 
-### AI: Sinh tiêu đề
+---
+
+### Danh mục (Categories)
+
+| Phương thức | Endpoint | Mô tả |
+| :--- | :--- | :--- |
+| GET | /api/categories | Lấy danh sách danh mục (Chỉ Admin) |
+| POST | /api/categories | Tạo danh mục mới (Chỉ Admin) |
+| PUT | /api/categories/{id} | Cập nhật danh mục (Chỉ Admin) |
+| DELETE | /api/categories/{id} | Xóa danh mục (Chỉ Admin) |
+
+Ví dụ tạo danh mục:
 ```bash
-curl -X POST http://localhost/api/ai/generate-title \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"prompt":"Hướng dẫn tối ưu hiệu năng database MySQL cho ứng dụng web lớn"}'
+curl -X POST http://localhost:8080/api/categories \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "name": "Technology"
+}'
 ```
 
-### AI: Tóm tắt nội dung
+---
+
+### Nhãn (Tags)
+
+| Phương thức | Endpoint | Mô tả |
+| :--- | :--- | :--- |
+| GET | /api/tags | Lấy danh sách nhãn (Chỉ Admin) |
+| POST | /api/tags | Tạo nhãn mới (Chỉ Admin) |
+| PUT | /api/tags/{id} | Cập nhật nhãn (Chỉ Admin) |
+| DELETE | /api/tags/{id} | Xóa nhãn (Chỉ Admin) |
+
+**Lưu ý:**
+Author có thể truyền `tag_list` khi tạo hoặc cập nhật bài viết. Nếu một Tag chưa tồn tại, hệ thống sẽ tự động tạo Tag đó và liên kết với bài viết. Đây không được xem là quyền quản lý trực tiếp tài nguyên Tag.
+
+Ví dụ tạo nhãn:
 ```bash
-curl -X POST http://localhost/api/ai/generate-summary \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"prompt":"<nội dung bài viết dài...>"}'
+curl -X POST http://localhost:8080/api/tags \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "name": "yii2"
+}'
 ```
 
-### Comment với reply
-```bash
-# Comment gốc
-curl -X POST http://localhost/api/posts/5/comments \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"content":"Bài viết hay lắm!"}'
+---
 
-# Reply vào comment (parent_id = id comment gốc)
-curl -X POST http://localhost/api/posts/5/comments \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"content":"Cảm ơn bạn!","parent_id":3}'
+### Bình luận (Comments)
+
+| Phương thức | Endpoint | Mô tả |
+| :--- | :--- | :--- |
+| POST | /api/posts/{post_id}/comments | Tạo hoặc phản hồi bình luận (Yêu cầu đăng nhập) |
+| PUT | /api/comments/{id} | Cập nhật bình luận (Chủ bình luận hoặc Admin) |
+| DELETE | /api/comments/{id} | Xóa bình luận (Chủ bình luận, Tác giả bài viết hoặc Admin) |
+| POST | /api/comments/{id}/hide | Ẩn bình luận (Tác giả bài viết hoặc Admin) |
+
+Ví dụ tạo bình luận:
+```bash
+curl -X POST http://localhost:8080/api/posts/1/comments \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "content": "This is a comment",
+  "parent_id": null
+}'
 ```
 
-### Like / Unlike post
+---
+
+### Tải lên Phương tiện (Media Upload)
+
+| Phương thức | Endpoint | Mô tả |
+| :--- | :--- | :--- |
+| POST | /api/media/upload | Tải ảnh lên Cloudflare R2 (Yêu cầu quyền Author hoặc Admin) |
+
+Ví dụ tải lên ảnh:
 ```bash
-curl -X POST http://localhost/api/posts/5/like \
-  -H "Authorization: Bearer <token>"
+curl -X POST http://localhost:8080/api/media/upload \
+-H "Authorization: Bearer <token>" \
+-F "files=@/path/to/image.png"
 ```
+Phản hồi mẫu:
+```json
+{
+  "urls": [
+    "https://pub-c72d381ae12447c9bf46b66d74e81240.r2.dev/content/2026/06/66712345abcd.png"
+  ],
+  "media": [
+    {
+      "id": 12,
+      "url": "https://pub-c72d381ae12447c9bf46b66d74e81240.r2.dev/content/2026/06/66712345abcd.png"
+    }
+  ]
+}
+```
+
+---
+
+### Hỗ trợ Trí tuệ Nhân tạo (AI Assistant)
+
+*Tích hợp Cloudflare AI Worker để tối ưu bài viết. Chỉ áp dụng cho Author và Admin.*
+
+#### 1. Gợi ý Tiêu đề (Generate Title)
+Đầu vào là mô tả (`description`), kết quả trả về đúng 5 gợi ý tiêu đề blog hấp dẫn.
+```
+POST /api/ai/generate-title
+```
+```bash
+curl -X POST http://localhost:8080/api/ai/generate-title \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "description": "Bài viết hướng dẫn về lập trình REST API bằng framework Yii2 cho người mới bắt đầu"
+}'
+```
+
+#### 2. Tóm tắt nội dung (Generate Summary)
+Đầu vào là nội dung bài viết (`content`), kết quả trả về tóm tắt ngắn gọn trong 2-3 câu.
+```
+POST /api/ai/generate-summary
+```
+```bash
+curl -X POST http://localhost:8080/api/ai/generate-summary \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "content": "[Nội dung bài viết dài cần tóm tắt...]"
+}'
+```
+
+#### 3. Cải thiện văn bản (Improve Text)
+Đầu vào là văn bản gốc (`text`), kết quả trả về văn bản đã được tối ưu diễn đạt và sửa lỗi.
+```
+POST /api/ai/improve-text
+```
+```bash
+curl -X POST http://localhost:8080/api/ai/improve-text \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "text": "code yii2 viet nhu nay co ok khong nhi"
+}'
+```
+
+---
+
+## 4. Sơ đồ ERD
+
+Sơ đồ quan hệ thực thể cơ sở dữ liệu:
+
+https://drive.google.com/file/d/12jby51hJwU11mPKhxoqBWM-sI0slSl2f/view?usp=sharing
+
+---
+
+## 5. Kiểm thử & Tài khoản mẫu
+
+### Tài khoản thử nghiệm mặc định
+Các tài khoản sau được tự động nạp sẵn khi chạy lệnh migrations:
+* **Admin:** `admin` / `Admin@123`
+* **Author 1:** `author1` / `Author@123`
+* **Author 2:** `author2` / `Author@123`
+* **Reader:** `reader` / `Reader@123`
+
+### Postman Collection
+Import tệp tin kiểm thử Postman sau để chạy test:
+```
+docs/postman/yii2_blog_postman_collection.json
+docs/postman/yii2_blog_postman_environment.json
+```
+Sau khi import xong thì chọn đúng enviroment: Yii2 Blog - Local Development
+Sau đó run collection: Yii2 Blog API
+
+---Lưu ý----
+Nếu chạy thủ công: Hãy sử dụng chuỗi Bearer Token nhận được từ API Đăng nhập (`POST /api/auth/login`) gắn vào phần cấu hình `Authorization` cho các API yêu cầu xác thực.
+
+## 6. Video Demo
+
+Link: https://www.youtube.com/watch?v=VLpxcPRbV6g
+

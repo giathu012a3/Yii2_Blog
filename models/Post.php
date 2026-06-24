@@ -1,137 +1,138 @@
 <?php
 
-declare(strict_types=1);
-
 namespace app\models;
 
-use app\models\base\PostBase;
-use app\models\query\PostQuery;
+use app\behaviors\SlugBehavior;
 use app\behaviors\SoftDeleteBehavior;
-use yii\behaviors\BlameableBehavior;
-use yii\behaviors\SluggableBehavior;
-use yii\behaviors\TimestampBehavior;
-use app\models\MediaLink;
-use app\models\Media;
+use app\helpers\CacheHelper;
+use app\models\base\BasePost;
+use app\rbac\Permission;
 use Yii;
+use yii\behaviors\TimestampBehavior;
+use yii\caching\TagDependency;
+use yii\helpers\HtmlPurifier;
+use yii\web\Cookie;
 
-/**
- * Post model extending PostBase.
- */
-class Post extends PostBase
+class Post extends BasePost
 {
-    public const STATUS_PUBLISHED = 1;
-    public const STATUS_DRAFT = 0;
+    const STATUS_DRAFT = 0;
+    const STATUS_PUBLISHED = 1;
+    const NOT_DELETED = 0;
+    const DELETED = 1;
 
-    public $like_count;
 
-    public function behaviors(): array
+    public function behaviors()
     {
         return [
-            [
-                'class' => TimestampBehavior::class,
+            TimestampBehavior::class,
+            'slug' => [
+                'class' => SlugBehavior::class,
+                'attribute' => 'title'
             ],
-            [
-                'class' => SluggableBehavior::class,
-                'attribute' => 'title',
-                'ensureUnique' => true,
-            ],
-            [
-                'class' => BlameableBehavior::class,
-                'createdByAttribute' => 'author_id',
-                'updatedByAttribute' => false,
-            ],
-            [
-                'class' => SoftDeleteBehavior::class,
-            ],
+            SoftDeleteBehavior::class,
         ];
-    }
-
-    public function rules(): array
-    {
-        return array_merge(parent::rules(), [
-            [['title'], 'unique', 'message' => 'This title has already been taken.'],
-        ]);
     }
 
     public function beforeSave($insert)
     {
-        if (!parent::beforeSave($insert)) {
-            return false;
+        if (parent::beforeSave($insert)) {
+            if ($this->status == self::STATUS_PUBLISHED) {
+                $oldPubishedAt = $this->getOldAttribute('published_at');
+                if (empty($oldPubishedAt) && empty($this->published_at)) {
+                    $this->published_at = time();
+                }
+            }
+            if (!empty($this->content)) {
+                $this->content = HtmlPurifier::process($this->content);
+            }
+            return true;
         }
-
-        if ($this->status === self::STATUS_PUBLISHED && $this->published_at === null) {
-            $this->published_at = time();
-        }
-
-        return true;
+        return false;
     }
 
-    public function fields(): array
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        TagDependency::invalidate(Yii::$app->cache,[CacheHelper::getPostId($this->id)]);
+    }
+
+    public function afterDelete()
+    {
+        parent::afterDelete();
+        TagDependency::invalidate(Yii::$app->cache,[CacheHelper::getPostId($this->id)]);
+    }
+
+    public function fields()
     {
         return [
             'id',
-            'title',
-            'slug',
-            'status',
-            'view_count',
-            'category_id',
             'author_id',
-            'like_count' => function () {
-                return $this->like_count !== null ? (int)$this->like_count : (int)$this->getPostLikes()->count();
+            'title',
+            'description',
+            'status',
+            'thumbnail' => function () {
+                return $this->thumbnailMedia ? $this->thumbnailMedia->url : null;
             },
-            'thumbnail_url' => function () {
-                $thumbnail = $this->thumbnail;
-                return $thumbnail ? $thumbnail->file_url : null;
-            },
-            'published_at' => function () {
-                return $this->published_at ? Yii::$app->formatter->asDatetime($this->published_at) : null;
-            },
-            'created_at' => function () {
-                return $this->created_at ? Yii::$app->formatter->asDatetime($this->created_at) : null;
-            },
-            'updated_at' => function () {
-                return $this->updated_at ? Yii::$app->formatter->asDatetime($this->updated_at) : null;
-            }
+            'slug',
+            'view_count',
+            'published_at',
+            'created_at',
         ];
     }
 
-    public function extraFields(): array
+    public function extraFields()
     {
-        return ['content', 'category', 'tags', 'author', 'thumbnail'];
+        return [
+            'category',
+            'author',
+            'tags',
+            'comments',
+            'content'
+        ];
     }
 
-    public static function find(): PostQuery
+    public function handleView()
     {
-        return new PostQuery(static::class);
-    }
-
-    public function incrementViewCount(): void
-    {
-        $this->updateCounters(['view_count' => 1]);
-    }
-
-    public function toggleLike(int $userId): array
-    {
-        $like = PostLike::findOne(['post_id' => $this->id, 'user_id' => $userId]);
-        if ($like !== null) {
-            $like->delete();
-            return [
-                'liked' => false,
-                'message' => 'Post unliked successfully.',
-            ];
+        if ($this->status != self::STATUS_PUBLISHED) {
+            return;
         }
 
-        $like = new PostLike();
-        $like->post_id = $this->id;
-        $like->user_id = $userId;
-        if ($like->save()) {
-            return [
-                'liked' => true,
-                'message' => 'Post liked successfully.',
-            ];
+        $userId = Yii::$app->user->isGuest ? 'guest' : Yii::$app->user->id;
+
+        if ($userId == $this->author_id) {
+            return;
         }
 
-        throw new \yii\web\ServerErrorHttpException('Failed to like post.');
+        if ($userId && Yii::$app->user->can(Permission::ADMIN_ACCESS)) {
+            return;
+        }
+
+        $coookieName = "user-{$userId}-view-post-{$this->id}";
+
+        if (Yii::$app->request->cookies->has($coookieName)) {
+            return;
+        }
+        $this->updateCounters([
+            'view_count' => 1
+        ]);
+
+        Yii::$app->response->cookies->add(
+            new Cookie([
+                'name' => $coookieName,
+                'value' => 1,
+                "expire" => time() + 86400
+            ])
+        );
+    }
+
+
+    /**
+     * {@inheritdoc}
+     * @return \app\models\query\PostQuery the active query used by this AR class.
+     */
+    public static function find()
+    {
+        return new \app\models\query\PostQuery(get_called_class());
     }
 
     public function getCategory()
@@ -144,50 +145,23 @@ class Post extends PostBase
         return $this->hasOne(User::class, ['id' => 'author_id']);
     }
 
-    public function getComments()
-    {
-        return $this->hasMany(Comment::class, ['post_id' => 'id']);
-    }
-
-    public function getPostLikes()
-    {
-        return $this->hasMany(PostLike::class, ['post_id' => 'id']);
-    }
-
-    public function getLikedUsers()
-    {
-        return $this->hasMany(User::class, ['id' => 'user_id'])->via('postLikes');
-    }
-
-    public function getPostTags()
-    {
-        return $this->hasMany(PostTag::class, ['post_id' => 'id']);
-    }
-
     public function getTags()
     {
-        return $this->hasMany(Tag::class, ['id' => 'tag_id'])->via('postTags');
+        return $this->hasMany(Tag::class, ['id' => 'tag_id'])->viaTable('post_tag', ['post_id' => 'id']);
     }
 
-    public function getMediaLinks()
+    public function getComments()
     {
-        return $this->hasMany(MediaLink::class, ['model_id' => 'id'])
-            ->onCondition(['model_type' => 'Post']);
+        return $this->hasMany(Comment::class, ['post_id' => 'id'])
+            ->andWhere([
+                'status' => Comment::STATUS_ACTIVE,
+                'parent_id' => null
+            ]);
     }
 
-    public function getMedia()
+    public function getThumbnailMedia()
     {
-        return $this->hasMany(Media::class, ['id' => 'media_id'])->via('mediaLinks');
-    }
-
-    public function getThumbnailLink()
-    {
-        return $this->hasOne(MediaLink::class, ['model_id' => 'id'])
-            ->onCondition(['model_type' => 'Post', 'group_type' => 'thumbnail']);
-    }
-
-    public function getThumbnail()
-    {
-        return $this->hasOne(Media::class, ['id' => 'media_id'])->via('thumbnailLink');
+        return $this->hasOne(Media::class, ['model_id' => 'id'])
+            ->andOnCondition(['model_name' => self::tableName(), 'collection' => 'thumbnail']);
     }
 }

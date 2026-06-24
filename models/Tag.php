@@ -1,84 +1,52 @@
 <?php
 
-declare(strict_types=1);
-
 namespace app\models;
 
-use app\models\base\TagBase;
-use app\models\query\TagQuery;
-use app\behaviors\SoftDeleteBehavior;
-use yii\behaviors\SluggableBehavior;
+use app\models\base\BaseTag;
+use app\behaviors\SlugBehavior;
+use app\helpers\CacheHelper;
+use Yii;
 use yii\behaviors\TimestampBehavior;
+use yii\caching\TagDependency;
 
-/**
- * Tag model extending TagBase.
- */
-class Tag extends TagBase
+class Tag extends BaseTag
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function behaviors(): array
+    public function behaviors()
     {
         return [
-            [
-                'class' => TimestampBehavior::class,
-            ],
-            [
-                'class' => SluggableBehavior::class,
-                'attribute' => 'name',
-            ],
-            [
-                'class' => SoftDeleteBehavior::class,
-            ],
+            SlugBehavior::class,
+            TimestampBehavior::class,
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function find(): TagQuery
-    {
-        return new TagQuery(static::class);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function afterSave($insert, $changedAttributes)
     {
         parent::afterSave($insert, $changedAttributes);
-
-        if (!$insert && isset($changedAttributes['is_deleted']) && (int)$this->is_deleted === 1) {
-            PostTag::deleteAll(['tag_id' => $this->id]);
-        }
+        TagDependency::invalidate(Yii::$app->cache, [CacheHelper::getPostId($this->id)]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    public function afterDelete()
+    {
+        parent::afterDelete();
+        TagDependency::invalidate(Yii::$app->cache, [CacheHelper::getPostId($this->id)]);
+    }
+
+    public function beforeValidate()
+    {
+        if ($this->name !== null) {
+            $this->name = mb_strtolower(trim($this->name), 'UTF-8');
+        }
+        return parent::beforeValidate();
+    }
+
     public function fields()
     {
-        return ['id', 'name', 'slug'];
-    }
-
-    /**
-     * Gets query for [[PostTags]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getPostTags()
-    {
-        return $this->hasMany(PostTag::class, ['tag_id' => 'id']);
-    }
-
-    /**
-     * Gets query for [[Posts]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getPosts()
-    {
-        return $this->hasMany(Post::class, ['id' => 'post_id'])->via('postTags');
+        return [
+            'id',
+            'name',
+            'slug',
+            'created_at',
+            'updated_at',
+        ];
     }
 }

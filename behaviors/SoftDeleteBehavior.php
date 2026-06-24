@@ -1,38 +1,30 @@
 <?php
 
-declare(strict_types=1);
-
 namespace app\behaviors;
 
 use yii\base\Behavior;
-use yii\db\ActiveRecord;
 
 class SoftDeleteBehavior extends Behavior
 {
-    public $isDeletedAttribute = 'is_deleted';
+    public $deletedAttribute = 'is_deleted';
     public $deletedAtAttribute = 'deleted_at';
 
-    public function softDelete()
+    public function softDelete(): bool
     {
         $model = $this->owner;
-        $model->{$this->isDeletedAttribute} = 1;
 
-        if ($this->deletedAtAttribute !== null) {
+        if (!$model->hasAttribute($this->deletedAttribute)) {
+            return false;
+        }
+
+        $attributes = [$this->deletedAttribute];
+        $model->{$this->deletedAttribute} = 1;
+
+        if ($this->deletedAtAttribute && $model->hasAttribute($this->deletedAtAttribute)) {
             $model->{$this->deletedAtAttribute} = time();
+            $attributes[] = $this->deletedAtAttribute;
         }
 
-        return $model->save(false);
-    }
-
-    public function restore()
-    {
-        $model = $this->owner;
-        $model->{$this->isDeletedAttribute} = 0;
-
-        if ($this->deletedAtAttribute !== null) {
-            $model->{$this->deletedAtAttribute} = null;
-        }
-
-        return $model->save(false);
+        return $model->save(false, $attributes);
     }
 }

@@ -1,178 +1,249 @@
 <?php
 
-declare(strict_types=1);
-
 namespace app\modules\api\controllers;
 
+use app\helpers\CacheHelper;
 use app\models\Post;
+use app\models\PostLike;
 use app\modules\api\models\forms\PostForm;
 use app\modules\api\models\search\PostSearch;
-use yii\filters\AccessControl;
-use yii\web\NotFoundHttpException;
-use yii\web\ForbiddenHttpException;
-use yii\web\ServerErrorHttpException;
+use app\rbac\Permission;
 use Yii;
+use yii\caching\TagDependency;
+use yii\filters\AccessControl;
+use yii\web\ForbiddenHttpException;
+use yii\web\NotFoundHttpException;
 
-class PostController extends BaseApiController
+/**
+ * PostController implements the CRUD actions for Post model.
+ */
+class PostController extends BaseController
 {
+    /**
+     * @inheritDoc
+     */
     public function behaviors()
     {
         $behaviors = parent::behaviors();
-
+        $behaviors['verbs'] = [
+            'class' => \yii\filters\VerbFilter::class,
+            'actions' => [
+                'index' => ['GET', 'HEAD'],
+                'view' => ['GET', 'HEAD'],
+                'create' => ['POST'],
+                'update' => ['PUT', 'PATCH'],
+                'delete' => ['DELETE'],
+                'like' => ['POST'],
+            ],
+        ];
         $behaviors['authenticator']['optional'] = ['index', 'view'];
-
         $behaviors['access'] = [
             'class' => AccessControl::class,
             'rules' => [
                 [
                     'allow' => true,
                     'actions' => ['index', 'view'],
-                    'roles' => ['?', '@'],
                 ],
                 [
                     'allow' => true,
-                    'actions' => ['create'],
-                    'roles' => ['createPost'],
-                ],
-                [
-                    'allow' => true,
-                    'actions' => ['manage', 'manage-list', 'update', 'publish', 'delete'],
-                    'roles' => ['admin', 'author'],
-                ],
-                [
-                    'allow' => true,
-                    'actions' => ['like'],
-                    'roles' => ['likePost'],
-                ],
-            ],
+                    'actions' => ['create', 'update', 'delete', 'like'],
+                    'roles' => ['@'],
+                ]
+            ]
         ];
-
         return $behaviors;
     }
 
+    /**
+     * Lists all Post models.
+     *
+     * @return string
+     */
     public function actionIndex()
     {
         $searchModel = new PostSearch();
-        $searchModel->isManagement = false;
-        return $searchModel->search(Yii::$app->request->getQueryParams(), '');
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        return $dataProvider;
     }
 
-    public function actionManageList()
+    /**
+     * Displays a single Post model.
+     * @param int $id ID
+     * @return string
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionView($id)
     {
-        $searchModel = new PostSearch();
-        $searchModel->isManagement = true;
-        return $searchModel->search(Yii::$app->request->getQueryParams(), '');
-    }
+        $params = $this->request->queryParams;
+        $expand = isset($params['expand']) ? explode(',', $params['expand']) : [];
+        $expand = array_map('trim', $expand);
 
-    public function actionView($slug)
-    {
-        $post = Post::find()->active()->published()->bySlug($slug)->one();
-        if ($post === null) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Post not found.'));
+        $cacheKey = CacheHelper::getPostViewKey($id, $params);
+        $ttl = Yii::$app->params['cacheTTL']['post'] ?? 3600;
+
+        $dbModel = $this->findModel($id);
+
+        if ($dbModel->status !== Post::STATUS_PUBLISHED) {
+            if (Yii::$app->user->isGuest || (!Yii::$app->user->can(Permission::UPDATE_POST) && !Yii::$app->user->can(Permission::UPDATE_OWN_POST, ['post' => $dbModel]))) {
+                throw new ForbiddenHttpException(Yii::t('app', 'You do not have permission to view this post.'));
+            }
+
+            return $dbModel;
         }
 
-        $post->incrementViewCount();
+        $dbModel->handleView();
 
-        return $post;
+        return Yii::$app->cache->getOrSet(
+            $cacheKey,
+            fn() => $dbModel->toArray([], $expand),
+            $ttl,
+            new TagDependency([
+                'tags' => [
+                    CacheHelper::getPostId($id),
+                ],
+            ])
+        );
     }
 
-    public function actionManage($id)
-    {
-        $post = Post::find()->active()->byId((int)$id)->one();
-        if ($post === null) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Post not found.'));
-        }
 
-        if (!Yii::$app->user->can('updatePost', ['model' => $post])) {
-            throw new ForbiddenHttpException(\Yii::t('app', 'You are not allowed to manage this post.'));
-        }
 
-        return $post;
-    }
-
+    /**
+     * Creates a new Post model.
+     * If creation is successful, the browser will be redirected to the 'view' page.
+     * @return string|\yii\web\Response
+     */
     public function actionCreate()
     {
+        if (!Yii::$app->user->can(Permission::CREATE_POST)) {
+            throw new ForbiddenHttpException(Yii::t('app', 'You do not have permission to create a post.'));
+        }
         $model = new PostForm();
-
-        if ($model->load(Yii::$app->request->getBodyParams(), '') && $model->save()) {
-            Yii::$app->response->statusCode = 201;
-            return $model;
-        }
-
-        Yii::$app->response->statusCode = 422;
-        return $model->getErrors();
-    }
-
-    public function actionUpdate($id)
-    {
-        $model = PostForm::find()->active()->byId((int)$id)->one();
-        if ($model === null) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Post not found.'));
-        }
-
-        if (!Yii::$app->user->can('updatePost', ['model' => $model])) {
-            throw new ForbiddenHttpException(\Yii::t('app', 'You are not allowed to update this post.'));
-        }
-
-        $model->load(Yii::$app->request->getBodyParams(), '');
+        $model->load($this->request->post(), '');
 
         if ($model->save()) {
             return $model;
         }
+        Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
 
-        Yii::$app->response->statusCode = 422;
-        return $model->getErrors();
+        return $model->errors;
     }
 
+    /**
+     * Updates an existing Post model.
+     * If update is successful, the browser will be redirected to the 'view' page.
+     * @param int $id ID
+     * @return string|\yii\web\Response
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionUpdate($id)
+    {
+        $model = $this->findModel($id);
+        if (!Yii::$app->user->can(Permission::UPDATE_POST) && !Yii::$app->user->can(Permission::UPDATE_OWN_POST, ['post' => $model])) {
+            throw new ForbiddenHttpException(Yii::t('app', 'You do not have permission to update this post.'));
+        }
+
+        $model->load($this->request->post(), '');
+
+        if ($model->save()) {
+            return $model;
+        }
+        Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
+
+        return $model->errors;
+    }
+
+    /**
+     * Deletes an existing Post model.
+     * If deletion is successful, the browser will be redirected to the 'index' page.
+     * @param int $id ID
+     * @return \yii\web\Response
+     * @throws NotFoundHttpException if the model cannot be found
+     */
     public function actionDelete($id)
     {
-        $post = Post::find()->active()->byId((int)$id)->one();
-        if ($post === null) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Post not found.'));
+        $model = $this->findModel($id);
+        if (!Yii::$app->user->can(Permission::DELETE_POST) && !Yii::$app->user->can(Permission::DELETE_OWN_POST, ['post' => $model])) {
+            throw new ForbiddenHttpException(Yii::t('app', 'You do not have permission to delete this post.'));
         }
 
-        if (!Yii::$app->user->can('deletePost', ['model' => $post])) {
-            throw new ForbiddenHttpException(\Yii::t('app', 'You are not allowed to delete this post.'));
+        if ($model->softDelete()) {
+            return [
+                'message' => Yii::t('app', 'Post deleted successfully.'),
+            ];
         }
-
-        if ($post->softDelete()) {
-            Yii::$app->response->statusCode = 204;
-            return null;
-        }
-
-        throw new ServerErrorHttpException(\Yii::t('app', 'Failed to delete post.'));
+        Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
+        return [
+            'message' => Yii::t('app', 'Failed to delete the post.'),
+        ];
     }
 
-    public function actionLike($id)
+    public function actionLike($post_id)
     {
-        $post = Post::find()->active()->published()->byId((int)$id)->one();
-        if ($post === null) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Post not found.'));
+        $post = Post::find()->notDelete()->published()->andWhere(['id' => $post_id])->one();
+        if (!$post) {
+            throw new NotFoundHttpException(Yii::t('app', 'The requested post does not exist.'));
         }
+        $userId = Yii::$app->user->id;
 
-        return $post->toggleLike((int) Yii::$app->user->id);
+        $like = PostLike::findOne(['post_id' => $post_id, 'author_id' => $userId]);
+        if ($like) {
+            if ($like->delete()) {
+                return [
+                    'liked' => false,
+                    'message' => Yii::t('app', 'Post unliked successfully.'),
+                ];
+            }
+        } else {
+            $like = new PostLike();
+            $like->post_id = (int)$post_id;
+            $like->author_id = (int)$userId;
+
+            try {
+                if ($like->save()) {
+                    return [
+                        'liked' => true,
+                        'message' => Yii::t('app', 'Post liked successfully.'),
+                    ];
+                }
+            } catch (\yii\db\Exception $e) {
+                return [
+                    'liked' => true,
+                    'message' => Yii::t('app', 'Post liked successfully.'),
+                ];
+            }
+
+            Yii::$app->response->statusCode = self::HTTP_INTERNAL_SERVER_ERROR;
+            return [
+                'message' => Yii::t('app', 'Failed to like the post.'),
+                'errors' => $like->errors,
+            ];
+        }
+        Yii::$app->response->statusCode = self::HTTP_INTERNAL_SERVER_ERROR;
+        return [
+            'message' => Yii::t('app', 'An error occurred while processing your request.'),
+        ];
     }
 
-    public function actionPublish($id)
+    /**
+     * Finds the Post model based on its primary key value.
+     * If the model is not found, a 404 HTTP exception will be thrown.
+     * @param int $id ID
+     * @return Post the loaded model
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    protected function findModel($id)
     {
-        $post = Post::find()->active()->byId((int)$id)->one();
-        if ($post === null) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Post not found.'));
+        $query = PostForm::find()->where(['id' => $id]);
+        if (!Yii::$app->user->can(Permission::ADMIN_ACCESS)) {
+            $query->notDelete();
+        }
+        $model = $query->one();
+
+        if ($model !== null) {
+            return $model;
         }
 
-        if (!Yii::$app->user->can('updatePost', ['model' => $post])) {
-            throw new ForbiddenHttpException(\Yii::t('app', 'You are not allowed to publish this post.'));
-        }
-
-        $post->status = Post::STATUS_PUBLISHED;
-        if ($post->published_at === null) {
-            $post->published_at = time();
-        }
-
-        if ($post->save(false)) {
-            return $post;
-        }
-
-        throw new ServerErrorHttpException(\Yii::t('app', 'Failed to publish post.'));
+        throw new NotFoundHttpException(Yii::t('app', 'The requested page does not exist.'));
     }
 }

@@ -35,5 +35,5 @@ tests/_support/_generated
 #vagrant folder
 /.vagrant
 
-# Environment — never commit real credentials
-.env
+#Enviroment
+.env

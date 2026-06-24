@@ -1,13 +1,11 @@
 <?php
 
-declare(strict_types=1);
-
 namespace app\modules\api\models\search;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use app\models\Post;
-use app\models\PostLike;
+use app\rbac\Permission;
 use Yii;
 
 /**
@@ -16,25 +14,28 @@ use Yii;
 class PostSearch extends Post
 {
     public $tag;
-    public $tag_id;
-    public $isManagement = false;
 
-    /**
-     * Override behaviors to avoid running SluggableBehavior and generating unique slug checks during search.
-     */
-    public function behaviors(): array
+    private function getExpandableRelations(): array
+    {
+        return [
+            'category' => [],
+            'tags' => [],
+            'comments' => ['author', 'replies', 'replies.author'],
+        ];
+    }
+
+    public function behaviors()
     {
         return [];
     }
-
     /**
      * {@inheritdoc}
      */
-    public function rules(): array
+    public function rules()
     {
         return [
-            [['id', 'status', 'category_id', 'author_id', 'published_at', 'created_at', 'updated_at', 'tag_id'], 'integer'],
-            [['title', 'content', 'slug', 'tag'], 'safe'],
+            [['id', 'category_id', 'author_id', 'status', 'published_at', 'view_count', 'is_deleted', 'deleted_at', 'created_at', 'updated_at'], 'integer'],
+            [['title', 'description', 'slug', 'content', 'tag'], 'safe'],
         ];
     }
 
@@ -43,96 +44,97 @@ class PostSearch extends Post
      */
     public function scenarios()
     {
+        // bypass scenarios() implementation in the parent class
         return Model::scenarios();
     }
 
     /**
-     * Creates data provider instance with search query applied.
+     * Creates data provider instance with search query applied
      *
      * @param array $params
-     * @param string|null $formName
+     * @param string|null $formName Form name to be used into `->load()` method.
+     *
      * @return ActiveDataProvider
      */
-    public function search(array $params, ?string $formName = '')
+    public function search($params, $formName = null)
     {
-        $userId  = Yii::$app->user->id;
-        $isAdmin = Yii::$app->user->can('admin');
+        $expand = Yii::$app->request->get('expand');
+        $with = ['author', 'thumbnailMedia'];
 
-        $query = Post::find()->active();
-        $query->select([
-            'post.*',
-            'like_count' => PostLike::find()
-                ->select('COUNT(*)')
-                ->where('post_like.post_id = post.id')
-        ]);
+        if (is_string($expand) && !empty($expand)) {
+            $requested = explode(',', $expand);
 
-        if ($this->isManagement) {
-            if (!$isAdmin) {
-                $query->andWhere(['post.author_id' => $userId]);
+            $allowed = $this->getExpandableRelations();
+            foreach ($requested as $relation) {
+                $relation = trim($relation);
+                if (!isset($allowed[$relation])) {
+                    continue;
+                }
+                $with[] = $relation;
+                foreach ($allowed[$relation] as $child) {
+                    $with[] = "{$relation}.{$child}";
+                }
             }
-        } else {
-            $query->andWhere(['post.status' => Post::STATUS_PUBLISHED]);
-        }
 
-        $expand = array_filter(explode(',', Yii::$app->request->get('expand', '')));
-        $validExpands = ['category', 'tags', 'author', 'thumbnail'];
-        $withRelations = array_intersect($expand, $validExpands);
-
-        // Always eager load the thumbnail relation to prevent N+1 queries for thumbnail_url
-        if (!in_array('thumbnail', $withRelations, true)) {
-            $withRelations[] = 'thumbnail';
+            $with = array_unique($with);
         }
+        $query = Post::find()->with($with);
 
-        if (!empty($withRelations)) {
-            $query->with($withRelations);
-        }
+
+        // add conditions that should always apply here
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
-            'pagination' => [
-                'pageSizeParam'   => 'limit',
-                'defaultPageSize' => 10,
-            ],
-            'sort' => [
-                'defaultOrder' => ['id' => SORT_DESC],
-                'attributes' => [
-                    'id',
-                    'title',
-                    'status',
-                    'view_count',
-                    'published_at',
-                    'created_at',
-                    'updated_at',
-                ],
-            ],
         ]);
 
-        $this->load($params, $formName);
+        $this->load($params, '');
 
         if (!$this->validate()) {
+            // uncomment the following line if you do not want to return any records when validation fails
+            // $query->where('0=1');
             return $dataProvider;
         }
 
+        // grid filtering conditions
         $query->andFilterWhere([
-            'post.id'           => $this->id,
-            'post.status'       => $this->status,
-            'post.category_id'  => $this->category_id,
-            'post.author_id'    => $this->author_id,
+            'post.id' => $this->id,
+            'post.category_id' => $this->category_id,
+            'post.author_id' => $this->author_id,
+            'post.status' => $this->status,
             'post.published_at' => $this->published_at,
-            'post.created_at'   => $this->created_at,
-            'post.updated_at'   => $this->updated_at,
         ]);
 
         $query->andFilterWhere(['like', 'post.title', $this->title])
-              ->andFilterWhere(['like', 'post.slug', $this->slug]);
+            ->andFilterWhere(['like', 'post.description', $this->description])
+            ->andFilterWhere(['like', 'post.slug', $this->slug])
+            ->andFilterWhere(['like', 'post.content', $this->content]);
 
         if (!empty($this->tag)) {
             $query->joinWith('tags')
-                  ->andWhere(['like', 'tag.name', $this->tag]);
+                ->andWhere([
+                    'or',
+                    ['tag.name' => $this->tag],
+                    ['tag.slug' => $this->tag]
+                ]);
         }
-        if (!empty($this->tag_id)) {
-            $query->joinWith('postTags')
-                  ->andWhere(['post_tag.tag_id' => $this->tag_id]);
+
+        $isGuest = Yii::$app->user->isGuest;
+        $isAuthor = !$isGuest && Yii::$app->user->can(Permission::AUTHOR_ACCESS);
+        $isAdmin = !$isGuest && Yii::$app->user->can(Permission::ADMIN_ACCESS);
+        $isReader = !$isGuest && !$isAuthor && !$isAdmin;
+
+        if ($isGuest || $isReader) {
+            $query->published()->notDelete();
+        } elseif ($isAuthor && !$isAdmin) {
+            $query->publishedOrOwn(Yii::$app->user->id)->notDelete();
+        }
+
+        if ($isAdmin) {
+            if ($this->is_deleted === null || $this->is_deleted === '') {
+                $query->notDelete();
+            } else {
+                $query->andWhere(['post.is_deleted' => (int)$this->is_deleted]);
+            }
         }
 
         return $dataProvider;

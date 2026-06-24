@@ -1,271 +1,264 @@
 <?php
 
-declare(strict_types=1);
-
 namespace app\modules\api\models\forms;
 
-use app\models\Post;
 use app\models\Category;
 use app\models\Media;
-use app\models\MediaLink;
+use app\models\Post;
 use app\models\Tag;
-use yii\helpers\ArrayHelper;
 use Yii;
+use yii\web\UploadedFile;
 
 class PostForm extends Post
 {
-    public $tagNames = [];
-    public $thumbnail_id;
+    public $tag_list = null;
+    public $warnings;
+    public $thumbnail_file;
 
-    private array $_oldTags = [];
-    private array $_oldTagIds = [];
-    private ?int $_oldThumbnailId = null;
-
-    public function scenarios(): array
+    public function scenarios()
     {
-        return [
-            self::SCENARIO_DEFAULT => ['title', 'content', 'category_id', 'status', 'tagNames', 'thumbnail_id'],
-        ];
+        $scenarios = parent::scenarios();
+        $scenarios[self::SCENARIO_DEFAULT] = ['category_id', 'title', 'description', 'thumbnail_file', 'content', 'status', 'tag_list'];
+        return $scenarios;
     }
 
-    public function rules(): array
+    public function rules()
     {
         return array_merge(parent::rules(), [
-            [
-                ['category_id'],
-                'exist',
-                'targetClass' => Category::class,
-                'targetAttribute' => 'id',
-                'filter' => ['is_deleted' => 0],
-                'message' => \Yii::t('app', 'The selected category is invalid or deleted.')
-            ],
+            [['category_id'], 'exist', 'targetClass' => Category::class, 'targetAttribute' => 'id'],
+            [['status'], 'default', 'value' => self::STATUS_DRAFT],
             [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PUBLISHED]],
-            [['thumbnail_id'], 'default', 'value' => null],
-            [['thumbnail_id'], 'integer'],
-            [
-                ['thumbnail_id'],
-                'exist',
-                'skipOnError' => true,
-                'targetClass' => Media::class,
-                'targetAttribute' => 'id',
-                'filter' => function ($query) {
-                    if (Yii::$app->user->can('updatePost')) {
-                        return;
-                    }
-                    $userId = Yii::$app->user->id ?? 0;
-                    $query->andWhere(['user_id' => $userId]);
-                },
-                'message' => \Yii::t('app', 'The selected thumbnail is invalid.')
-            ],
-            [['tagNames'], 'each', 'rule' => ['string', 'max' => 255], 'skipOnEmpty' => true],
-            [['title'], 'validateHasChanges', 'skipOnEmpty' => false],
+            [['content'], 'required'],
+            [['tag_list'], 'safe'],
+            [['thumbnail_file'], 'file', 'skipOnEmpty' => true, 'extensions' => 'png, jpg, jpeg, webp', 'maxSize' => 5 * 1024 * 1024, 'mimeTypes' => 'image/jpeg, image/png, image/webp'],
         ]);
     }
 
-    public function validateHasChanges($attribute, $params)
+    public function fields()
+    {
+        $fields = parent::fields();
+        if (!empty($this->warnings)) {
+            $fields['warnings'] = 'warnings';
+        }
+        return $fields;
+    }
+
+
+    public function beforeValidate()
     {
         if ($this->isNewRecord) {
-            return;
+            $this->author_id = Yii::$app->user->id;
         }
-
-        $dirty = $this->getDirtyAttributes();
-        unset($dirty['updated_at'], $dirty['published_at'], $dirty['slug'], $dirty['created_at']);
-
-        $oldTags = $this->_oldTags;
-        $newTags = array_filter(array_map('trim', (array)$this->tagNames));
-        sort($oldTags);
-        sort($newTags);
-
-        $oldThumb = $this->_oldThumbnailId !== null ? (int)$this->_oldThumbnailId : null;
-        $newThumb = $this->thumbnail_id !== null && $this->thumbnail_id !== '' ? (int)$this->thumbnail_id : null;
-
-        if (empty($dirty) && $oldTags === $newTags && $oldThumb === $newThumb) {
-            $this->addError($attribute, \Yii::t('app', 'No changes detected.'));
+        $file = UploadedFile::getInstanceByName('thumbnail_file');
+        if ($file) {
+            $this->thumbnail_file = $file;
         }
-    }
-
-    public function afterFind()
-    {
-        parent::afterFind();
-
-        $this->thumbnail_id = $this->thumbnail ? $this->thumbnail->id : null;
-        $this->tagNames = ArrayHelper::getColumn($this->tags, 'name');
-
-        $this->_oldThumbnailId = $this->thumbnail_id;
-        $this->_oldTags = $this->tagNames;
-        $this->_oldTagIds = ArrayHelper::getColumn($this->tags, 'id');
-    }
-
-    public function beforeSave($insert)
-    {
-        if (!parent::beforeSave($insert)) {
-            return false;
-        }
-
-        if (empty($this->thumbnail_id)) {
-            $this->thumbnail_id = $this->detectThumbnailId();
-        }
-
-        return true;
+        return parent::beforeValidate();
     }
 
     public function afterSave($insert, $changedAttributes)
     {
         parent::afterSave($insert, $changedAttributes);
-
-        $this->syncThumbnailLink();
-        $this->syncTags();
-    }
-
-    private function syncThumbnailLink(): void
-    {
-        $newVal = $this->thumbnail_id !== null ? $this->thumbnail_id : null;
-        $oldVal = $this->_oldThumbnailId;
-
-        if ($oldVal === $newVal) {
-            return;
+        if ($this->tag_list !== null) {
+            if (is_array($this->tag_list)) {
+                $tagIds = $this->resolveTagIds($this->tag_list);
+                $this->syncTags($tagIds);
+            } else {
+                Yii::warning("Invalid tag_list format for post ID {$this->id}: expected array, got " . gettype($this->tag_list));
+                $this->warnings[] = 'tag_list must be an array of strings, tags were not synced.';
+            }
         }
 
-        MediaLink::deleteAll([
-            'model_type' => 'Post',
-            'model_id' => $this->id,
-            'group_type' => 'thumbnail',
-        ]);
+        $this->syncThumbnail();
+        $this->syncContentImages();
+    }
 
-        if (!empty($newVal)) {
-            $link = new MediaLink([
-                'model_type' => 'Post',
+    protected function syncContentImages()
+    {
+        $mediaUrls = Media::findAllImagesInContent($this->content);
+
+        $mediaIds = Media::find()->select('id')->where(['url' => $mediaUrls])->column();
+
+        if (!empty($mediaIds)) {
+            Media::updateAll(
+                [
+                    'model_id' => $this->id,
+                    'model_name' => self::tableName(),
+                ],
+                [
+                    'id' => $mediaIds,
+                    'model_id' => null
+                ]
+            );
+        }
+
+        $removedMediaQuery = Media::find()
+            ->where([
                 'model_id' => $this->id,
-                'group_type' => 'thumbnail',
-                'media_id' => $newVal,
+                'model_name' => self::tableName(),
+                'collection' => 'content'
             ]);
-            $link->save(false);
+
+        if (!empty($mediaIds)) {
+            $removedMediaQuery->andWhere(['not', ['id' => $mediaIds]]);
         }
 
-        $this->_oldThumbnailId = $newVal;
+        $removedMedia = $removedMediaQuery->all();
+
+        foreach ($removedMedia as $media) {
+            $media->deleteMedia(true);
+        }
     }
 
-    private function syncTags(): void
+    protected function resolveTagIds(array $inputs): array
     {
-        $uniqueNames = $this->normalizeTagNames((array)$this->tagNames);
-        $names = array_values($uniqueNames);
+        $names = array_filter(array_unique(
+            array_map(fn($i) => mb_strtolower(trim((string)$i), 'UTF-8'), $inputs)
+        ));
 
-        $oldTags = $this->_oldTags;
-        $newTags = $names;
-        sort($oldTags);
-        sort($newTags);
-        if ($oldTags === $newTags) {
-            return;
+        if (empty($names)) {
+            return [];
         }
 
-        if (empty($uniqueNames)) {
-            Yii::$app->db->createCommand()
-                ->delete('post_tag', ['post_id' => $this->id])
-                ->execute();
-            $this->_oldTags = [];
-            $this->_oldTagIds = [];
-            unset($this->tags);
-            unset($this->postTags);
-            return;
-        }
-
-        $tagIds = $this->getOrCreateTagIds($uniqueNames);
-
-        $oldTagIds = $this->_oldTagIds;
-        $toLink = array_diff($tagIds, $oldTagIds);
-        $toUnlink = array_diff($oldTagIds, $tagIds);
-
-        if (!empty($toUnlink)) {
-            Yii::$app->db->createCommand()
-                ->delete('post_tag', ['post_id' => $this->id, 'tag_id' => $toUnlink])
-                ->execute();
-        }
-
-        if (!empty($toLink)) {
-            $rows = [];
-            foreach ($toLink as $tagId) {
-                $rows[] = [$this->id, $tagId];
-            }
-            Yii::$app->db->createCommand()
-                ->batchInsert('post_tag', ['post_id', 'tag_id'], $rows)
-                ->execute();
-        }
-
-        $this->_oldTags = $names;
-        $this->_oldTagIds = $tagIds;
-
-        unset($this->tags);
-        unset($this->postTags);
-    }
-
-    private function normalizeTagNames(array $names): array
-    {
-        $unique = [];
-        foreach ($names as $name) {
-            $name = trim($name);
-            if ($name === '') {
-                continue;
-            }
-
-            $lower = mb_strtolower($name);
-            if (!isset($unique[$lower])) {
-                $unique[$lower] = $name;
-            }
-        }
-
-        return $unique;
-    }
-
-    private function getOrCreateTagIds(array $uniqueNames): array
-    {
-        $existingTags = Tag::find()->andWhere(['name' => array_values($uniqueNames)])->all();
-        $tagsByName = [];
-        foreach ($existingTags as $tag) {
-            $tagsByName[mb_strtolower($tag->name)] = $tag;
-        }
+        $existingTags = Tag::find()->where(['name' => $names])->indexBy('name')->all();
 
         $tagIds = [];
-        foreach ($uniqueNames as $lower => $name) {
-            if (isset($tagsByName[$lower])) {
-                $tag = $tagsByName[$lower];
-                if ((int)$tag->is_deleted === 1) {
-                    $tag->is_deleted = 0;
-                    $tag->save(false);
-                }
+        foreach ($names as $name) {
+            if (isset($existingTags[$name])) {
+                $tagIds[] = (int)$existingTags[$name]->id;
             } else {
-                $tag = new Tag();
-                $tag->name = $name;
-                $tag->save();
-            }
-
-            if ($tag->id) {
-                $tagIds[] = (int)$tag->id;
+                $tagIds[] = $this->createTag($name);
             }
         }
 
-        return $tagIds;
+        return array_filter($tagIds);
     }
 
-    private function detectThumbnailId(): ?int
+    protected function createTag(string $name): ?int
     {
-        $publicUrl = rtrim(Yii::$app->r2->publicUrl ?? '', '/');
+        $tag = new Tag();
+        $tag->name = $name;
 
-        if (empty($publicUrl) || empty($this->content)) {
+        if (!$tag->validate()) {
+            $errors = implode(', ', $tag->getErrorSummary(true));
+            $this->warnings[] = "Validation failed for tag '{$name}': {$errors}";
             return null;
         }
 
-        $escapedUrl = preg_quote($publicUrl, '/');
-        $pattern = '/' . $escapedUrl . '\/([a-zA-Z0-9_\-]{32}\.(?:png|jpg|jpeg|webp))/i';
+        try {
+            if ($tag->save(false)) {
+                return (int)$tag->id;
+            }
+        } catch (\yii\db\Exception $e) {
 
-        if (!preg_match($pattern, (string)$this->content, $matches)) {
+            if (isset($e->errorInfo[0]) && $e->errorInfo[0] === '23000') {
+                $existing = Tag::findOne(['name' => $name]);
+                if ($existing) {
+                    return (int)$existing->id;
+                }
+            }
+            Yii::error("Database error creating tag '{$name}': " . $e->getMessage());
+            $this->warnings[] = "Database error for tag '{$name}': " . $e->getMessage();
             return null;
         }
 
-        $media = Media::find()
-            ->select('id')
-            ->where(['file_name' => $matches[1]])
-            ->one();
+        $this->warnings[] = "Failed to save tag '{$name}'.";
+        return null;
+    }
 
-        return $media ? (int)$media->id : null;
+
+    protected function syncTags(array $tagIds)
+    {
+        $currentTagIds = (new \yii\db\Query())
+            ->select('tag_id')
+            ->from('post_tag')
+            ->where(['post_id' => $this->id])
+            ->column();
+
+        $currentTagIds = array_map('intval', $currentTagIds);
+
+        $tagsToAdd = array_diff($tagIds, $currentTagIds);
+        $tagsToRemove = array_diff($currentTagIds, $tagIds);
+
+        if (!empty($tagsToRemove)) {
+            Yii::$app->db->createCommand()
+                ->delete('post_tag', [
+                    'post_id' => $this->id,
+                    'tag_id' => $tagsToRemove,
+                ])
+                ->execute();
+        }
+
+        if (!empty($tagsToAdd)) {
+            $rows = [];
+            $now = time();
+            foreach ($tagsToAdd as $tagId) {
+                $rows[] = [$this->id, $tagId, $now];
+            }
+            Yii::$app->db->createCommand()
+                ->batchInsert('post_tag', ['post_id', 'tag_id', 'created_at'], $rows)
+                ->execute();
+        }
+    }
+
+    protected function syncThumbnail()
+    {
+
+        if ($this->thumbnail_file === '') {
+            $this->deleteOldThumbnail(true);
+            return;
+        }
+
+        if ($this->thumbnail_file) {
+            $this->handleUploadedThumbnail();
+            return;
+        }
+
+        $this->handleFallbackThumbnail();
+    }
+
+    private function getOldThumbnail()
+    {
+        return Media::findOne([
+            'model_id' => $this->id,
+            'model_name' => self::tableName(),
+            'collection' => 'thumbnail'
+        ]);
+    }
+
+    private function deleteOldThumbnail(bool $deleteFromR2 = true)
+    {
+        $oldThumbnail = $this->getOldThumbnail();
+        if ($oldThumbnail) {
+            $oldThumbnail->deleteMedia($deleteFromR2);
+        }
+    }
+
+    private function handleUploadedThumbnail()
+    {
+        $this->deleteOldThumbnail(true);
+        $media = Media::uploadAndCreate($this->thumbnail_file, 'thumbnail', $this->id, self::tableName());
+        if (!$media) {
+            $this->warnings[] = "Fail to upload thumbnail.";
+        }
+    }
+
+    private function handleFallbackThumbnail()
+    {
+        $thumbnailUrl = Media::findFirstImageInContent($this->content);
+        if (empty($thumbnailUrl)) {
+            return;
+        }
+
+        $oldThumbnail = $this->getOldThumbnail();
+        if ($oldThumbnail && $oldThumbnail->url === $thumbnailUrl) {
+            return;
+        }
+
+        $this->deleteOldThumbnail(false);
+        $media = Media::createFromUrl($thumbnailUrl, 'thumbnail', $this->id, self::tableName());
+        if (!$media) {
+            $this->warnings[] = "Fail to create thumbnail.";
+        }
     }
 }

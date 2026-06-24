@@ -1,145 +1,146 @@
 <?php
 
-declare(strict_types=1);
-
 namespace app\models;
 
-use app\models\base\MediaBase;
-use app\models\query\MediaQuery;
+use app\models\base\BaseMedia;
 use Yii;
 use yii\behaviors\TimestampBehavior;
-use yii\behaviors\BlameableBehavior;
-use yii\web\UploadedFile;
 
-/**
- * Media model extending MediaBase.
- */
-class Media extends MediaBase
+class Media extends BaseMedia
 {
-    private ?UploadedFile $_uploadedFile = null;
-
-    public function setUploadedFile(UploadedFile $file): void
-    {
-        $this->_uploadedFile = $file;
-    }
-
-    public function getUploadedFile(): ?UploadedFile
-    {
-        return $this->_uploadedFile;
-    }
-    public function behaviors(): array
+    public function behaviors()
     {
         return [
             [
                 'class' => TimestampBehavior::class,
                 'updatedAtAttribute' => false,
-            ],
-            [
-                'class' => BlameableBehavior::class,
-                'createdByAttribute' => 'user_id',
-                'updatedByAttribute' => false,
-            ],
+            ]
         ];
     }
-
-    public function beforeValidate(): bool
-    {
-        if ($this->user_id === null && Yii::$app->has('user') && !Yii::$app->user->isGuest) {
-            $this->user_id = (int)Yii::$app->user->id;
-        }
-
-        if ($this->isNewRecord) {
-            if ($this->_uploadedFile === null) {
-                $this->addError('uploadedFile', 'Uploaded file is required.');
-                return false;
-            }
-            $this->mime_type = $this->_uploadedFile->type;
-            $this->size = $this->_uploadedFile->size;
-        }
-
-        return parent::beforeValidate();
-    }
-
-    public function beforeSave($insert): bool
-    {
-        if (!parent::beforeSave($insert)) {
-            return false;
-        }
-
-        if ($insert && $this->_uploadedFile !== null) {
-            $fileName = Yii::$app->security->generateRandomString(32) . '.' . $this->_uploadedFile->extension;
-            $fileUrl = Yii::$app->r2->upload($this->_uploadedFile->tempName, $fileName, $this->_uploadedFile->type);
-
-            if ($fileUrl === null) {
-                $this->addError('uploadedFile', 'Failed to upload file to Cloudflare R2.');
-                return false;
-            }
-
-            $this->file_name = $fileName;
-            $this->file_url = $fileUrl;
-        }
-
-        return true;
-    }
-
-    public function afterDelete(): void
-    {
-        parent::afterDelete();
-        if (!empty($this->file_name)) {
-            try {
-                Yii::$app->r2->delete($this->file_name);
-            } catch (\Throwable $e) {
-                Yii::error("Failed to delete R2 file: " . $e->getMessage(), __METHOD__);
-            }
-        }
-    }
-
-    public static function find(): MediaQuery
-    {
-        return new MediaQuery(static::class);
-    }
-
-    /**
-     * Gets query for [[User]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getUser()
-    {
-        return $this->hasOne(User::class, ['id' => 'user_id']);
-    }
-
-    /**
-     * Gets query for [[MediaLinks]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getMediaLinks()
-    {
-        return $this->hasMany(MediaLink::class, ['media_id' => 'id']);
-    }
-
-    public function fields(): array
+    public function fields()
     {
         return [
             'id',
-            'user_id',
-            'file_name',
-            'file_url',
+            'model_id',
+            'model_name',
+            'url',
+            'collection',
+            'file_size',
             'mime_type',
-            'size',
-            'created_at' => function () {
-                return $this->created_at ? Yii::$app->formatter->asDatetime($this->created_at) : null;
-            },
-            'presigned_url' => function () {
-                return $this->getPresignedUrl();
-            },
+            'created_at',
         ];
     }
 
-    public function getPresignedUrl(string $expires = '+20 minutes'): ?string
+    public static function uploadAndCreate($file, $collection, $modelId = null, $modelName = null)
     {
-        return Yii::$app->r2->getPresignedUrl($this->file_name, $expires);
-    }
-}
+        $r2 = Yii::$app->r2Component;
 
+        $folder = $collection === 'thumbnail' ? 'thumbnails' : 'content';
+
+        try {
+            $url = $r2->upload($file, $folder);
+            $publicUrl = Yii::$app->r2Component->publicUrl;
+            $storageKey = str_replace(rtrim($publicUrl, '/') . '/', '', $url);
+        } catch (\Exception $e) {
+            Yii::error("R2 Upload failed: " . $e->getMessage(), 'media');
+            return null;
+        }
+        $media = new self();
+        $media->model_id = $modelId;
+        $media->model_name = $modelName;
+        $media->collection = $collection;
+        $media->url = $url;
+        $media->storage_key = $storageKey;
+        $media->file_size = $file->size;
+        $media->mime_type = $file->type;
+
+        if (!$media->save()) {
+            Yii::error("Failed to save media metadata: " . json_encode($media->errors), 'media');
+
+            try {
+                $r2->delete($storageKey);
+            } catch (\Exception $ex) {
+                Yii::error("Failed to clean up R2 file '{$storageKey}' after DB failure: " . $ex->getMessage(), 'media');
+            }
+            return null;
+        }
+        return $media;
+    }
+
+    public static function createFromUrl(string $url, string $collection, $modelId = null, $modelName = null): ?self
+    {
+
+        $existingMedia = self::findOne(['url' => $url]);
+        $media = new self();
+        $media->model_id = $modelId;
+        $media->model_name = $modelName;
+        $media->collection = $collection;
+        $media->url = $url;
+
+        if ($existingMedia) {
+            $media->storage_key = $existingMedia->storage_key;
+            $media->file_size = $existingMedia->file_size;
+            $media->mime_type = $existingMedia->mime_type;
+        } else {
+
+            $media->storage_key = null;
+            $media->file_size = null;
+            $media->mime_type = null;
+        }
+        if (!$media->save()) {
+            Yii::error("Failed to save media from URL: " . json_encode($media->errors), 'media');
+            return null;
+        }
+        return $media;
+    }
+
+    public static function findAllImagesInContent(?string $content): array
+    {
+        if (empty($content)) {
+            return [];
+        }
+
+        $urls = [];
+
+        if (preg_match_all('/<img[^>]+src=["\']([^"\']+)["\']/i', $content, $matches)) {
+            $urls = array_merge($urls, $matches[1]);
+        }
+
+        if (preg_match_all('/!\[[^\]]*]\(([^)]+)\)/', $content, $matches)) {
+            $urls = array_merge($urls, $matches[1]);
+        }
+
+        $urls = array_map(
+            static fn(string $url) => trim(html_entity_decode($url)),
+            $urls
+        );
+
+        return array_values(array_unique(array_filter($urls)));
+    }
+
+    public static function findFirstImageInContent($content)
+    {
+        $images = self::findAllImagesInContent($content);
+        return !empty($images) ? reset($images) : null;
+    }
+
+    public function deleteMedia(bool $deleteFromR2 = true)
+    {
+        if ($deleteFromR2 && !empty($this->storage_key)) {
+            $otherReferencesCount = self::find()
+                ->where(['storage_key' => $this->storage_key])
+                ->andWhere(['not', ['id' => $this->id]])
+                ->count();
+            if ($otherReferencesCount == 0) {
+                try {
+                    $r2 = Yii::$app->r2Component;
+                    $r2->delete($this->storage_key);
+                } catch (\Exception $e) {
+                    Yii::error("Failed to delete media from R2 (Key: {$this->storage_key}): " . $e->getMessage(), 'media');
+                }
+            }
+        }
+        return (bool)$this->delete();
+    }
+
+}

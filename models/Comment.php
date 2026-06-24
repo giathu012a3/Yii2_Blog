@@ -1,125 +1,67 @@
 <?php
 
-declare(strict_types=1);
-
 namespace app\models;
 
-use app\behaviors\SoftDeleteBehavior;
-use app\models\base\CommentBase;
-use app\models\query\CommentQuery;
-use yii\behaviors\TimestampBehavior;
+use app\helpers\CacheHelper;
+use app\models\base\BaseComment;
 use Yii;
+use yii\behaviors\TimestampBehavior;
+use yii\caching\TagDependency;
 
-/**
- * Comment model extending CommentBase.
- */
-class Comment extends CommentBase
+class Comment extends BaseComment
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function behaviors(): array
+    const STATUS_ACTIVE = 1;
+    const STATUS_INACTIVE = 0;
+
+    public function behaviors()
     {
         return [
-            [
-                'class' => TimestampBehavior::class,
-            ],
-            [
-                'class' => SoftDeleteBehavior::class,
-            ],
+            TimestampBehavior::class,
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function find(): CommentQuery
+    public function afterSave($insert, $changedAttributes)
     {
-        return new CommentQuery(static::class);
+        parent::afterSave($insert, $changedAttributes);
+        TagDependency::invalidate(Yii::$app->cache, [CacheHelper::getPostId($this->id)]);
     }
 
-    /**
-     * Gets query for [[Post]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
+    public function afterDelete()
+    {
+        parent::afterDelete();
+        TagDependency::invalidate(Yii::$app->cache, [CacheHelper::getPostId($this->id)]);
+    }
+
+    public function fields()
+    {
+        return parent::fields();
+    }
+    public function extraFields()
+    {
+        return [
+            'post',
+            'author',
+            'replies',
+        ];
+    }
+
     public function getPost()
     {
         return $this->hasOne(Post::class, ['id' => 'post_id']);
     }
-
-    /**
-     * Gets query for [[User]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getUser()
+    public function getAuthor()
     {
-        return $this->hasOne(User::class, ['id' => 'user_id']);
+        return $this->hasOne(User::class, ['id' => 'author_id']);
     }
 
-    /**
-     * Gets query for [[Parent]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getParent()
+    public static function find()
     {
-        return $this->hasOne(Comment::class, ['id' => 'parent_id']);
+        return new \app\models\query\CommentQuery(get_called_class());
     }
 
-    /**
-     * Gets query for [[Replies]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
     public function getReplies()
     {
-        return $this->hasMany(Comment::class, ['parent_id' => 'id']);
-    }
-
-    public function fields(): array
-    {
-        return [
-            'id',
-            'post_id',
-            'parent_id',
-            'content',
-            'created_at' => function () {
-                return $this->created_at ? Yii::$app->formatter->asDatetime($this->created_at) : null;
-            },
-            'updated_at' => function () {
-                return $this->updated_at ? Yii::$app->formatter->asDatetime($this->updated_at) : null;
-            },
-        ];
-    }
-
-    public function extraFields(): array
-    {
-        return [
-            'user'    => function () {
-                return $this->user
-                    ? ['id' => $this->user->id, 'username' => $this->user->username]
-                    : null;
-            },
-            'replies' => function () {
-                if ($this->parent_id !== null) {
-                    return null;
-                }
-                return array_map(function (Comment $reply) {
-                    return [
-                        'id'         => $reply->id,
-                        'post_id'    => $reply->post_id,
-                        'parent_id'  => $reply->parent_id,
-                        'content'    => $reply->content,
-                        'created_at' => $reply->created_at ? Yii::$app->formatter->asDatetime($reply->created_at) : null,
-                        'updated_at' => $reply->updated_at ? Yii::$app->formatter->asDatetime($reply->updated_at) : null,
-                        'user'       => $reply->user
-                            ? ['id' => $reply->user->id, 'username' => $reply->user->username]
-                            : null,
-                    ];
-                }, $this->isRelationPopulated('replies') ? $this->replies : []);
-            },
-        ];
+        return $this->hasMany(self::class, ['parent_id' => 'id'])
+            ->andWhere(['status' => self::STATUS_ACTIVE]);
     }
 }

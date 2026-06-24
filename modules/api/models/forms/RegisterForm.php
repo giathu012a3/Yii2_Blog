@@ -1,35 +1,33 @@
 <?php
 
-declare(strict_types=1);
-
 namespace app\modules\api\models\forms;
 
 use app\models\User;
+use app\models\UserAccessToken;
+use Exception;
 use Yii;
+use yii\base\Model;
 
-class RegisterForm extends User
+class RegisterForm extends Model
 {
-    public ?string $password = null;
+    public $username;
+    public $email;
+    public $password;
+    public $password_confirmation;
 
     public function rules()
     {
-        $rules = parent::rules();
-        return array_merge($rules, [
-            ['password', 'required'],
-            ['password', 'string', 'min' => 6],
-            ['email', 'email'],
-            ['username', 'unique', 'targetClass' => User::class, 'message' => \Yii::t('app', 'This username has already been taken.')],
-            ['email', 'unique', 'targetClass' => User::class, 'message' => \Yii::t('app', 'This email address has already been taken.')],
-        ]);
+        return [
+            [['username', 'email', 'password', 'password_confirmation'], 'required'],
+            [['email'], 'email'],
+            [['username'], 'string', 'min' => 3, 'max' => 255],
+            [['password'], 'string', 'min' => 6, 'max' => 255],
+            [['password_confirmation'], 'compare', 'compareAttribute' => 'password'],
+            [['username'], 'unique', 'targetClass' => User::class],
+            [['email'], 'unique', 'targetClass' => User::class],
+        ];
     }
 
-    public function load($data, $formName = null): bool
-    {
-        if (is_array($data)) {
-            unset($data['access_token'], $data['status'], $data['is_deleted'], $data['deleted_at']);
-        }
-        return parent::load($data, $formName);
-    }
 
     public function register()
     {
@@ -37,22 +35,32 @@ class RegisterForm extends User
             return null;
         }
 
-        $this->setPassword($this->password);
-        $this->generateAuthKey();
-        $this->status = self::STATUS_ACTIVE;
-        $this->is_deleted = 0;
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $user = new User();
+            $user->username = $this->username;
+            $user->email = $this->email;
+            $user->setPassword($this->password);
+            $user->generateAuthKey();
+            $user->status = User::STATUS_ACTIVE;
 
-        if ($this->save(false)) {
-            $auth = Yii::$app->authManager;
-            if ($auth) {
-                $readerRole = $auth->getRole('reader');
+            if ($user->save()) {
+                $auth = Yii::$app->authManager;
+                $readerRole = $auth->getRole(User::ROLE_READER);
                 if ($readerRole) {
-                    $auth->assign($readerRole, $this->id);
+                    $auth->assign($readerRole, $user->id);
                 }
+
+               $transaction->commit();
+               return $user;
             }
-            return $this;
+
+        }catch(\Exception $e) {
+            $transaction->rollback();
+            $this->addError('register', Yii::t('app', 'Registration failed.') . $e->getMessage());
         }
 
         return null;
+
     }
 }

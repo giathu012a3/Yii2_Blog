@@ -1,103 +1,69 @@
 <?php
 
-declare(strict_types=1);
-
 namespace app\modules\api\controllers;
 
-use app\models\Media;
-use app\modules\api\models\forms\UploadForm;
-use yii\filters\AccessControl;
-use yii\web\UploadedFile;
-use yii\web\NotFoundHttpException;
-use yii\web\ForbiddenHttpException;
-use yii\web\ServerErrorHttpException;
 use Yii;
+use yii\web\UploadedFile;
+use app\modules\api\models\forms\UploadForm;
+use app\models\Media;
+use app\rbac\Permission;
+use yii\filters\AccessControl;
 
-class MediaController extends BaseApiController
+class MediaController extends BaseController
 {
-    public function behaviors(): array
+    public function behaviors()
     {
         $behaviors = parent::behaviors();
+        $behaviors['verbs'] = [
+            'class' => \yii\filters\VerbFilter::class,
+            'actions' => [
+                'upload' => ['POST'],
+            ],
+        ];
 
         $behaviors['access'] = [
             'class' => AccessControl::class,
             'rules' => [
                 [
                     'allow' => true,
-                    'roles' => ['createPost'],
-                ],
-            ],
+                    'actions' => ['upload'],
+                    'roles' => [Permission::AUTHOR_ACCESS, Permission::ADMIN_ACCESS],
+                ]
+            ]
         ];
-
         return $behaviors;
     }
 
     public function actionUpload()
     {
-        $form = new UploadForm();
-        $form->file = UploadedFile::getInstanceByName('file');
+        $model = new UploadForm();
+        $model->files = UploadedFile::getInstancesByName('files');
 
-        if (!$form->validate()) {
-            Yii::$app->response->statusCode = 422;
-            return $form->getErrors();
-        }
-
-        $media = new Media();
-        $media->setUploadedFile($form->file);
-
-        if (!$media->validate()) {
-            Yii::$app->response->statusCode = 422;
-            return $media->getErrors();
-        }
-
-        $dbTrans = Yii::$app->db->beginTransaction();
-        try {
-            if ($media->save(false)) {
-                $dbTrans->commit();
-                Yii::$app->response->statusCode = 201;
-                return [
-                    'media_id' => $media->id,
-                    'file_url' => $media->file_url,
-                ];
-            }
-            $dbTrans->rollBack();
-        } catch (\Throwable $e) {
-            $dbTrans->rollBack();
-            if (!empty($media->file_name)) {
-                try {
-                    Yii::$app->r2->delete($media->file_name);
-                } catch (\Throwable $cleanupEx) {
-                    Yii::error("Failed to clean up orphaned R2 file: " . $cleanupEx->getMessage());
+        if ($model->validate()) {
+            $uploads = [];
+            foreach ($model->files as $file) {
+                $media = Media::uploadAndCreate($file, 'content');
+                if ($media) {
+                  $uploads[] = [
+                    'url' => $media->url,
+                    'id' => $media->id
+                  ];
                 }
             }
-            Yii::$app->response->statusCode = 502;
+
+            if (empty($uploads)) {
+                Yii::$app->response->statusCode = self::HTTP_INTERNAL_SERVER_ERROR;
+                return [
+                    'message' => Yii::t('app', 'Failed to upload files.'),
+                ];
+            }
+
             return [
-                'message' => \Yii::t('app', 'Failed to save media metadata or upload file to R2: {error}', ['error' => $e->getMessage()])
+                'media' => $uploads,
             ];
         }
 
-        Yii::$app->response->statusCode = 502;
-        return [
-            'message' => \Yii::t('app', 'Failed to upload file to Cloudflare R2.')
-        ];
-    }
-
-    public function actionDelete($id)
-    {
-        $media = Media::findOne($id);
-        if ($media === null) {
-            throw new NotFoundHttpException(\Yii::t('app', 'Media not found.'));
-        }
-
-        if ($media->user_id !== (int)Yii::$app->user->id && !Yii::$app->user->can('admin')) {
-            throw new ForbiddenHttpException(\Yii::t('app', 'You are not allowed to delete this media.'));
-        }
-
-        if ($media->delete()) {
-            Yii::$app->response->statusCode = 204;
-            return null;
-        }
-
-        throw new ServerErrorHttpException(\Yii::t('app', 'Failed to delete media.'));
+        Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
+        return $model->errors;
     }
 }
