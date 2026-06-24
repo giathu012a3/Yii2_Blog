@@ -37,9 +37,21 @@ $config = [
         'singletons' => [
             \yii\mail\MailerInterface::class => [
                 'class' => \yii\symfonymailer\Mailer::class,
-                // send all mails to a file by default.
-                'useFileTransport' => true,
+                'useFileTransport' => ($_ENV['MAIL_FILE_TRANSPORT'] ?? 'true') === 'true',
                 'viewPath' => '@app/mail',
+                'transport' => [
+                    'scheme' => 'smtp',
+                    'host' => $_ENV['SMTP_HOST'] ?? '',
+                    'username' => $_ENV['SMTP_USER'] ?? '',
+                    'password' => $_ENV['SMTP_PASS'] ?? '',
+                    'port' => (int)($_ENV['SMTP_PORT'] ?? 2525),
+                    'encryption' => $_ENV['SMTP_ENCRYPTION'] ?? 'tls',
+                ],
+                'messageConfig' => [
+                    'from' => [
+                        ($_ENV['MAIL_FROM_EMAIL'] ?? 'noreply@example.com') => ($_ENV['MAIL_FROM_NAME'] ?? 'Yii2 Blog App')
+                    ],
+                ]
             ],
         ],
     ],
@@ -165,17 +177,17 @@ $config = [
         ],
         'r2Component' => [
             'class' => \app\components\R2Component::class,
-            'bucket' => $_ENV['R2_BUCKET_NAME'],
-            'publicUrl' => $_ENV['R2_PUBLIC_URL'],
-            'accessKey' => $_ENV['R2_ACCESS_KEY_ID'],
-            'secretKey' => $_ENV['R2_SECRET_ACCESS_KEY'],
-            'endPoint' => $_ENV['R2_ENDPOINT'],
+            'bucket' => $_ENV['R2_BUCKET_NAME'] ?? $_ENV['R2_BUCKET'] ?? '',
+            'publicUrl' => $_ENV['R2_PUBLIC_URL'] ?? '',
+            'accessKey' => $_ENV['R2_ACCESS_KEY_ID'] ?? $_ENV['R2_ACCESS_KEY'] ?? '',
+            'secretKey' => $_ENV['R2_SECRET_ACCESS_KEY'] ?? $_ENV['R2_SECRET_KEY'] ?? '',
+            'endPoint' => $_ENV['R2_ENDPOINT'] ?? (isset($_ENV['CF_ACCOUNT_ID']) ? "https://{$_ENV['CF_ACCOUNT_ID']}.r2.cloudflarestorage.com" : ''),
         ],
         'aiWorkerComponent' => [
             'class' => \app\components\AiWorkerComponent::class,
-            'accountId' => $_ENV['CF_ACCOUNT_ID'],
-            'apiToken' => $_ENV['CF_API_TOKEN'],
-            'model' => $_ENV['CF_AI_MODEL'],
+            'accountId' => $_ENV['CF_ACCOUNT_ID'] ?? '',
+            'apiToken' => trim($_ENV['CF_API_TOKEN'] ?? $_ENV['AI_WORKER_TOKEN'] ?? '', '"\''),
+            'model' => $_ENV['CF_AI_MODEL'] ?? $_ENV['AI_WORKER_MODEL'] ?? '',
         ],
         'redis' => [
             'class' => \yii\redis\Connection::class,

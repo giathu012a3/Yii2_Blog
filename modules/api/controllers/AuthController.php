@@ -2,6 +2,7 @@
 
 namespace app\modules\api\controllers;
 
+use app\behaviors\LoginRateLimiter;
 use app\modules\api\models\forms\LoginForm;
 use app\modules\api\models\forms\RegisterForm;
 use Yii;
@@ -21,6 +22,10 @@ class AuthController extends BaseController
             ],
         ];
         $behaviors['authenticator']['optional'] = ['register', 'login'];
+        $behaviors['rateLimiter'] = [
+            'class' => LoginRateLimiter::class,
+            'only' => ['login'],
+        ];
         return $behaviors;
     }
 
