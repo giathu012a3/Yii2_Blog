@@ -2,8 +2,11 @@
 
 namespace app\models;
 
+use app\helpers\CacheHelper;
 use app\models\base\BaseComment;
+use Yii;
 use yii\behaviors\TimestampBehavior;
+use yii\caching\TagDependency;
 
 class Comment extends BaseComment
 {
@@ -15,6 +18,18 @@ class Comment extends BaseComment
         return [
             TimestampBehavior::class,
         ];
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        TagDependency::invalidate(Yii::$app->cache, [CacheHelper::getPostId($this->id)]);
+    }
+
+    public function afterDelete()
+    {
+        parent::afterDelete();
+        TagDependency::invalidate(Yii::$app->cache, [CacheHelper::getPostId($this->id)]);
     }
 
     public function fields()
