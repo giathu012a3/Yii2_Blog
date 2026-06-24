@@ -2,12 +2,14 @@
 
 namespace app\modules\api\controllers;
 
+use app\helpers\CacheHelper;
 use app\models\Post;
 use app\models\PostLike;
 use app\modules\api\models\forms\PostForm;
 use app\modules\api\models\search\PostSearch;
 use app\rbac\Permission;
 use Yii;
+use yii\caching\TagDependency;
 use yii\filters\AccessControl;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
@@ -73,15 +75,38 @@ class PostController extends BaseController
      */
     public function actionView($id)
     {
-        $model = $this->findModel($id);
-        if ($model->status !== Post::STATUS_PUBLISHED) {
-            if (Yii::$app->user->isGuest || (!Yii::$app->user->can(Permission::UPDATE_POST) && !Yii::$app->user->can(Permission::UPDATE_OWN_POST, ['post' => $model]))) {
+        $params = $this->request->queryParams;
+        $expand = isset($params['expand']) ? explode(',', $params['expand']) : [];
+        $expand = array_map('trim', $expand);
+
+        $cacheKey = CacheHelper::getPostViewKey($id, $params);
+        $ttl = Yii::$app->params['cacheTTL']['post'] ?? 3600;
+
+        $dbModel = $this->findModel($id);
+
+        if ($dbModel->status !== Post::STATUS_PUBLISHED) {
+            if (Yii::$app->user->isGuest || (!Yii::$app->user->can(Permission::UPDATE_POST) && !Yii::$app->user->can(Permission::UPDATE_OWN_POST, ['post' => $dbModel]))) {
                 throw new ForbiddenHttpException('You do not have permission to view this post.');
             }
+
+            return $dbModel;
         }
-        $model->handleView();
-        return $model;
+
+        $dbModel->handleView();
+
+        return Yii::$app->cache->getOrSet(
+            $cacheKey,
+            fn() => $dbModel->toArray([], $expand),
+            $ttl,
+            new TagDependency([
+                'tags' => [
+                    CacheHelper::getPostId($id),
+                ],
+            ])
+        );
     }
+
+
 
     /**
      * Creates a new Post model.

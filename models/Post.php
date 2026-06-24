@@ -4,10 +4,12 @@ namespace app\models;
 
 use app\behaviors\SlugBehavior;
 use app\behaviors\SoftDeleteBehavior;
+use app\helpers\CacheHelper;
 use app\models\base\BasePost;
 use app\rbac\Permission;
 use Yii;
 use yii\behaviors\TimestampBehavior;
+use yii\caching\TagDependency;
 use yii\helpers\HtmlPurifier;
 use yii\web\Cookie;
 
@@ -46,6 +48,18 @@ class Post extends BasePost
             return true;
         }
         return false;
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        TagDependency::invalidate(Yii::$app->cache,[CacheHelper::getPostId($this->id)]);
+    }
+
+    public function afterDelete()
+    {
+        parent::afterDelete();
+        TagDependency::invalidate(Yii::$app->cache,[CacheHelper::getPostId($this->id)]);
     }
 
     public function fields()
