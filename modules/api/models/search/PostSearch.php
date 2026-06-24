@@ -20,7 +20,7 @@ class PostSearch extends Post
         return [
             'category' => [],
             'tags' => [],
-            'comments' => ['author', 'replies'],
+            'comments' => ['author', 'replies', 'replies.author'],
         ];
     }
 

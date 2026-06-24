@@ -28,12 +28,18 @@ class CategoryController extends BaseController
                 'delete' => ['DELETE'],
             ],
         ];
+        $behaviors['authenticator']['optional'] = ['index', 'view'];
         $behaviors['access'] = [
             'class' => AccessControl::class,
             'rules' => [
                 [
                     'allow' => true,
-                    'actions' => ['index', 'view', 'create', 'update', 'delete'],
+                    'actions' => ['index', 'view'],
+                    'roles' => ['?', '@'],
+                ],
+                [
+                    'allow' => true,
+                    'actions' => ['create', 'update', 'delete'],
                     'roles' => [Permission::MANAGE_CATEGORIES],
                 ]
             ],
@@ -109,6 +115,14 @@ class CategoryController extends BaseController
     public function actionDelete($id)
     {
         $model = $this->findModel($id);
+
+        // Check if there are posts using this category
+        if (\app\models\Post::find()->where(['category_id' => $id])->exists()) {
+            Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
+            return [
+                'message' => Yii::t('app', 'Cannot delete category because it has associated posts.'),
+            ];
+        }
 
         try {
             $model->delete();

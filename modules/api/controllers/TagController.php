@@ -28,12 +28,18 @@ class TagController extends BaseController
                 'delete' => ['DELETE'],
             ],
         ];
+        $behaviors['authenticator']['optional'] = ['index', 'view'];
         $behaviors['access'] = [
             'class' => AccessControl::class,
             'rules' => [
                 [
                     'allow'   => true,
-                    'actions' => ['index', 'view', 'create', 'update', 'delete'],
+                    'actions' => ['index', 'view'],
+                    'roles'   => ['?', '@'],
+                ],
+                [
+                    'allow'   => true,
+                    'actions' => ['create', 'update', 'delete'],
                     'roles'   => [Permission::MANAGE_TAGS],
                 ],
             ],
@@ -109,11 +115,20 @@ class TagController extends BaseController
     {
         $model = $this->findModel($id);
 
+        $db = Yii::$app->db;
+        $transaction = $db->beginTransaction();
         try {
+            // Delete association records in post_tag pivot table
+            $db->createCommand()
+                ->delete('post_tag', ['tag_id' => $model->id])
+                ->execute();
+
             $model->delete();
-        } catch (\yii\db\Exception $e) {
+            $transaction->commit();
+        } catch (\Exception $e) {
+            $transaction->rollBack();
             Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
-            return ['message' => Yii::t('app', 'Cannot delete this tag')];
+            return ['message' => Yii::t('app', 'Cannot delete this tag: ') . $e->getMessage()];
         }
 
         return ['message' => Yii::t('app', 'Tag deleted successfully.')];

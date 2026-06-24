@@ -36,12 +36,12 @@ class PostQuery extends \yii\db\ActiveQuery
 
     public function notDelete()
     {
-        return $this->andWhere(['is_deleted' => Post::NOT_DELETED]);
+        return $this->andWhere(['post.is_deleted' => Post::NOT_DELETED]);
     }
 
     public function deleted()
     {
-        return $this->andWhere(['is_deleted' => Post::DELETED]);
+        return $this->andWhere(['post.is_deleted' => Post::DELETED]);
     }
 
     public function withDeleted()
@@ -51,7 +51,7 @@ class PostQuery extends \yii\db\ActiveQuery
 
     public function published()
     {
-        return $this->andWhere(['status' => Post::STATUS_PUBLISHED]);
+        return $this->andWhere(['post.status' => Post::STATUS_PUBLISHED]);
     }
 
     public function publishedOrOwn($userId)

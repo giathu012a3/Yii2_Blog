@@ -8,6 +8,17 @@ use yii\helpers\HtmlPurifier;
 
 class CommentForm extends Comment
 {
+    public function beforeValidate()
+    {
+        if ($this->parent_id) {
+            $parent = Comment::findOne($this->parent_id);
+            if ($parent && $parent->parent_id) {
+                $this->parent_id = $parent->parent_id;
+            }
+        }
+        return parent::beforeValidate();
+    }
+
     public function rules()
     {
         return [
