@@ -5,6 +5,18 @@ use yii\web\Response;
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
 
+$cacheDriver = $_ENV['CACHE_DRIVER'] ?? 'file';
+$cacheConfig = [
+    'class' => \yii\caching\FileCache::class,
+];
+
+if ($cacheDriver === 'redis') {
+    $cacheConfig = [
+        'class' => \yii\redis\Cache::class,
+        'redis' => 'redis',
+    ];
+}
+
 $config = [
     'id' => 'basic',
     'basePath' => dirname(__DIR__),
@@ -31,9 +43,7 @@ $config = [
                 'application/json' => 'yii\web\JsonParser'
             ]
         ],
-        'cache' => [
-            'class' => \yii\caching\FileCache::class,
-        ],
+        'cache' => $cacheConfig,
         'user' => [
             'identityClass' => \app\models\User::class,
             'enableAutoLogin' => true,
@@ -155,6 +165,13 @@ $config = [
             'apiToken' => $_ENV['CF_API_TOKEN'],
             'model' => $_ENV['CF_AI_MODEL'],
         ],
+        'redis' => [
+            'class' => \yii\redis\Connection::class,
+            'hostname' => $_ENV['REDIS_HOST'] ?? '127.0.0.1',
+            'port' => $_ENV['REDIS_PORT'] ?? 6379,
+            'database' => $_ENV['REDIS_DATABASE'] ?? 0,
+            'password' => !empty($_ENV['REDIS_PASSWORD']) ? $_ENV['REDIS_PASSWORD'] : null,
+        ]
 
     ],
     'params' => $params,
