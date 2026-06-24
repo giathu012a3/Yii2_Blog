@@ -46,7 +46,7 @@ class CommentForm extends Comment
         if ($plainText === '') {
             $this->addError(
                 $attribute,
-                'Invalid comment'
+                Yii::t('app', 'Invalid comment')
             );
         }
     }

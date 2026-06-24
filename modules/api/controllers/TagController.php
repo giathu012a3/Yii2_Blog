@@ -113,10 +113,10 @@ class TagController extends BaseController
             $model->delete();
         } catch (\yii\db\Exception $e) {
             Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
-            return ['message' => 'Cannot delete this tag'];
+            return ['message' => Yii::t('app', 'Cannot delete this tag')];
         }
 
-        return ['message' => 'Tag deleted successfully.'];
+        return ['message' => Yii::t('app', 'Tag deleted successfully.')];
     }
 
     /**

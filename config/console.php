@@ -46,7 +46,20 @@ $config = [
             'port' => $_ENV['REDIS_PORT'] ?? 6379,
             'database' => $_ENV['REDIS_DATABASE'] ?? 0,
             'password' => !empty($_ENV['REDIS_PASSWORD']) ? $_ENV['REDIS_PASSWORD'] : null,
-        ]
+        ],
+        'i18n' => [
+            'translations' => [
+                'app*' => [
+                    'class' => \yii\i18n\PhpMessageSource::class,
+                    'basePath' => '@app/messages',
+                    'sourceLanguage' => 'en-US',
+                    'fileMap' => [
+                        'app' => 'app.php',
+                    ],
+                ],
+            ],
+        ],
+
     ],
     'params' => $params,
     /*

@@ -57,7 +57,7 @@ class RegisterForm extends Model
 
         }catch(\Exception $e) {
             $transaction->rollback();
-            $this->addError('register', 'Registration failed.' . $e->getMessage());
+            $this->addError('register', Yii::t('app', 'Registration failed.') . $e->getMessage());
         }
 
         return null;

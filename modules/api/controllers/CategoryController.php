@@ -114,11 +114,11 @@ class CategoryController extends BaseController
             $model->delete();
         } catch (\yii\db\Exception $e) {
             Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
-            return ['message' => 'Cannot delete this category'];
+            return ['message' => Yii::t('app', 'Cannot delete this category')];
         }
 
         return [
-            'message' => 'Category deleted successfully.',
+            'message' => Yii::t('app', 'Category deleted successfully.'),
         ];
     }
 

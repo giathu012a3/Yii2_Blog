@@ -67,7 +67,7 @@ class AuthController extends BaseController
         }
 
         return [
-            'message' => 'Logout successfully.',
+            'message' => Yii::t('app','Logout successfully.'),
         ];
     }
 

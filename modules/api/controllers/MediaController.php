@@ -54,7 +54,7 @@ class MediaController extends BaseController
             if (empty($uploads)) {
                 Yii::$app->response->statusCode = self::HTTP_INTERNAL_SERVER_ERROR;
                 return [
-                    'message' => 'Failed to upload files.',
+                    'message' => Yii::t('app', 'Failed to upload files.'),
                 ];
             }
 

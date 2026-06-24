@@ -48,7 +48,7 @@ class CommentController extends BaseController
 
         if ($model->save()) {
             return [
-                'message' => 'Comment added successfully.',
+                'message' => Yii::t('app', 'Comment added successfully.'),
                 'comment' => $model,
             ];
         }
@@ -62,14 +62,14 @@ class CommentController extends BaseController
         $model = $this->findModel($id);
 
         if (!Yii::$app->user->can(Permission::ADMIN_ACCESS) && !Yii::$app->user->can(Permission::UPDATE_OWN_COMMENT, ['comment' => $model])) {
-            throw new ForbiddenHttpException('You do not have permission to edit this comment.');
+            throw new ForbiddenHttpException(Yii::t('app', 'You do not have permission to edit this comment.'));
         }
 
         $model->load(Yii::$app->request->post(), '');
 
         if ($model->save()) {
             return [
-                'message' => 'Comment updated successfully.',
+                'message' => Yii::t('app', 'Comment updated successfully.'),
                 'comment' => $model,
             ];
         }
@@ -84,11 +84,11 @@ class CommentController extends BaseController
 
         $post = $model->post;
         if (!$post) {
-            throw new NotFoundHttpException('Post associated with this comment not found.');
+            throw new NotFoundHttpException(Yii::t('app', 'Post associated with this comment not found.'));
         }
 
         if (!Yii::$app->user->can(Permission::ADMIN_ACCESS) && !Yii::$app->user->can(Permission::HIDE_COMMENT_ON_OWN_POST, ['post' => $post])) {
-            throw new ForbiddenHttpException('You do not have permission to hide this comment.');
+            throw new ForbiddenHttpException(Yii::t('app', 'You do not have permission to hide this comment.'));
         }
 
         $transaction = Yii::$app->db->beginTransaction();
@@ -98,7 +98,7 @@ class CommentController extends BaseController
                 Comment::updateAll(['status' => Comment::STATUS_INACTIVE], ['parent_id' => $model->id]);
                 $transaction->commit();
                 return [
-                    'message' => 'Comment and its replies have been hidden successfully.',
+                    'message' => Yii::t('app', 'Comment and its replies have been hidden successfully.'),
                     'comment' => $model,
                 ];
             }
@@ -120,7 +120,7 @@ class CommentController extends BaseController
             !Yii::$app->user->can(Permission::DELETE_OWN_COMMENT, ['comment' => $model]) &&
             !Yii::$app->user->can(Permission::DELETE_COMMENT_ON_OWN_POST, ['post' => $post])
         ) {
-            throw new ForbiddenHttpException('You do not have permission to delete this comment.');
+            throw new ForbiddenHttpException(Yii::t('app', 'You do not have permission to delete this comment.'));
         }
 
         $db = Yii::$app->db;
@@ -130,7 +130,7 @@ class CommentController extends BaseController
             if ($model->delete()) {
                 $transaction->commit();
                 return [
-                    'message' => 'Comment and its replies deleted successfully.',
+                    'message' => Yii::t('app', 'Comment and its replies deleted successfully.'),
                 ];
             }
             throw new \Exception('Failed to delete comment.');
@@ -147,6 +147,6 @@ class CommentController extends BaseController
             return $model;
         }
 
-        throw new NotFoundHttpException('The requested page does not exist.');
+        throw new NotFoundHttpException(Yii::t('app', 'The requested page does not exist.'));
     }
 }

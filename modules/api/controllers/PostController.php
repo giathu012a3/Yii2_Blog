@@ -86,7 +86,7 @@ class PostController extends BaseController
 
         if ($dbModel->status !== Post::STATUS_PUBLISHED) {
             if (Yii::$app->user->isGuest || (!Yii::$app->user->can(Permission::UPDATE_POST) && !Yii::$app->user->can(Permission::UPDATE_OWN_POST, ['post' => $dbModel]))) {
-                throw new ForbiddenHttpException('You do not have permission to view this post.');
+                throw new ForbiddenHttpException(Yii::t('app', 'You do not have permission to view this post.'));
             }
 
             return $dbModel;
@@ -116,7 +116,7 @@ class PostController extends BaseController
     public function actionCreate()
     {
         if (!Yii::$app->user->can(Permission::CREATE_POST)) {
-            throw new ForbiddenHttpException('You do not have permission to create a post.');
+            throw new ForbiddenHttpException(Yii::t('app', 'You do not have permission to create a post.'));
         }
         $model = new PostForm();
         $model->load($this->request->post(), '');
@@ -140,7 +140,7 @@ class PostController extends BaseController
     {
         $model = $this->findModel($id);
         if (!Yii::$app->user->can(Permission::UPDATE_POST) && !Yii::$app->user->can(Permission::UPDATE_OWN_POST, ['post' => $model])) {
-            throw new ForbiddenHttpException('You do not have permission to update this post.');
+            throw new ForbiddenHttpException(Yii::t('app', 'You do not have permission to update this post.'));
         }
 
         $model->load($this->request->post(), '');
@@ -164,17 +164,17 @@ class PostController extends BaseController
     {
         $model = $this->findModel($id);
         if (!Yii::$app->user->can(Permission::DELETE_POST) && !Yii::$app->user->can(Permission::DELETE_OWN_POST, ['post' => $model])) {
-            throw new ForbiddenHttpException('You do not have permission to delete this post.');
+            throw new ForbiddenHttpException(Yii::t('app', 'You do not have permission to delete this post.'));
         }
 
         if ($model->softDelete()) {
             return [
-                'message' => 'Post deleted successfully.',
+                'message' => Yii::t('app', 'Post deleted successfully.'),
             ];
         }
         Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
         return [
-            'message' => 'Failed to delete the post.',
+            'message' => Yii::t('app', 'Failed to delete the post.'),
         ];
     }
 
@@ -182,7 +182,7 @@ class PostController extends BaseController
     {
         $post = Post::find()->notDelete()->published()->andWhere(['id' => $post_id])->one();
         if (!$post) {
-            throw new NotFoundHttpException('The requested post does not exist.');
+            throw new NotFoundHttpException(Yii::t('app', 'The requested post does not exist.'));
         }
         $userId = Yii::$app->user->id;
 
@@ -191,7 +191,7 @@ class PostController extends BaseController
             if ($like->delete()) {
                 return [
                     'liked' => false,
-                    'message' => 'Post unliked successfully.',
+                    'message' => Yii::t('app', 'Post unliked successfully.'),
                 ];
             }
         } else {
@@ -203,25 +203,25 @@ class PostController extends BaseController
                 if ($like->save()) {
                     return [
                         'liked' => true,
-                        'message' => 'Post liked successfully.',
+                        'message' => Yii::t('app', 'Post liked successfully.'),
                     ];
                 }
             } catch (\yii\db\Exception $e) {
                 return [
                     'liked' => true,
-                    'message' => 'Post liked successfully.',
+                    'message' => Yii::t('app', 'Post liked successfully.'),
                 ];
             }
 
             Yii::$app->response->statusCode = self::HTTP_INTERNAL_SERVER_ERROR;
             return [
-                'message' => 'Failed to like the post.',
+                'message' => Yii::t('app', 'Failed to like the post.'),
                 'errors' => $like->errors,
             ];
         }
         Yii::$app->response->statusCode = self::HTTP_INTERNAL_SERVER_ERROR;
         return [
-            'message' => 'An error occurred while processing your request.',
+            'message' => Yii::t('app', 'An error occurred while processing your request.'),
         ];
     }
 
@@ -244,6 +244,6 @@ class PostController extends BaseController
             return $model;
         }
 
-        throw new NotFoundHttpException('The requested page does not exist.');
+        throw new NotFoundHttpException(Yii::t('app', 'The requested page does not exist.'));
     }
 }

@@ -33,7 +33,7 @@ class LoginForm extends Model
         if (!$this->hasErrors()) {
             $user = $this->getUser();
             if (!$user || !$user->validatePassword($this->password)) {
-                $this->addError('Login error', 'Incorrect username or password.');
+                $this->addError('Login error', Yii::t('app','Incorrect username or password.'));
             }
         }
     }
@@ -43,7 +43,7 @@ class LoginForm extends Model
         $ip = Yii::$app->request->userIP;
 
         if($this->isBlocked($ip)) {
-            throw new \yii\web\TooManyRequestsHttpException('Too many failed login attempts. Please try again in 1 minute.');
+            throw new \yii\web\TooManyRequestsHttpException(Yii::t('app','Too many failed login attempts. Please try again in 1 minute.'));
         }
 
         if ($this->validate()) {

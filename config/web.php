@@ -21,6 +21,18 @@ $config = [
     'id' => 'basic',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
+
+    'on beforeRequest' => function () {
+        $lang = Yii::$app->request->get('lang');
+        if (!$lang) {
+            $lang = Yii::$app->request->headers->get('Accept-Language');
+        }
+        if ($lang) {
+            $lang = preg_split('/[;,]/', $lang)[0];
+            Yii::$app->language = trim($lang);
+        }
+    },
+
     'container' => [
         'singletons' => [
             \yii\mail\MailerInterface::class => [
@@ -171,7 +183,20 @@ $config = [
             'port' => $_ENV['REDIS_PORT'] ?? 6379,
             'database' => $_ENV['REDIS_DATABASE'] ?? 0,
             'password' => !empty($_ENV['REDIS_PASSWORD']) ? $_ENV['REDIS_PASSWORD'] : null,
-        ]
+        ],
+        'i18n' => [
+            'translations' => [
+                'app*' => [
+                    'class' => \yii\i18n\PhpMessageSource::class,
+                    'basePath' => '@app/messages',
+                    'sourceLanguage' => 'en-US',
+                    'fileMap' => [
+                        'app' => 'app.php',
+                    ],
+                ],
+            ],
+        ],
+
 
     ],
     'params' => $params,
