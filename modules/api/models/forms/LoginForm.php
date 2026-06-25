@@ -1,22 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace app\modules\api\models\forms;
 
 use app\models\User;
-use app\models\UserAccessToken;
 use Yii;
 use yii\base\Model;
 
 class LoginForm extends Model
 {
-    private const MAX_FAILED_LOGIN_ATTEMPTS = 5;
-    private const BLOCK_DURATION = 60;
-    private const TOKEN_EXPIRE_DURATION = 7 * 24 * 3600;
-    private const CACHE_KEY_BLOCK_PREFIX = 'login_block_';
-    private const CACHE_KEY_FAILED_PREFIX = 'login_failed_';
+    private const TOKEN_EXPIRE_DURATION = 7 * 24 * 3600; // 7 ngày
 
-    public $username;
-    public $password;
+    public ?string $username = null;
+    public ?string $password = null;
 
     private $_user = null;
 
@@ -24,7 +21,8 @@ class LoginForm extends Model
     {
         return [
             [['username', 'password'], 'required'],
-            [['password'], 'validatePassword']
+            [['username', 'password'], 'trim'],
+            ['password', 'validatePassword'],
         ];
     }
 
@@ -33,75 +31,32 @@ class LoginForm extends Model
         if (!$this->hasErrors()) {
             $user = $this->getUser();
             if (!$user || !$user->validatePassword($this->password)) {
-                $this->addError('Login error', Yii::t('app','Incorrect username or password.'));
+                $this->addError($attribute, \Yii::t('app', 'Incorrect username or password.'));
             }
         }
     }
 
-    public function login()
+    public function login(): ?array
     {
-        $ip = Yii::$app->request->userIP;
-
-        if($this->isBlocked($ip)) {
-            throw new \yii\web\TooManyRequestsHttpException(Yii::t('app','Too many failed login attempts. Please try again in 1 minute.'));
+        if (!$this->validate()) {
+            return null;
         }
 
-        if ($this->validate()) {
-            $user = $this->getUser();
-
-            if ($user) {
-                $this->clearFailedLoginAttempts($ip);
-
-                $accessToken = $this->createAccessToken($user);
-
-                if ($accessToken) {
-                    $user->currentToken = $accessToken;
-                    return $user;
-                }
-            }
+        $user = $this->getUser();
+        if ($user === null) {
+            return null;
         }
 
-        if(!empty($this->username) && !empty($this->password)) {
-            $this->increaseFailedLoginAttempts($ip);
+        // Tạo token với thời hạn 7 ngày
+        $tokenString = $user->generateAccessToken(self::TOKEN_EXPIRE_DURATION);
+        if ($tokenString === null) {
+            return null;
         }
 
-        return null;
-    }
-
-    private function increaseFailedLoginAttempts($ip)
-    {
-        $keyCheck = self::CACHE_KEY_FAILED_PREFIX . $ip;
-        $blockKey = self::CACHE_KEY_BLOCK_PREFIX . $ip;
-
-        $loginFailed = (int)Yii::$app->cache->get($keyCheck) + 1;
-        Yii::$app->cache->set($keyCheck, $loginFailed, self::BLOCK_DURATION);
-        if ($loginFailed >= self::MAX_FAILED_LOGIN_ATTEMPTS) {
-            Yii::$app->cache->set($blockKey, 'blocked', self::BLOCK_DURATION);
-            Yii::$app->cache->delete($keyCheck);
-        }
-    }
-    private function isBlocked($ip)
-    {
-        $blockKey = self::CACHE_KEY_BLOCK_PREFIX . $ip;
-        return (bool)Yii::$app->cache->get($blockKey);
-    }
-
-    private function clearFailedLoginAttempts($ip)
-    {
-        Yii::$app->cache->delete(self::CACHE_KEY_FAILED_PREFIX . $ip);
-    }
-
-    private function createAccessToken($user)
-    {
-        $accessToken = new UserAccessToken();
-        $accessToken->user_id = $user->id;
-        $accessToken->token = Yii::$app->security->generateRandomString(64);
-        $accessToken->expires_at = time() + self::TOKEN_EXPIRE_DURATION;
-        $accessToken->device_name = Yii::$app->request->userAgent;
-        if ($accessToken->save(false)) {
-            return $accessToken;
-        }
-        return null;
+        return [
+            'user'  => $user,
+            'token' => $tokenString,
+        ];
     }
 
     public function getUser()

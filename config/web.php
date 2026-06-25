@@ -63,14 +63,12 @@ $config = [
         'i18n' => [
             'translations' => [
                 'app*' => [
-                    'class' => \yii\i18n\PhpMessageSource::class,
-                    'basePath' => '@app/messages',
+                    'class'          => \yii\i18n\PhpMessageSource::class,
+                    'basePath'       => '@app/messages',
                     'sourceLanguage' => 'en-US',
-                    'fileMap' => [
+                    'fileMap'        => [
                         'app' => 'app.php',
                     ],
-                    'enableCaching' => !YII_DEBUG,
-                    'cachingDuration' => 3600,
                 ],
             ],
         ],

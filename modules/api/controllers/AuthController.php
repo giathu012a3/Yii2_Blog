@@ -1,83 +1,150 @@
 <?php
 
+declare(strict_types=1);
+
 namespace app\modules\api\controllers;
 
 use app\behaviors\LoginRateLimiter;
+use app\modules\api\models\forms\ChangePasswordForm;
 use app\modules\api\models\forms\LoginForm;
 use app\modules\api\models\forms\RegisterForm;
+use app\models\User;
 use Yii;
 
+/**
+ * AuthController handles user authentication actions like register, login, me, change-password, and logout.
+ */
 class AuthController extends BaseController
 {
+    /**
+     * {@inheritdoc}
+     */
     public function behaviors()
     {
-        $behaviors =  parent::behaviors();
+        $behaviors = parent::behaviors();
+
         $behaviors['verbs'] = [
-            'class' => \yii\filters\VerbFilter::class,
+            'class'   => \yii\filters\VerbFilter::class,
             'actions' => [
-                'register' => ['POST'],
-                'login' => ['POST'],
-                'logout' => ['POST'],
-                'me' => ['GET'],
+                'register'        => ['POST'],
+                'login'           => ['POST'],
+                'logout'          => ['POST'],
+                'me'              => ['GET'],
+                'change-password' => ['PUT'],
             ],
         ];
+
         $behaviors['authenticator']['optional'] = ['register', 'login'];
+
         $behaviors['rateLimiter'] = [
             'class' => LoginRateLimiter::class,
-            'only' => ['login'],
+            'only'  => ['login'],
         ];
+
         return $behaviors;
     }
 
+    /**
+     * Register a new user account.
+     */
     public function actionRegister()
     {
-        $form = new RegisterForm();
-        $form->load(Yii::$app->request->post(), '');
-        $user = $form->register();
-        if ($user) {
+        $model = new RegisterForm();
+        $model->load(Yii::$app->request->getBodyParams(), '');
+
+        if ($user = $model->register()) {
+            Yii::$app->response->statusCode = 201;
             return $user;
         }
-        Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
-        return [
-            'errors' => $form->errors
-        ];
+
+        Yii::$app->response->statusCode = 422;
+        return $model->getErrors();
     }
 
+    /**
+     * Authenticate user credentials and return bearer token.
+     */
     public function actionLogin()
     {
-        $form = new LoginForm();
-        $form->load(Yii::$app->request->post(), '');
-        $user = $form->login();
-        if ($user) {
+        $model = new LoginForm();
+        $model->load(Yii::$app->request->getBodyParams(), '');
+
+        $result = $model->login();
+        if ($result !== null) {
+            /** @var User $user */
+            $user  = $result['user'];
+            $token = $result['token'];
+
             return [
-                'user' => $user,
-                'access_token' => $user->currentToken->token,
+                'id'           => $user->id,
+                'username'     => $user->username,
+                'email'        => $user->email,
+                'access_token' => $token,
             ];
         }
 
-        Yii::$app->response->statusCode = self::HTTP_UNPROCESSABLE_ENTITY;
-        return [
-            'errors' => $form->errors
-        ];
+        Yii::$app->response->statusCode = 422;
+        return $model->getErrors();
     }
 
-    public function actionLogout()
-    {
-        $user = Yii::$app->user->identity;
-
-        if ($user->currentToken) {
-            $user->currentToken->updateAttributes([
-                'revoked_at' => time(),
-            ]);
-        }
-
-        return [
-            'message' => Yii::t('app','Logout successfully.'),
-        ];
-    }
-
+    /**
+     * Get the profile of the current authenticated user.
+     */
     public function actionMe()
     {
         return Yii::$app->user->identity;
+    }
+
+    /**
+     * Log out the current authenticated user by revoking their access token.
+     */
+    public function actionLogout()
+    {
+        /** @var User|null $user */
+        $user = Yii::$app->user->identity;
+        if (!($user instanceof User)) {
+            Yii::$app->response->statusCode = 401;
+            return ['message' => \Yii::t('app', 'Unauthorized.')];
+        }
+
+        // Lấy Bearer token từ header Authorization
+        $authHeader  = Yii::$app->request->getHeaders()->get('Authorization');
+        $tokenString = null;
+        if ($authHeader !== null && preg_match('/^Bearer\s+(.+)$/i', $authHeader, $matches)) {
+            $tokenString = $matches[1];
+        }
+
+        if ($tokenString !== null) {
+            $user->revokeAccessToken($tokenString);
+        }
+
+        return ['message' => \Yii::t('app', 'Logged out successfully.')];
+    }
+
+    /**
+     * Change password of the current authenticated user.
+     */
+    public function actionChangePassword()
+    {
+        $userId = Yii::$app->user->id;
+        $model  = ChangePasswordForm::findOne($userId);
+
+        if ($model !== null) {
+            $model->load(Yii::$app->request->getBodyParams(), '');
+
+            if ($model->change()) {
+                return [
+                    'message' => \Yii::t('app', 'Password changed successfully. Please login again with your new password.'),
+                ];
+            }
+
+            Yii::$app->response->statusCode = 422;
+            return $model->getErrors();
+        }
+
+        Yii::$app->response->statusCode = 401;
+        return [
+            'message' => \Yii::t('app', 'Unauthorized.'),
+        ];
     }
 }

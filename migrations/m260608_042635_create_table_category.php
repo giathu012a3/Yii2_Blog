@@ -30,10 +30,22 @@ class m260608_042635_create_table_category extends Migration
         } catch (\Throwable $e) {
             echo "    [SKIP] idx-category-slug: " . $e->getMessage() . "\n";
         }
+
+        try {
+            $this->createIndex('idx-category-is_deleted', '{{%category}}', 'is_deleted');
+        } catch (\Throwable $e) {
+            echo "    [SKIP] idx-category-is_deleted: " . $e->getMessage() . "\n";
+        }
     }
 
     public function down(): void
     {
+        try {
+            $this->dropIndex('idx-category-is_deleted', '{{%category}}');
+        } catch (\Throwable $e) {
+            echo "    [SKIP] drop idx-category-is_deleted: " . $e->getMessage() . "\n";
+        }
+
         try {
             $this->dropTable('{{%category}}');
         } catch (\Throwable $e) {

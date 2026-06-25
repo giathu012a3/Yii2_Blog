@@ -36,10 +36,22 @@ class m260608_043202_create_table_tag extends Migration
         } catch (\Throwable $e) {
             echo "    [SKIP] idx-tag-slug: " . $e->getMessage() . "\n";
         }
+
+        try {
+            $this->createIndex('idx-tag-is_deleted', '{{%tag}}', 'is_deleted');
+        } catch (\Throwable $e) {
+            echo "    [SKIP] idx-tag-is_deleted: " . $e->getMessage() . "\n";
+        }
     }
 
     public function down(): void
     {
+        try {
+            $this->dropIndex('idx-tag-is_deleted', '{{%tag}}');
+        } catch (\Throwable $e) {
+            echo "    [SKIP] drop idx-tag-is_deleted: " . $e->getMessage() . "\n";
+        }
+
         try {
             $this->dropTable('{{%tag}}');
         } catch (\Throwable $e) {

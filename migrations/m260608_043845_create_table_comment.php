@@ -44,10 +44,22 @@ class m260608_043845_create_table_comment extends Migration
         } catch (\Throwable $e) {
             echo "    [SKIP] idx-comment-parent_id: " . $e->getMessage() . "\n";
         }
+
+        try {
+            $this->createIndex('idx-comment-is_deleted', '{{%comment}}', 'is_deleted');
+        } catch (\Throwable $e) {
+            echo "    [SKIP] idx-comment-is_deleted: " . $e->getMessage() . "\n";
+        }
     }
 
     public function down(): void
     {
+        try {
+            $this->dropIndex('idx-comment-is_deleted', '{{%comment}}');
+        } catch (\Throwable $e) {
+            echo "    [SKIP] drop idx-comment-is_deleted: " . $e->getMessage() . "\n";
+        }
+
         try {
             $this->dropTable('{{%comment}}');
         } catch (\Throwable $e) {

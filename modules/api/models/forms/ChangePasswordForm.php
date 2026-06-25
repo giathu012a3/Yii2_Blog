@@ -33,14 +33,15 @@ class ChangePasswordForm extends User
         }
     }
 
-    public function change()
+    public function change(): bool
     {
         if (!$this->validate()) {
             return false;
         }
 
         $this->setPassword($this->new_password);
-        $this->revokeAccessToken();
+        // Thu hồi toàn bộ token khi đổi mật khẩu (buộc đăng nhập lại)
+        $this->revokeAllTokens();
 
         return $this->save(false);
     }

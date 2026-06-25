@@ -54,10 +54,22 @@ class m260608_042821_create_table_post extends Migration
         } catch (\Throwable $e) {
             echo "    [SKIP] idx-post-author_id: " . $e->getMessage() . "\n";
         }
+
+        try {
+            $this->createIndex('idx-post-is_deleted', '{{%post}}', 'is_deleted');
+        } catch (\Throwable $e) {
+            echo "    [SKIP] idx-post-is_deleted: " . $e->getMessage() . "\n";
+        }
     }
 
     public function down(): void
     {
+        try {
+            $this->dropIndex('idx-post-is_deleted', '{{%post}}');
+        } catch (\Throwable $e) {
+            echo "    [SKIP] drop idx-post-is_deleted: " . $e->getMessage() . "\n";
+        }
+
         try {
             $this->dropTable('{{%post}}');
         } catch (\Throwable $e) {
