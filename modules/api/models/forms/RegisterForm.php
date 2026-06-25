@@ -51,8 +51,19 @@ class RegisterForm extends Model
                     $auth->assign($readerRole, $user->id);
                 }
 
-               $transaction->commit();
-               return $user;
+                $transaction->commit();
+
+                // Send welcome email
+                try {
+                    Yii::$app->mailer->compose('welcome', ['user' => $user])
+                        ->setTo($user->email)
+                        ->setSubject('Welcome to Yii2 Blog App')
+                        ->send();
+                } catch (\Exception $e) {
+                    Yii::error('Failed to send welcome email to ' . $user->email . ': ' . $e->getMessage(), 'email');
+                }
+
+                return $user;
             }
 
         }catch(\Exception $e) {

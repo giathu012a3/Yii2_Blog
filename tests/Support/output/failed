@@ -1,3 +1,0 @@
-tests\Unit\Models\UserTest.php:testFindUserById
-tests\Unit\Models\UserTest.php:testFindUserByAccessToken
-tests\Unit\Models\UserTest.php:testFindUserByUsername

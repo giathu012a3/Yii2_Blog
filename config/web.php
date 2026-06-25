@@ -39,6 +39,8 @@ $config = [
                 'class' => \yii\symfonymailer\Mailer::class,
                 'useFileTransport' => ($_ENV['MAIL_FILE_TRANSPORT'] ?? 'true') === 'true',
                 'viewPath' => '@app/mail',
+                'htmlLayout' => false,
+                'textLayout' => false,
                 'transport' => [
                     'scheme' => 'smtp',
                     'host' => $_ENV['SMTP_HOST'] ?? '',
