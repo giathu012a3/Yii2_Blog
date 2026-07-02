@@ -145,7 +145,7 @@ $config = [
                 'POST api/ai/generate-title'   => 'api/ai/generate-title',
                 'POST api/ai/generate-summary' => 'api/ai/generate-summary',
                 'POST api/ai/improve-text'     => 'api/ai/improve-text',
-
+                'GET api/post-stats'           => 'api/post-stats/index',
             ],
 
         ],

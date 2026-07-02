@@ -19,6 +19,30 @@ $config = [
     'id' => 'basic-console',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
+    'container' => [
+        'singletons' => [
+            \yii\mail\MailerInterface::class => [
+                'class' => \yii\symfonymailer\Mailer::class,
+                'useFileTransport' => ($_ENV['MAIL_FILE_TRANSPORT'] ?? 'true') === 'true',
+                'viewPath' => '@app/mail',
+                'htmlLayout' => false,
+                'textLayout' => false,
+                'transport' => [
+                    'scheme' => 'smtp',
+                    'host' => $_ENV['SMTP_HOST'] ?? '',
+                    'username' => $_ENV['SMTP_USER'] ?? '',
+                    'password' => $_ENV['SMTP_PASS'] ?? '',
+                    'port' => (int)($_ENV['SMTP_PORT'] ?? 2525),
+                    'encryption' => $_ENV['SMTP_ENCRYPTION'] ?? 'tls',
+                ],
+                'messageConfig' => [
+                    'from' => [
+                        ($_ENV['MAIL_FROM_EMAIL'] ?? 'noreply@example.com') => ($_ENV['MAIL_FROM_NAME'] ?? 'Yii2 Blog App')
+                    ],
+                ]
+            ],
+        ],
+    ],
     'controllerNamespace' => 'app\commands',
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
@@ -27,6 +51,7 @@ $config = [
     ],
     'components' => [
         'cache' => $cacheConfig,
+        'mailer' => \yii\mail\MailerInterface::class,
         'log' => [
             'targets' => [
                 [

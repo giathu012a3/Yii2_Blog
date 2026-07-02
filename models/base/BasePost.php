@@ -39,11 +39,11 @@ class BasePost extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['description', 'content', 'published_at', 'deleted_at', 'created_at', 'updated_at'], 'default', 'value' => null],
+            [['content', 'published_at', 'deleted_at', 'created_at', 'updated_at'], 'default', 'value' => null],
             [['is_deleted'], 'default', 'value' => 0],
             [['category_id', 'author_id', 'title', 'slug'], 'required'],
             [['category_id', 'author_id', 'status', 'published_at', 'view_count', 'is_deleted', 'deleted_at', 'created_at', 'updated_at'], 'integer'],
-            [['description', 'content'], 'string'],
+            [['content'], 'string'],
             [['title', 'slug'], 'string', 'max' => 255],
             [['slug'], 'unique'],
         ];
@@ -59,7 +59,6 @@ class BasePost extends \yii\db\ActiveRecord
             'category_id' => 'Category ID',
             'author_id' => 'Author ID',
             'title' => 'Title',
-            'description' => 'Description',
             'slug' => 'Slug',
             'content' => 'Content',
             'status' => 'Status',
